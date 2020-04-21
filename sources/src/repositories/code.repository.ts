@@ -6,24 +6,24 @@ import {
 } from "@loopback/repository";
 import { Ctor } from "loopback-component-history";
 
-import { bindACL, ACLBindings, PrivateACLBindings } from "../keys";
+import { bindCRUD, CRUDBindings, PrivateCRUDBindings } from "../keys";
 
 import { Code, User } from "../models";
 
 import { DefaultUserRepository } from "./";
 
-@bindACL("CodeRepository")
+@bindCRUD("CodeRepository")
 export class CodeRepository<
     Model extends Code
 > extends DefaultKeyValueRepository<Model> {
     public readonly user: BelongsToAccessor<User, string>;
 
     constructor(
-        @inject(PrivateACLBindings.CODE_MODEL)
+        @inject(PrivateCRUDBindings.CODE_MODEL)
         ctor: Ctor<Model>,
-        @inject(PrivateACLBindings.CACHE_DATASOURCE)
+        @inject(PrivateCRUDBindings.CACHE_DATASOURCE)
         dataSource: juggler.DataSource,
-        @inject(ACLBindings.USER_REPOSITORY)
+        @inject(CRUDBindings.USER_REPOSITORY)
         userRepository: DefaultUserRepository
     ) {
         super(ctor, dataSource);

@@ -18,7 +18,7 @@ import { User, Session, Code } from "./models";
 /**
  * Default Permissions
  */
-export class ACLPermissions extends PermissionsList {
+export class CRUDPermissions extends PermissionsList {
     /** User */
     USERS_READ = "Read users";
     USERS_WRITE = "Write users";
@@ -69,7 +69,7 @@ export type FilterWhere<Model extends Entity> = (
 /** Filter Scope, passed to filter interceptor for API's business scope definition */
 export interface FilterScope<
     Model extends Entity,
-    Permissions extends ACLPermissions,
+    Permissions extends CRUDPermissions,
     Controller
 > {
     repositoryGetter: RepositoryGetter<Model, Controller>;
@@ -100,9 +100,9 @@ export type MessageHandler = (
 export type ActivateHandler = (userId: string) => Promise<void>;
 
 /**
- * ACLMixin configs
+ * CRUDMixin configs
  */
-export interface ACLMixinConfig<Permissions extends ACLPermissions> {
+export interface CRUDMixinConfig<Permissions extends CRUDPermissions> {
     sessionModel?: Ctor<Session>;
     codeModel?: Ctor<Code>;
     tokenService?: Class<TokenService>;
@@ -116,11 +116,11 @@ export interface ACLMixinConfig<Permissions extends ACLPermissions> {
 }
 
 /**
- * ACLApplication configs
+ * CRUDApplication configs
  */
-export type ACLRestServerConfig = RestServerConfig & { homePath?: string };
-export type ACLGraphQLServerConfig = HttpServerOptions;
-export interface ACLApplicationConfig extends ApplicationConfig {
-    rest?: ACLRestServerConfig;
-    graphql?: ACLGraphQLServerConfig;
+export type CRUDRestServerConfig = RestServerConfig & { homePath?: string };
+export type CRUDGraphQLServerConfig = HttpServerOptions;
+export interface CRUDApplicationConfig extends ApplicationConfig {
+    rest?: CRUDRestServerConfig;
+    graphql?: CRUDGraphQLServerConfig;
 }

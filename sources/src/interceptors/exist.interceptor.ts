@@ -8,13 +8,13 @@ import { HttpErrors } from "@loopback/rest";
 import { Entity, Filter, RelationType } from "@loopback/repository";
 import { Ctor } from "loopback-component-history";
 
-import { ACLPermissions, FilterScope, RepositoryGetter } from "../types";
+import { CRUDPermissions, FilterScope, RepositoryGetter } from "../types";
 
 import { filterFn } from "./filter.interceptor";
 
 export function exist<
     Model extends Entity,
-    Permissions extends ACLPermissions,
+    Permissions extends CRUDPermissions,
     Controller
 >(
     ctor: Ctor<Model>,

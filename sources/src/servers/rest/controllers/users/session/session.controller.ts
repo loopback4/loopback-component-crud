@@ -53,7 +53,7 @@ export function GenerateUsersSessionController<
             return this.sessionRepository.get(token);
         }
 
-        @authenticate("acl")
+        @authenticate("crud")
         @get("/users/session", {
             responses: {
                 "200": {
@@ -72,7 +72,7 @@ export function GenerateUsersSessionController<
             return this.session;
         }
 
-        @authenticate("acl")
+        @authenticate("crud")
         @del("/users/session", {
             responses: {
                 "204": {

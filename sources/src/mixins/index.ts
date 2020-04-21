@@ -1,1 +1,1 @@
-export * from "./acl.mixin";
+export * from "./crud.mixin";

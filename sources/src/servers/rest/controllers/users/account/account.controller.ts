@@ -9,7 +9,7 @@ import {
 import { Class, EntityNotFoundError } from "@loopback/repository";
 import { Ctor } from "loopback-component-history";
 
-import { ACLPermissions } from "../../../../../types";
+import { CRUDPermissions } from "../../../../../types";
 
 import { Controller } from "../../../../../servers";
 import { Code, User, UserRole } from "../../../../../models";
@@ -25,7 +25,7 @@ export function GenerateUsersAccountController<
 >(codeCtor: Ctor<CodeModel>, userCtor: Ctor<UserModel>): Class<Controller> {
     class UsersAccountController extends Controller {
         @intercept(
-            unique<User, ACLPermissions, Controller>(
+            unique<User, CRUDPermissions, Controller>(
                 userCtor,
                 {
                     repositoryGetter: (controller) => controller.userRepository,

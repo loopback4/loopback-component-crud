@@ -33,7 +33,7 @@ import {
 /**
  * Public bindings used in application scope
  */
-export namespace ACLBindings {
+export namespace CRUDBindings {
     /**
      * Base Repository key:
      *
@@ -59,9 +59,9 @@ export namespace ACLBindings {
 
     export const SESSION_REPOSITORY = BindingKey.create<
         SessionRepository<Session>
-    >("acl.repositories.session");
+    >("crud.repositories.session");
     export const CODE_REPOSITORY = BindingKey.create<CodeRepository<Code>>(
-        "acl.repositories.code"
+        "crud.repositories.code"
     );
 
     /**
@@ -81,7 +81,7 @@ export namespace ACLBindings {
 /**
  * Private binding used in component scope
  */
-export namespace PrivateACLBindings {
+export namespace PrivateCRUDBindings {
     /**
      * Model key:
      *
@@ -106,10 +106,10 @@ export namespace PrivateACLBindings {
         PrivateAuthorizationBindings.ROLE_PERMISSION_MODEL;
 
     export const SESSION_MODEL = BindingKey.create<Ctor<Session>>(
-        "private.acl.models.session"
+        "private.crud.models.session"
     );
     export const CODE_MODEL = BindingKey.create<Ctor<Code>>(
-        "private.acl.models.code"
+        "private.crud.models.code"
     );
 
     /**
@@ -118,7 +118,7 @@ export namespace PrivateACLBindings {
      * 1. CacheDataSource: CDBMS
      */
     export const CACHE_DATASOURCE = BindingKey.create<juggler.DataSource>(
-        "private.acl.dataSources.cache"
+        "private.crud.dataSources.cache"
     );
 
     /**
@@ -129,13 +129,13 @@ export namespace PrivateACLBindings {
      * 3. ActivateProvider
      */
     export const TOKEN_SERVICE = BindingKey.create<TokenService>(
-        "private.acl.providers.token"
+        "private.crud.providers.token"
     );
     export const MESSAGE_PROVIDER = BindingKey.create<MessageHandler>(
-        "private.acl.providers.message"
+        "private.crud.providers.message"
     );
     export const ACTIVATE_PROVIDER = BindingKey.create<ActivateHandler>(
-        "private.acl.providers.activate"
+        "private.crud.providers.activate"
     );
 
     /**
@@ -145,10 +145,10 @@ export namespace PrivateACLBindings {
      * 2. SessionTimeoutConstant
      */
     export const CODE_TIMEOUT_CONSTANT = BindingKey.create<number>(
-        "private.acl.constants.codeTimeout"
+        "private.crud.constants.codeTimeout"
     );
     export const SESSION_TIMEOUT_CONSTANT = BindingKey.create<number>(
-        "private.acl.constants.sessionTimeout"
+        "private.crud.constants.sessionTimeout"
     );
 }
 
@@ -160,24 +160,24 @@ export namespace PrivateACLBindings {
  * 2. SessionRepository
  * 3. CodeRepository
  */
-export type BindACLKey =
+export type BindCRUDKey =
     | "CacheDataSource"
     | "SessionRepository"
     | "CodeRepository";
-export function bindACL(key: BindACLKey) {
+export function bindCRUD(key: BindCRUDKey) {
     return bind((binding) => {
         binding.tag({
-            acl: true,
-            aclKey: key,
+            crud: true,
+            crudKey: key,
         });
 
         return binding;
     });
 }
-export function findACL(ctx: Context, key: BindACLKey) {
+export function findCRUD(ctx: Context, key: BindCRUDKey) {
     const binding = ctx.findByTag({
-        acl: true,
-        aclKey: key,
+        crud: true,
+        crudKey: key,
     })[0];
 
     if (binding) {
@@ -187,5 +187,5 @@ export function findACL(ctx: Context, key: BindACLKey) {
 
 /** bindCacheDataSource */
 export function bindCacheDataSource() {
-    return bindACL("CacheDataSource");
+    return bindCRUD("CacheDataSource");
 }

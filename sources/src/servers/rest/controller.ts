@@ -3,7 +3,7 @@ import { Request, RestBindings } from "@loopback/rest";
 import { AuthenticationBindings, TokenService } from "@loopback/authentication";
 
 import { MessageHandler, ActivateHandler } from "../../types";
-import { ACLBindings, PrivateACLBindings } from "../../keys";
+import { CRUDBindings, PrivateCRUDBindings } from "../../keys";
 
 import {
     DefaultUserRepository,
@@ -12,12 +12,12 @@ import {
     DefaultUserRoleRepository,
     DefaultRolePermissionRepository,
     SessionRepository,
-    CodeRepository
+    CodeRepository,
 } from "../../repositories";
 
 import { Session, Code } from "../../models";
 
-export class ACLController {
+export class CRUDController {
     constructor(
         @inject(RestBindings.Http.REQUEST)
         public request: Request,
@@ -26,38 +26,38 @@ export class ACLController {
     ) {}
 }
 
-export class Controller extends ACLController {
+export class Controller extends CRUDController {
     constructor(
         @inject(RestBindings.Http.REQUEST)
         public request: Request,
         @inject(AuthenticationBindings.CURRENT_USER, { optional: true })
         public session: Session,
 
-        @inject(PrivateACLBindings.CODE_TIMEOUT_CONSTANT)
+        @inject(PrivateCRUDBindings.CODE_TIMEOUT_CONSTANT)
         public codeTimeout: number,
-        @inject(PrivateACLBindings.SESSION_TIMEOUT_CONSTANT)
+        @inject(PrivateCRUDBindings.SESSION_TIMEOUT_CONSTANT)
         public sessionTimeout: number,
 
-        @inject(PrivateACLBindings.TOKEN_SERVICE)
+        @inject(PrivateCRUDBindings.TOKEN_SERVICE)
         public tokenService: TokenService,
-        @inject(PrivateACLBindings.MESSAGE_PROVIDER)
+        @inject(PrivateCRUDBindings.MESSAGE_PROVIDER)
         public messageHandler: MessageHandler,
-        @inject(PrivateACLBindings.ACTIVATE_PROVIDER)
+        @inject(PrivateCRUDBindings.ACTIVATE_PROVIDER)
         public activateHandler: ActivateHandler,
 
-        @inject(ACLBindings.USER_REPOSITORY)
+        @inject(CRUDBindings.USER_REPOSITORY)
         public userRepository: DefaultUserRepository,
-        @inject(ACLBindings.ROLE_REPOSITORY)
+        @inject(CRUDBindings.ROLE_REPOSITORY)
         public roleRepository: DefaultRoleRepository,
-        @inject(ACLBindings.PERMISSION_REPOSITORY)
+        @inject(CRUDBindings.PERMISSION_REPOSITORY)
         public permissionRepository: DefaultPermissionRepository,
-        @inject(ACLBindings.USER_ROLE_REPOSITORY)
+        @inject(CRUDBindings.USER_ROLE_REPOSITORY)
         public userRoleRepository: DefaultUserRoleRepository,
-        @inject(ACLBindings.ROLE_PERMISSION_REPOSITORY)
+        @inject(CRUDBindings.ROLE_PERMISSION_REPOSITORY)
         public rolePermissionRepository: DefaultRolePermissionRepository,
-        @inject(ACLBindings.SESSION_REPOSITORY)
+        @inject(CRUDBindings.SESSION_REPOSITORY)
         public sessionRepository: SessionRepository<Session>,
-        @inject(ACLBindings.CODE_REPOSITORY)
+        @inject(CRUDBindings.CODE_REPOSITORY)
         public codeRepository: CodeRepository<Code>
     ) {
         super(request, session);

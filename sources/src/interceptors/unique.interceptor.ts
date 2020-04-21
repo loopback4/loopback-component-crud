@@ -8,11 +8,11 @@ import { HttpErrors } from "@loopback/rest";
 import { Entity } from "@loopback/repository";
 import { Ctor } from "loopback-component-history";
 
-import { ACLPermissions, FilterScope, RepositoryGetter } from "../types";
+import { CRUDPermissions, FilterScope, RepositoryGetter } from "../types";
 
 export function unique<
     Model extends Entity,
-    Permissions extends ACLPermissions,
+    Permissions extends CRUDPermissions,
     Controller
 >(
     ctor: Ctor<Model>,

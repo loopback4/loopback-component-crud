@@ -20,7 +20,7 @@ import {
     AuthorizeFn,
 } from "loopback-component-authorization";
 
-import { ACLPermissions } from "../../types";
+import { CRUDPermissions } from "../../types";
 
 const SequenceActions = RestBindings.SequenceActions;
 
@@ -33,7 +33,7 @@ export class Sequence implements SequenceHandler {
         @inject(AuthenticationBindings.AUTH_ACTION)
         protected authenticateRequest: AuthenticateFn,
         @inject(AuthorizationBindings.AUTHORIZE_ACTION)
-        protected authorizeRequest: AuthorizeFn<ACLPermissions>,
+        protected authorizeRequest: AuthorizeFn<CRUDPermissions>,
         @inject(SequenceActions.INVOKE_METHOD)
         protected invoke: InvokeMethod,
         @inject(SequenceActions.SEND)

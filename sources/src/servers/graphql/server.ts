@@ -7,23 +7,23 @@ import {
     Application,
 } from "@loopback/core";
 
-import { ACLBindings } from "../../keys";
-import { ACLGraphQLServerConfig } from "../../types";
-import { ACLRestServer } from "../../servers";
+import { CRUDBindings } from "../../keys";
+import { CRUDGraphQLServerConfig } from "../../types";
+import { CRUDRestServer } from "../../servers";
 
 import { ApolloServer } from "apollo-server";
 import { createGraphQLSchema } from "openapi-to-graphql";
 
 @lifeCycleObserver("servers.GraphQL")
-export class ACLGraphQLServer extends Context implements Server {
+export class CRUDGraphQLServer extends Context implements Server {
     private _listening: boolean = false;
     private _server: ApolloServer;
 
     constructor(
         @inject(CoreBindings.APPLICATION_INSTANCE)
         app: Application,
-        @inject(ACLBindings.GRAPHQL_SERVER_CONFIG)
-        public config: ACLGraphQLServerConfig = {}
+        @inject(CRUDBindings.GRAPHQL_SERVER_CONFIG)
+        public config: CRUDGraphQLServerConfig = {}
     ) {
         super(app);
     }
@@ -32,7 +32,9 @@ export class ACLGraphQLServer extends Context implements Server {
         return this._listening;
     }
     async start() {
-        const restServer = this.getSync<ACLRestServer>("servers.ACLRestServer");
+        const restServer = this.getSync<CRUDRestServer>(
+            "servers.CRUDRestServer"
+        );
 
         let openApiSpec = await restServer.getApiSpec();
 

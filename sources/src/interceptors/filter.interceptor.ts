@@ -8,13 +8,13 @@ import { Entity, Where, Filter } from "@loopback/repository";
 import { Ctor } from "loopback-component-history";
 import { authorizeFn } from "loopback-component-authorization";
 
-import { ACLPermissions, FilterScope } from "../types";
+import { CRUDPermissions, FilterScope } from "../types";
 
-import { ACLController } from "../servers";
+import { CRUDController } from "../servers";
 
 export function filter<
     Model extends Entity,
-    Permissions extends ACLPermissions,
+    Permissions extends CRUDPermissions,
     Controller
 >(
     ctor: Ctor<Model>,
@@ -98,7 +98,7 @@ export function filter<
 
 export async function filterFn<
     Model extends Entity,
-    Permissions extends ACLPermissions,
+    Permissions extends CRUDPermissions,
     Controller
 >(
     ctor: Ctor<Model>,
@@ -144,7 +144,7 @@ export async function filterFn<
                         if (
                             await authorizeFn<any>(
                                 modelAccess[0],
-                                (invocationCtx.target as ACLController).session
+                                (invocationCtx.target as CRUDController).session
                                     .permissions,
                                 invocationCtx
                             )

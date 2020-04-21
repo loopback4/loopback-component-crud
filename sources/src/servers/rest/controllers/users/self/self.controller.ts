@@ -11,7 +11,7 @@ import {
 import { authenticate } from "@loopback/authentication";
 import { authorize } from "loopback-component-authorization";
 
-import { ACLPermissions } from "../../../../../types";
+import { CRUDPermissions } from "../../../../../types";
 
 import { Controller } from "../../../../../servers";
 import { User } from "../../../../../models";
@@ -23,8 +23,8 @@ export function GenerateUsersSelfController<UserModel extends User>(
     userCtor: Ctor<UserModel>
 ): Class<Controller> {
     class UsersSelfController extends Controller {
-        @authorize<ACLPermissions>("USERS_READ_SELF")
-        @authenticate("acl")
+        @authorize<CRUDPermissions>("USERS_READ_SELF")
+        @authenticate("crud")
         @get("/users/self", {
             responses: {
                 "200": {
@@ -44,7 +44,7 @@ export function GenerateUsersSelfController<UserModel extends User>(
         }
 
         @intercept(
-            unique<User, ACLPermissions, Controller>(
+            unique<User, CRUDPermissions, Controller>(
                 userCtor,
                 {
                     repositoryGetter: (controller) => controller.userRepository,
@@ -55,8 +55,8 @@ export function GenerateUsersSelfController<UserModel extends User>(
                 false
             )
         )
-        @authorize<ACLPermissions>("USERS_WRITE_SELF")
-        @authenticate("acl")
+        @authorize<CRUDPermissions>("USERS_WRITE_SELF")
+        @authenticate("crud")
         @put("/users/self", {
             responses: {
                 "204": {
@@ -78,7 +78,7 @@ export function GenerateUsersSelfController<UserModel extends User>(
         }
 
         @intercept(
-            filter<User, ACLPermissions, Controller>(
+            filter<User, CRUDPermissions, Controller>(
                 userCtor,
                 {
                     repositoryGetter: (controller) => controller.userRepository,
@@ -93,8 +93,8 @@ export function GenerateUsersSelfController<UserModel extends User>(
                 { index: 0, type: "filter" }
             )
         )
-        @authorize<ACLPermissions>("USERS_HISTORY_SELF")
-        @authenticate("acl")
+        @authorize<CRUDPermissions>("USERS_HISTORY_SELF")
+        @authenticate("crud")
         @get("/users/self/history", {
             responses: {
                 "200": {

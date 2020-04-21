@@ -13,8 +13,8 @@ import { RestExplorerComponent } from "@loopback/rest-explorer";
 /** Authentication binding imports */
 import { AuthenticationComponent } from "@loopback/authentication";
 
-import { ACLBindings, PrivateACLBindings } from "../../keys";
-import { ACLRestServerConfig } from "../../types";
+import { CRUDBindings, PrivateCRUDBindings } from "../../keys";
+import { CRUDRestServerConfig } from "../../types";
 import { Sequence } from "../../servers";
 
 import {
@@ -38,25 +38,25 @@ import {
 } from "../../servers/rest/controllers";
 
 @lifeCycleObserver("servers.REST")
-export class ACLRestServer extends RestServer {
+export class CRUDRestServer extends RestServer {
     constructor(
         @inject(CoreBindings.APPLICATION_INSTANCE)
         app: Application,
-        @inject(ACLBindings.REST_SERVER_CONFIG)
-        config: ACLRestServerConfig = {},
-        @inject(PrivateACLBindings.USER_MODEL)
+        @inject(CRUDBindings.REST_SERVER_CONFIG)
+        config: CRUDRestServerConfig = {},
+        @inject(PrivateCRUDBindings.USER_MODEL)
         userCtor: Ctor<User>,
-        @inject(PrivateACLBindings.ROLE_MODEL)
+        @inject(PrivateCRUDBindings.ROLE_MODEL)
         roleCtor: Ctor<Role>,
-        @inject(PrivateACLBindings.PERMISSION_MODEL)
+        @inject(PrivateCRUDBindings.PERMISSION_MODEL)
         permissionCtor: Ctor<Permission>,
-        @inject(PrivateACLBindings.USER_ROLE_MODEL)
+        @inject(PrivateCRUDBindings.USER_ROLE_MODEL)
         userRoleCtor: Ctor<UserRole>,
-        @inject(PrivateACLBindings.ROLE_PERMISSION_MODEL)
+        @inject(PrivateCRUDBindings.ROLE_PERMISSION_MODEL)
         rolePermissionCtor: Ctor<RolePermission>,
-        @inject(PrivateACLBindings.SESSION_MODEL)
+        @inject(PrivateCRUDBindings.SESSION_MODEL)
         sessionCtor: Ctor<Session>,
-        @inject(PrivateACLBindings.CODE_MODEL)
+        @inject(PrivateCRUDBindings.CODE_MODEL)
         codeCtor: Ctor<Code>
     ) {
         super(app, config);

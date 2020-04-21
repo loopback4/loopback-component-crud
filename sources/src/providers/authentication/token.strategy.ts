@@ -3,13 +3,13 @@ import { HttpErrors, Request } from "@loopback/rest";
 import { AuthenticationStrategy, TokenService } from "@loopback/authentication";
 import { UserProfile } from "@loopback/security";
 
-import { PrivateACLBindings } from "../../keys";
+import { PrivateCRUDBindings } from "../../keys";
 
-export class ACLTokenStrategy implements AuthenticationStrategy {
-    name: string = "acl";
+export class CRUDTokenStrategy implements AuthenticationStrategy {
+    name: string = "crud";
 
     constructor(
-        @inject(PrivateACLBindings.TOKEN_SERVICE)
+        @inject(PrivateCRUDBindings.TOKEN_SERVICE)
         public tokenService: TokenService
     ) {}
 

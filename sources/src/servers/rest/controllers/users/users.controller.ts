@@ -1,17 +1,17 @@
 import { Class } from "@loopback/repository";
 import { Ctor } from "loopback-component-history";
 
-import { ACLPermissions } from "../../../../types";
+import { CRUDPermissions } from "../../../../types";
 
-import { Controller, ACLControllerMixin } from "../../../../servers";
+import { Controller, CRUDControllerMixin } from "../../../../servers";
 import { User } from "../../../../models";
 
 export function GenerateUsersController<Model extends User>(
     ctor: Ctor<Model>
 ): Class<Controller> {
-    class UsersController extends ACLControllerMixin<
+    class UsersController extends CRUDControllerMixin<
         User,
-        ACLPermissions,
+        CRUDPermissions,
         Controller
     >(
         Controller,

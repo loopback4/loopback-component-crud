@@ -23,14 +23,14 @@ import {
     generateIds,
     generatePath,
 } from "../../interceptors";
-import { FilterScope, ACLPermissions } from "../../types";
+import { FilterScope, CRUDPermissions } from "../../types";
 
-import { ACLController } from "../../servers";
+import { CRUDController } from "../../servers";
 
 export function CreateControllerMixin<
     Model extends Entity,
-    Permissions extends ACLPermissions,
-    Controller extends ACLController
+    Permissions extends CRUDPermissions,
+    Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
@@ -40,7 +40,7 @@ export function CreateControllerMixin<
     relations: string[],
     basePath: string
 ): Class<Controller> {
-    const parentClass: Class<ACLController> = controllerClass;
+    const parentClass: Class<CRUDController> = controllerClass;
 
     const method = (name: string) =>
         relations.reduce(
@@ -97,7 +97,7 @@ export function CreateControllerMixin<
         );
 
         authorize(condition)(prototype, method("createAll"), methodDescriptor);
-        authenticate("acl")(prototype, method("createAll"), methodDescriptor);
+        authenticate("crud")(prototype, method("createAll"), methodDescriptor);
 
         post(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -201,7 +201,7 @@ export function CreateControllerMixin<
         );
 
         authorize(condition)(prototype, method("createOne"), methodDescriptor);
-        authenticate("acl")(prototype, method("createOne"), methodDescriptor);
+        authenticate("crud")(prototype, method("createOne"), methodDescriptor);
 
         post(`${generatePath(rootCtor, relations, basePath)}/one`, {
             responses: {
@@ -279,8 +279,8 @@ export function CreateControllerMixin<
 
 export function ReadControllerMixin<
     Model extends Entity,
-    Permissions extends ACLPermissions,
-    Controller extends ACLController
+    Permissions extends CRUDPermissions,
+    Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
@@ -290,7 +290,7 @@ export function ReadControllerMixin<
     relations: string[],
     basePath: string
 ): Class<Controller> {
-    const parentClass: Class<ACLController> = controllerClass;
+    const parentClass: Class<CRUDController> = controllerClass;
 
     const method = (name: string) =>
         relations.reduce(
@@ -348,7 +348,7 @@ export function ReadControllerMixin<
         );
 
         authorize(condition)(prototype, method("readAll"), methodDescriptor);
-        authenticate("acl")(prototype, method("readAll"), methodDescriptor);
+        authenticate("crud")(prototype, method("readAll"), methodDescriptor);
 
         get(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -437,7 +437,7 @@ export function ReadControllerMixin<
         );
 
         authorize(condition)(prototype, method("countAll"), methodDescriptor);
-        authenticate("acl")(prototype, method("countAll"), methodDescriptor);
+        authenticate("crud")(prototype, method("countAll"), methodDescriptor);
 
         get(`${generatePath(rootCtor, relations, basePath)}/count`, {
             responses: {
@@ -524,7 +524,7 @@ export function ReadControllerMixin<
         );
 
         authorize(condition)(prototype, method("readOne"), methodDescriptor);
-        authenticate("acl")(prototype, method("readOne"), methodDescriptor);
+        authenticate("crud")(prototype, method("readOne"), methodDescriptor);
 
         get(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
@@ -591,8 +591,8 @@ export function ReadControllerMixin<
 
 export function UpdateControllerMixin<
     Model extends Entity,
-    Permissions extends ACLPermissions,
-    Controller extends ACLController
+    Permissions extends CRUDPermissions,
+    Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
@@ -602,7 +602,7 @@ export function UpdateControllerMixin<
     relations: string[],
     basePath: string
 ): Class<Controller> {
-    const parentClass: Class<ACLController> = controllerClass;
+    const parentClass: Class<CRUDController> = controllerClass;
 
     const method = (name: string) =>
         relations.reduce(
@@ -676,7 +676,7 @@ export function UpdateControllerMixin<
         );
 
         authorize(condition)(prototype, method("updateAll"), methodDescriptor);
-        authenticate("acl")(prototype, method("updateAll"), methodDescriptor);
+        authenticate("crud")(prototype, method("updateAll"), methodDescriptor);
 
         put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -783,7 +783,7 @@ export function UpdateControllerMixin<
         );
 
         authorize(condition)(prototype, method("updateOne"), methodDescriptor);
-        authenticate("acl")(prototype, method("updateOne"), methodDescriptor);
+        authenticate("crud")(prototype, method("updateOne"), methodDescriptor);
 
         put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
@@ -849,8 +849,8 @@ export function UpdateControllerMixin<
 
 export function DeleteControllerMixin<
     Model extends Entity,
-    Permissions extends ACLPermissions,
-    Controller extends ACLController
+    Permissions extends CRUDPermissions,
+    Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
@@ -860,7 +860,7 @@ export function DeleteControllerMixin<
     relations: string[],
     basePath: string
 ): Class<Controller> {
-    const parentClass: Class<ACLController> = controllerClass;
+    const parentClass: Class<CRUDController> = controllerClass;
 
     const method = (name: string) =>
         relations.reduce(
@@ -918,7 +918,7 @@ export function DeleteControllerMixin<
         );
 
         authorize(condition)(prototype, method("deleteAll"), methodDescriptor);
-        authenticate("acl")(prototype, method("deleteAll"), methodDescriptor);
+        authenticate("crud")(prototype, method("deleteAll"), methodDescriptor);
 
         del(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -1004,7 +1004,7 @@ export function DeleteControllerMixin<
         );
 
         authorize(condition)(prototype, method("deleteOne"), methodDescriptor);
-        authenticate("acl")(prototype, method("deleteOne"), methodDescriptor);
+        authenticate("crud")(prototype, method("deleteOne"), methodDescriptor);
 
         del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
@@ -1065,8 +1065,8 @@ export function DeleteControllerMixin<
 
 export function HistoryControllerMixin<
     Model extends Entity,
-    Permissions extends ACLPermissions,
-    Controller extends ACLController
+    Permissions extends CRUDPermissions,
+    Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
@@ -1076,7 +1076,7 @@ export function HistoryControllerMixin<
     relations: string[],
     basePath: string
 ): Class<Controller> {
-    const parentClass: Class<ACLController> = controllerClass;
+    const parentClass: Class<CRUDController> = controllerClass;
 
     const method = (name: string) =>
         relations.reduce(
@@ -1136,7 +1136,7 @@ export function HistoryControllerMixin<
         );
 
         authorize(condition)(prototype, method("historyOne"), methodDescriptor);
-        authenticate("acl")(prototype, method("historyOne"), methodDescriptor);
+        authenticate("crud")(prototype, method("historyOne"), methodDescriptor);
 
         get(`${generatePath(rootCtor, relations, basePath)}/{id}/history`, {
             responses: {
@@ -1199,10 +1199,10 @@ export function HistoryControllerMixin<
     return MixedController as any;
 }
 
-export function CRUDControllerMixin<
+export function ControllerMixin<
     Model extends Entity,
-    Permissions extends ACLPermissions,
-    Controller extends ACLController
+    Permissions extends CRUDPermissions,
+    Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     ctors: Ctor<Model>[],
@@ -1283,7 +1283,7 @@ export function CRUDControllerMixin<
         if (relation in leafCtor.definition.relations) {
             const modelRelation = leafCtor.definition.relations[relation];
 
-            controllerClass = CRUDControllerMixin<any, Permissions, any>(
+            controllerClass = ControllerMixin<any, Permissions, any>(
                 controllerClass,
                 [...ctors, modelRelation.target()],
                 [...scopes, scope],
@@ -1296,17 +1296,17 @@ export function CRUDControllerMixin<
     return controllerClass as any;
 }
 
-export function ACLControllerMixin<
+export function CRUDControllerMixin<
     Model extends Entity,
-    Permissions extends ACLPermissions,
-    Controller extends ACLController
+    Permissions extends CRUDPermissions,
+    Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     ctor: Ctor<Model>,
     scope: FilterScope<Model, Permissions, Controller>,
     basePath: string
 ): Class<Controller> {
-    return CRUDControllerMixin<Model, Permissions, Controller>(
+    return ControllerMixin<Model, Permissions, Controller>(
         controllerClass,
         [ctor],
         [scope],

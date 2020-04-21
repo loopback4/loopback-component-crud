@@ -4,74 +4,77 @@ import { CoreBindings } from "@loopback/core";
 
 import { registerAuthenticationStrategy } from "@loopback/authentication";
 
-import { findACL, ACLBindings, PrivateACLBindings } from "../keys";
-import { ACLMixinConfig, ACLPermissions } from "../types";
+import { findCRUD, CRUDBindings, PrivateCRUDBindings } from "../keys";
+import { CRUDMixinConfig, CRUDPermissions } from "../types";
 
 import {
-    ACLTokenService,
-    ACLTokenStrategy,
+    CRUDTokenService,
+    CRUDTokenStrategy,
     MessageProvider,
-    ActivateProvider
+    ActivateProvider,
 } from "../providers";
 import { User, Role, Session, Code } from "../models";
 import { SessionRepository, CodeRepository } from "../repositories";
 
-export function ACLMixin<
+export function CRUDMixin<
     T extends Class<any>,
-    Permissions extends ACLPermissions
+    Permissions extends CRUDPermissions
 >(superClass: T) {
     const bootObservers = (ctx: Context) => {
         /**
          * Fix: servers start dependency bug
          */
         ctx.bind(CoreBindings.LIFE_CYCLE_OBSERVER_OPTIONS).to({
-            orderedGroups: ["servers.REST", "servers.GraphQL"]
+            orderedGroups: ["servers.REST", "servers.GraphQL"],
         });
     };
 
-    const bootModels = (ctx: Context, configs: ACLMixinConfig<Permissions>) => {
-        ctx.bind(PrivateACLBindings.SESSION_MODEL).to(
+    const bootModels = (
+        ctx: Context,
+        configs: CRUDMixinConfig<Permissions>
+    ) => {
+        ctx.bind(PrivateCRUDBindings.SESSION_MODEL).to(
             configs.sessionModel || Session
         );
-        ctx.bind(PrivateACLBindings.CODE_MODEL).to(configs.codeModel || Code);
+        ctx.bind(PrivateCRUDBindings.CODE_MODEL).to(configs.codeModel || Code);
     };
 
     const bootProviders = (
         ctx: Context,
-        configs: ACLMixinConfig<Permissions>
+        configs: CRUDMixinConfig<Permissions>
     ) => {
-        ctx.bind(PrivateACLBindings.TOKEN_SERVICE).toClass(
-            configs.tokenService || ACLTokenService
+        ctx.bind(PrivateCRUDBindings.TOKEN_SERVICE).toClass(
+            configs.tokenService || CRUDTokenService
         );
-        ctx.bind(PrivateACLBindings.MESSAGE_PROVIDER).toProvider(
+        ctx.bind(PrivateCRUDBindings.MESSAGE_PROVIDER).toProvider(
             configs.messageProvider || MessageProvider
         );
-        ctx.bind(PrivateACLBindings.ACTIVATE_PROVIDER).toProvider(
+        ctx.bind(PrivateCRUDBindings.ACTIVATE_PROVIDER).toProvider(
             configs.activateProvider || ActivateProvider
         );
 
         registerAuthenticationStrategy(
             ctx,
-            configs.tokenStrategy || ACLTokenStrategy
+            configs.tokenStrategy || CRUDTokenStrategy
         );
     };
 
     const bootConstants = (
         ctx: Context,
-        configs: ACLMixinConfig<Permissions>
+        configs: CRUDMixinConfig<Permissions>
     ) => {
-        ctx.bind(PrivateACLBindings.CODE_TIMEOUT_CONSTANT).to(
+        ctx.bind(PrivateCRUDBindings.CODE_TIMEOUT_CONSTANT).to(
             configs.codeTimeout
         );
-        ctx.bind(PrivateACLBindings.SESSION_TIMEOUT_CONSTANT).to(
+        ctx.bind(PrivateCRUDBindings.SESSION_TIMEOUT_CONSTANT).to(
             configs.sessionTimeout
         );
     };
 
     const bootDataSources = (ctx: Context) => {
-        let cacheDataSource = findACL(ctx, "CacheDataSource");
+        let cacheDataSource = findCRUD(ctx, "CacheDataSource");
         if (cacheDataSource) {
-            ctx.bind(PrivateACLBindings.CACHE_DATASOURCE).to(cacheDataSource);
+            ctx.bind(PrivateCRUDBindings.CACHE_DATASOURCE).to(cacheDataSource);
         }
     };
 
@@ -79,11 +82,11 @@ export function ACLMixin<
         /**
          * Find, Bind Session Repository
          */
-        let sessionRepository = findACL(ctx, "SessionRepository");
+        let sessionRepository = findCRUD(ctx, "SessionRepository");
         if (sessionRepository) {
-            ctx.bind(ACLBindings.SESSION_REPOSITORY).to(sessionRepository);
+            ctx.bind(CRUDBindings.SESSION_REPOSITORY).to(sessionRepository);
         } else {
-            ctx.bind(ACLBindings.SESSION_REPOSITORY)
+            ctx.bind(CRUDBindings.SESSION_REPOSITORY)
                 .toClass(SessionRepository)
                 .tag("repository");
         }
@@ -91,18 +94,18 @@ export function ACLMixin<
         /**
          * Find, Bind Code Repository
          */
-        let codeRepository = findACL(ctx, "CodeRepository");
+        let codeRepository = findCRUD(ctx, "CodeRepository");
         if (codeRepository) {
-            ctx.bind(ACLBindings.CODE_REPOSITORY).to(codeRepository);
+            ctx.bind(CRUDBindings.CODE_REPOSITORY).to(codeRepository);
         } else {
-            ctx.bind(ACLBindings.CODE_REPOSITORY)
+            ctx.bind(CRUDBindings.CODE_REPOSITORY)
                 .toClass(CodeRepository)
                 .tag("repository");
         }
     };
 
     const migrateUsers = async (ctx: Context, adminUser: User) => {
-        const userRepository = ctx.getSync(ACLBindings.USER_REPOSITORY);
+        const userRepository = ctx.getSync(CRUDBindings.USER_REPOSITORY);
 
         /**
          * Migrate Administrator user
@@ -110,8 +113,8 @@ export function ACLMixin<
         if (
             !(await userRepository.findOne({
                 where: {
-                    username: adminUser.username
-                }
+                    username: adminUser.username,
+                },
             }))
         ) {
             await userRepository.create(adminUser);
@@ -119,7 +122,7 @@ export function ACLMixin<
     };
 
     const migrateRoles = async (ctx: Context) => {
-        const roleRepository = ctx.getSync(ACLBindings.ROLE_REPOSITORY);
+        const roleRepository = ctx.getSync(CRUDBindings.ROLE_REPOSITORY);
 
         /**
          * Migrate Users role
@@ -127,14 +130,14 @@ export function ACLMixin<
         if (
             !(await roleRepository.findOne({
                 where: {
-                    name: "Users"
-                }
+                    name: "Users",
+                },
             }))
         ) {
             await roleRepository.create(
                 new Role({
                     name: "Users",
-                    description: "System users"
+                    description: "System users",
                 })
             );
         }
@@ -145,24 +148,24 @@ export function ACLMixin<
         if (
             !(await roleRepository.findOne({
                 where: {
-                    name: "Admins"
-                }
+                    name: "Admins",
+                },
             }))
         ) {
             await roleRepository.create(
                 new Role({
                     name: "Admins",
-                    description: "System admins"
+                    description: "System admins",
                 })
             );
         }
     };
 
     const migrateUsersRoles = async (ctx: Context, adminUser: User) => {
-        const userRepository = ctx.getSync(ACLBindings.USER_REPOSITORY);
-        const roleRepository = ctx.getSync(ACLBindings.ROLE_REPOSITORY);
+        const userRepository = ctx.getSync(CRUDBindings.USER_REPOSITORY);
+        const roleRepository = ctx.getSync(CRUDBindings.ROLE_REPOSITORY);
         const userRoleRepository = ctx.getSync(
-            ACLBindings.USER_ROLE_REPOSITORY
+            CRUDBindings.USER_ROLE_REPOSITORY
         );
 
         /**
@@ -170,8 +173,8 @@ export function ACLMixin<
          */
         const administratorUser = await userRepository.findOne({
             where: {
-                username: adminUser.username
-            }
+                username: adminUser.username,
+            },
         });
 
         /**
@@ -179,8 +182,8 @@ export function ACLMixin<
          */
         const adminsRole = await roleRepository.findOne({
             where: {
-                name: "Admins"
-            }
+                name: "Admins",
+            },
         });
 
         if (administratorUser && adminsRole) {
@@ -191,13 +194,13 @@ export function ACLMixin<
                 !(await userRoleRepository.findOne({
                     where: {
                         userId: administratorUser.id,
-                        roleId: adminsRole.id
-                    }
+                        roleId: adminsRole.id,
+                    },
                 }))
             ) {
                 await userRoleRepository.create({
                     userId: administratorUser.id,
-                    roleId: adminsRole.id
+                    roleId: adminsRole.id,
                 });
             }
         }
@@ -207,12 +210,12 @@ export function ACLMixin<
         ctx: Context,
         usersRolePermissions: (keyof Permissions)[]
     ) => {
-        const roleRepository = ctx.getSync(ACLBindings.ROLE_REPOSITORY);
+        const roleRepository = ctx.getSync(CRUDBindings.ROLE_REPOSITORY);
         const permissionRepository = ctx.getSync(
-            ACLBindings.PERMISSION_REPOSITORY
+            CRUDBindings.PERMISSION_REPOSITORY
         );
         const rolePermissionRepository = ctx.getSync(
-            ACLBindings.ROLE_PERMISSION_REPOSITORY
+            CRUDBindings.ROLE_PERMISSION_REPOSITORY
         );
 
         /**
@@ -220,8 +223,8 @@ export function ACLMixin<
          */
         const usersRole = await roleRepository.findOne({
             where: {
-                name: "Users"
-            }
+                name: "Users",
+            },
         });
 
         /**
@@ -229,8 +232,8 @@ export function ACLMixin<
          */
         const adminsRole = await roleRepository.findOne({
             where: {
-                name: "Admins"
-            }
+                name: "Admins",
+            },
         });
 
         /**
@@ -244,8 +247,8 @@ export function ACLMixin<
              */
             const rolePermissions = await rolePermissionRepository.find({
                 where: {
-                    roleId: usersRole.id
-                }
+                    roleId: usersRole.id,
+                },
             });
 
             /**
@@ -256,13 +259,15 @@ export function ACLMixin<
              */
             const addablePermissions = permissions
                 .filter(
-                    permission =>
+                    (permission) =>
                         usersRolePermissions.indexOf(permission.key as any) >= 0
                 )
                 .filter(
-                    permission =>
+                    (permission) =>
                         rolePermissions
-                            .map(rolePermission => rolePermission.permissionId)
+                            .map(
+                                (rolePermission) => rolePermission.permissionId
+                            )
                             .indexOf(permission.id) < 0
                 );
 
@@ -270,9 +275,9 @@ export function ACLMixin<
              * Add new permissions to Users
              */
             await rolePermissionRepository.createAll(
-                addablePermissions.map(permission => ({
+                addablePermissions.map((permission) => ({
                     roleId: usersRole.id,
-                    permissionId: permission.id
+                    permissionId: permission.id,
                 }))
             );
         }
@@ -283,8 +288,8 @@ export function ACLMixin<
              */
             const rolePermissions = await rolePermissionRepository.find({
                 where: {
-                    roleId: adminsRole.id
-                }
+                    roleId: adminsRole.id,
+                },
             });
 
             /**
@@ -293,9 +298,9 @@ export function ACLMixin<
              * 1. Filter not added permissions
              */
             const addablePermissions = permissions.filter(
-                permission =>
+                (permission) =>
                     rolePermissions
-                        .map(rolePermission => rolePermission.permissionId)
+                        .map((rolePermission) => rolePermission.permissionId)
                         .indexOf(permission.id) < 0
             );
 
@@ -303,18 +308,18 @@ export function ACLMixin<
              * Add new permissions to Admins
              */
             await rolePermissionRepository.createAll(
-                addablePermissions.map(permission => ({
+                addablePermissions.map((permission) => ({
                     roleId: adminsRole.id,
-                    permissionId: permission.id
+                    permissionId: permission.id,
                 }))
             );
         }
     };
 
     return class extends superClass {
-        public aclConfigs: ACLMixinConfig<Permissions> = {
+        public crudConfigs: CRUDMixinConfig<Permissions> = {
             codeTimeout: 300e3,
-            sessionTimeout: 300e3
+            sessionTimeout: 300e3,
         };
 
         async boot() {
@@ -322,9 +327,9 @@ export function ACLMixin<
 
             await super.boot();
 
-            bootModels(this as any, this.aclConfigs);
-            bootProviders(this as any, this.aclConfigs);
-            bootConstants(this as any, this.aclConfigs);
+            bootModels(this as any, this.crudConfigs);
+            bootProviders(this as any, this.crudConfigs);
+            bootConstants(this as any, this.crudConfigs);
             bootDataSources(this as any);
             bootRepositories(this as any);
         }
@@ -333,15 +338,18 @@ export function ACLMixin<
             await super.migrateSchema(options);
 
             if (
-                this.aclConfigs.adminUser &&
-                this.aclConfigs.usersRolePermissions
+                this.crudConfigs.adminUser &&
+                this.crudConfigs.usersRolePermissions
             ) {
-                await migrateUsers(this as any, this.aclConfigs.adminUser);
+                await migrateUsers(this as any, this.crudConfigs.adminUser);
                 await migrateRoles(this as any);
-                await migrateUsersRoles(this as any, this.aclConfigs.adminUser);
+                await migrateUsersRoles(
+                    this as any,
+                    this.crudConfigs.adminUser
+                );
                 await migrateRolesPermissions(
                     this as any,
-                    this.aclConfigs.usersRolePermissions
+                    this.crudConfigs.usersRolePermissions
                 );
             }
         }

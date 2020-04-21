@@ -7,8 +7,8 @@ import {
     GetUserPermissionsFn,
 } from "loopback-component-authorization";
 
-import { ACLBindings, PrivateACLBindings } from "../../keys";
-import { ACLPermissions } from "../../types";
+import { CRUDBindings, PrivateCRUDBindings } from "../../keys";
+import { CRUDPermissions } from "../../types";
 
 import { Session, User } from "../../models";
 import { SessionRepository, DefaultUserRepository } from "../../repositories";
@@ -17,16 +17,16 @@ import { randomBytes } from "crypto";
 
 import { getClientIp } from "request-ip";
 
-export class ACLTokenService implements TokenService {
+export class CRUDTokenService implements TokenService {
     constructor(
-        @inject(PrivateACLBindings.SESSION_TIMEOUT_CONSTANT)
+        @inject(PrivateCRUDBindings.SESSION_TIMEOUT_CONSTANT)
         protected sessionTimeout: number,
-        @inject(ACLBindings.SESSION_REPOSITORY)
+        @inject(CRUDBindings.SESSION_REPOSITORY)
         protected sessionRepository: SessionRepository<Session>,
-        @inject(ACLBindings.USER_REPOSITORY)
+        @inject(CRUDBindings.USER_REPOSITORY)
         protected userRepository: DefaultUserRepository,
         @inject(AuthorizationBindings.GET_USER_PERMISSIONS_ACTION)
-        protected getUserPermissions: GetUserPermissionsFn<ACLPermissions>
+        protected getUserPermissions: GetUserPermissionsFn<CRUDPermissions>
     ) {}
 
     async verifyToken(token: string): Promise<Session | any> {
