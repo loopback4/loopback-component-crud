@@ -3,16 +3,16 @@ import { model, property } from "@loopback/repository";
 import {
     relation,
     User as UserModel,
-    UserRelations as UserModelRelations
-} from "loopback-authorization-extension";
+    UserRelations as UserModelRelations,
+} from "loopback-component-authorization";
 
 import { UserRole } from "./";
 
 @relation<UserWithRelations, UserRole>("userRoles", () => UserRole)
 @model({
     settings: {
-        hiddenProperties: ["password"]
-    }
+        hiddenProperties: ["password"],
+    },
 })
 export class User extends UserModel {
     @property({
@@ -20,8 +20,8 @@ export class User extends UserModel {
         required: true,
         unique: true,
         jsonSchema: {
-            pattern: `^[A-Za-z\\d#$@!%&*?]{6,}$`
-        }
+            pattern: `^[A-Za-z\\d#$@!%&*?]{6,}$`,
+        },
     })
     username: string;
 
@@ -29,8 +29,8 @@ export class User extends UserModel {
         type: "string",
         required: true,
         jsonSchema: {
-            pattern: `^[A-Za-z\\d#$@!%&*?]{8,}$`
-        }
+            pattern: `^[A-Za-z\\d#$@!%&*?]{8,}$`,
+        },
     })
     password: string;
 
@@ -39,86 +39,86 @@ export class User extends UserModel {
         required: true,
         unique: true,
         jsonSchema: {
-            pattern: `^(([^<>()\\[\\]\\.,;:\\s@\\"]+(\\.[^<>()\\[\\]\\.,;:\\s@\\"]+)*)|(\\".+\\"))@(([^<>()[\\]\\.,;:\\s@\\"]+\\.)+[^<>()[\\]\\.,;:\\s@\\"]{2,})$`
-        }
+            pattern: `^(([^<>()\\[\\]\\.,;:\\s@\\"]+(\\.[^<>()\\[\\]\\.,;:\\s@\\"]+)*)|(\\".+\\"))@(([^<>()[\\]\\.,;:\\s@\\"]+\\.)+[^<>()[\\]\\.,;:\\s@\\"]{2,})$`,
+        },
     })
     email: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     firstName: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     lastName: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     description: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     picture: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     country: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     city: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     location: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     address: string;
 
     @property({
         type: "string",
         jsonSchema: {
-            pattern: `^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\\s\\./0-9]*$`
-        }
+            pattern: `^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\\s\\./0-9]*$`,
+        },
     })
     phone: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     fax: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     cellular: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     zipCode: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     position: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     resume: string;
 
     @property({
-        type: "date"
+        type: "date",
     })
     birthDate: Date;
 
@@ -126,8 +126,8 @@ export class User extends UserModel {
         type: "string",
         required: true,
         jsonSchema: {
-            enum: ["Register", "Active", "Disable"]
-        }
+            enum: ["Register", "Active", "Disable"],
+        },
     })
     status: "Register" | "Active" | "Disable";
 

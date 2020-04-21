@@ -2,11 +2,11 @@ import {
     Interceptor,
     InvocationContext,
     InvocationResult,
-    ValueOrPromise
+    ValueOrPromise,
 } from "@loopback/context";
 import { HttpErrors } from "@loopback/rest";
 import { Entity } from "@loopback/repository";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 
 import { ACLPermissions, FilterScope, RepositoryGetter } from "../types";
 
@@ -69,23 +69,23 @@ async function uniqueFn<Model extends Entity, Controller>(
         count = {
             count: models
                 .map(
-                    model =>
+                    (model) =>
                         Object.keys(model).filter(
-                            modelKey => uniqueFields.indexOf(modelKey) >= 0
+                            (modelKey) => uniqueFields.indexOf(modelKey) >= 0
                         ).length
                 )
-                .reduce((prev, current) => prev + current, 0)
+                .reduce((prev, current) => prev + current, 0),
         };
     } else if (uniqueFields.length > 0) {
         /** Find count of models where unique field values are same */
         count = await repository.count({
-            or: uniqueFields.map(fieldName => ({
+            or: uniqueFields.map((fieldName) => ({
                 [fieldName]: {
                     inq: models
                         .map((model: any) => model[fieldName])
-                        .filter(fieldValue => fieldValue)
-                }
-            }))
+                        .filter((fieldValue) => fieldValue),
+                },
+            })),
         });
     }
 
@@ -106,10 +106,10 @@ function getUniqueFields<Model extends Entity>(
 
     /** Find unique fields with at least one property in models */
     const uniqueFieldsWithProperties = uniqueFields.filter(
-        fieldName =>
+        (fieldName) =>
             models
                 .map((model: any) => model[fieldName])
-                .filter(uniqueProperty => uniqueProperty).length > 0
+                .filter((uniqueProperty) => uniqueProperty).length > 0
     );
 
     return uniqueFieldsWithProperties;

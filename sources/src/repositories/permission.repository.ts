@@ -1,4 +1,4 @@
-import { PermissionRepositoryMixin } from "loopback-authorization-extension";
+import { PermissionRepositoryMixin } from "loopback-component-authorization";
 
 import { Permission, PermissionRelations } from "../models";
 

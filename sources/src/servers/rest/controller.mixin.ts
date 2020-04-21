@@ -8,12 +8,12 @@ import {
     requestBody,
     getModelSchemaRef,
     getWhereSchemaFor,
-    getFilterSchemaFor
+    getFilterSchemaFor,
 } from "@loopback/rest";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 
 import { authenticate } from "@loopback/authentication";
-import { authorize } from "loopback-authorization-extension";
+import { authorize } from "loopback-component-authorization";
 import { intercept } from "@loopback/core";
 import {
     validate,
@@ -21,7 +21,7 @@ import {
     exist,
     filter,
     generateIds,
-    generatePath
+    generatePath,
 } from "../../interceptors";
 import { FilterScope, ACLPermissions } from "../../types";
 
@@ -55,7 +55,7 @@ export function CreateControllerMixin<
 
     const decorateCreateAllMethod = (prototype: any) => {
         /** Add createAll method */
-        prototype[method("createAll")] = async function(
+        prototype[method("createAll")] = async function (
             ...args: any[]
         ): Promise<Model[]> {
             /**
@@ -76,7 +76,7 @@ export function CreateControllerMixin<
             value: prototype[method("createAll")],
             writable: true,
             enumerable: false,
-            configurable: true
+            configurable: true,
         };
 
         /** Decorate createAll method */
@@ -107,12 +107,12 @@ export function CreateControllerMixin<
                         "application/json": {
                             schema: {
                                 type: "array",
-                                items: getModelSchemaRef(leafCtor)
-                            }
-                        }
-                    }
-                }
-            }
+                                items: getModelSchemaRef(leafCtor),
+                            },
+                        },
+                    },
+                },
+            },
         })(prototype, method("createAll"), methodDescriptor);
     };
     const decorateCreateAllParams = (prototype: any) => {
@@ -130,16 +130,16 @@ export function CreateControllerMixin<
                             exclude: Object.keys(
                                 leafCtor.definition.properties
                             ).filter(
-                                key =>
+                                (key) =>
                                     key === "uid" ||
                                     key === "beginDate" ||
                                     key === "endDate" ||
                                     key === "id"
-                            ) as any
-                        })
-                    }
-                }
-            }
+                            ) as any,
+                        }),
+                    },
+                },
+            },
         })(prototype, method("createAll"), ids.length);
     };
     const decorateCreateAllMetadatas = (prototype: any) => {
@@ -160,7 +160,7 @@ export function CreateControllerMixin<
 
     const decorateCreateOneMethod = (prototype: any) => {
         /** Add createOne method */
-        prototype[method("createOne")] = async function(
+        prototype[method("createOne")] = async function (
             ...args: any[]
         ): Promise<Model> {
             /**
@@ -180,7 +180,7 @@ export function CreateControllerMixin<
             value: prototype[method("createOne")],
             writable: true,
             enumerable: false,
-            configurable: true
+            configurable: true,
         };
 
         /** Decorate createOne method */
@@ -209,11 +209,11 @@ export function CreateControllerMixin<
                     description: `Create single ${leafCtor.name}`,
                     content: {
                         "application/json": {
-                            schema: getModelSchemaRef(leafCtor)
-                        }
-                    }
-                }
-            }
+                            schema: getModelSchemaRef(leafCtor),
+                        },
+                    },
+                },
+            },
         })(prototype, method("createOne"), methodDescriptor);
     };
     const decorateCreateOneParams = (prototype: any) => {
@@ -229,15 +229,15 @@ export function CreateControllerMixin<
                         exclude: Object.keys(
                             leafCtor.definition.properties
                         ).filter(
-                            key =>
+                            (key) =>
                                 key === "uid" ||
                                 key === "beginDate" ||
                                 key === "endDate" ||
                                 key === "id"
-                        ) as any
-                    })
-                }
-            }
+                        ) as any,
+                    }),
+                },
+            },
         })(prototype, method("createOne"), ids.length);
     };
     const decorateCreateOneMetadatas = (prototype: any) => {
@@ -304,7 +304,7 @@ export function ReadControllerMixin<
 
     const decorateReadAllMethod = (prototype: any) => {
         /** Add readAll method */
-        prototype[method("readAll")] = async function(
+        prototype[method("readAll")] = async function (
             ...args: any[]
         ): Promise<Model[]> {
             /**
@@ -326,7 +326,7 @@ export function ReadControllerMixin<
             value: prototype[method("readAll")],
             writable: true,
             enumerable: false,
-            configurable: true
+            configurable: true,
         };
 
         /** Decorate readAll method */
@@ -359,13 +359,13 @@ export function ReadControllerMixin<
                             schema: {
                                 type: "array",
                                 items: getModelSchemaRef(leafCtor, {
-                                    includeRelations: true
-                                })
-                            }
-                        }
-                    }
-                }
-            }
+                                    includeRelations: true,
+                                }),
+                            },
+                        },
+                    },
+                },
+            },
         })(prototype, method("readAll"), methodDescriptor);
     };
     const decorateReadAllParams = (prototype: any) => {
@@ -375,7 +375,7 @@ export function ReadControllerMixin<
         });
 
         param.query.object("filter", getFilterSchemaFor(leafCtor), {
-            description: `Filter ${leafCtor.name}`
+            description: `Filter ${leafCtor.name}`,
         })(prototype, method("readAll"), ids.length);
     };
     const decorateReadAllMetadatas = (prototype: any) => {
@@ -393,7 +393,7 @@ export function ReadControllerMixin<
 
     const decorateCountAllMethod = (prototype: any) => {
         /** Add countAll method */
-        prototype[method("countAll")] = async function(
+        prototype[method("countAll")] = async function (
             ...args: any[]
         ): Promise<Count> {
             /**
@@ -415,7 +415,7 @@ export function ReadControllerMixin<
             value: prototype[method("countAll")],
             writable: true,
             enumerable: false,
-            configurable: true
+            configurable: true,
         };
 
         /** Decorate countAll method */
@@ -445,11 +445,11 @@ export function ReadControllerMixin<
                     description: `Read ${leafCtor.name} count by where`,
                     content: {
                         "application/json": {
-                            schema: CountSchema
-                        }
-                    }
-                }
-            }
+                            schema: CountSchema,
+                        },
+                    },
+                },
+            },
         })(prototype, method("countAll"), methodDescriptor);
     };
     const decorateCountAllParams = (prototype: any) => {
@@ -459,7 +459,7 @@ export function ReadControllerMixin<
         });
 
         param.query.object("where", getWhereSchemaFor(leafCtor), {
-            description: `Where ${leafCtor.name}`
+            description: `Where ${leafCtor.name}`,
         })(prototype, method("countAll"), ids.length);
     };
     const decorateCountAllMetadatas = (prototype: any) => {
@@ -480,7 +480,7 @@ export function ReadControllerMixin<
 
     const decorateReadOneMethod = (prototype: any) => {
         /** Add readOne method */
-        prototype[method("readOne")] = async function(
+        prototype[method("readOne")] = async function (
             ...args: any[]
         ): Promise<Model> {
             /**
@@ -502,7 +502,7 @@ export function ReadControllerMixin<
             value: prototype[method("readOne")],
             writable: true,
             enumerable: false,
-            configurable: true
+            configurable: true,
         };
 
         /** Decorate readOne method */
@@ -533,12 +533,12 @@ export function ReadControllerMixin<
                     content: {
                         "application/json": {
                             schema: getModelSchemaRef(leafCtor, {
-                                includeRelations: true
-                            })
-                        }
-                    }
-                }
-            }
+                                includeRelations: true,
+                            }),
+                        },
+                    },
+                },
+            },
         })(prototype, method("readOne"), methodDescriptor);
     };
     const decorateReadOneParams = (prototype: any) => {
@@ -549,7 +549,7 @@ export function ReadControllerMixin<
 
         param.path.string("id")(prototype, method("readOne"), ids.length);
         param.query.object("filter", getFilterSchemaFor(leafCtor), {
-            description: `Filter ${leafCtor.name}`
+            description: `Filter ${leafCtor.name}`,
         })(prototype, method("readOne"), ids.length + 1);
     };
     const decorateReadOneMetadatas = (prototype: any) => {
@@ -617,7 +617,7 @@ export function UpdateControllerMixin<
 
     const decorateUpdateAllMethod = (prototype: any) => {
         /** Add updateAll method */
-        prototype[method("updateAll")] = async function(
+        prototype[method("updateAll")] = async function (
             ...args: any[]
         ): Promise<Model[]> {
             /**
@@ -644,7 +644,7 @@ export function UpdateControllerMixin<
             value: prototype[method("updateAll")],
             writable: true,
             enumerable: false,
-            configurable: true
+            configurable: true,
         };
 
         /** Decorate updateAll method */
@@ -684,10 +684,10 @@ export function UpdateControllerMixin<
                     description: `Update multiple ${leafCtor.name} by where`,
                     schema: {
                         type: "array",
-                        items: getModelSchemaRef(leafCtor)
-                    }
-                }
-            }
+                        items: getModelSchemaRef(leafCtor),
+                    },
+                },
+            },
         })(prototype, method("updateAll"), methodDescriptor);
     };
     const decorateUpdateAllParams = (prototype: any) => {
@@ -699,12 +699,12 @@ export function UpdateControllerMixin<
         requestBody({
             content: {
                 "application/json": {
-                    schema: getModelSchemaRef(leafCtor, { partial: true })
-                }
-            }
+                    schema: getModelSchemaRef(leafCtor, { partial: true }),
+                },
+            },
         })(prototype, method("updateAll"), ids.length);
         param.query.object("where", getWhereSchemaFor(leafCtor), {
-            description: `Where ${leafCtor.name}`
+            description: `Where ${leafCtor.name}`,
         })(prototype, method("updateAll"), ids.length + 1);
     };
     const decorateUpdateAllMetadatas = (prototype: any) => {
@@ -725,7 +725,7 @@ export function UpdateControllerMixin<
 
     const decorateUpdateOneMethod = (prototype: any) => {
         /** Add updateOne method */
-        prototype[method("updateOne")] = async function(
+        prototype[method("updateOne")] = async function (
             ...args: any[]
         ): Promise<Model> {
             /**
@@ -751,7 +751,7 @@ export function UpdateControllerMixin<
             value: prototype[method("updateOne")],
             writable: true,
             enumerable: false,
-            configurable: true
+            configurable: true,
         };
 
         /** Decorate updateOne method */
@@ -789,9 +789,9 @@ export function UpdateControllerMixin<
             responses: {
                 "200": {
                     description: `Update single ${leafCtor.name} by id`,
-                    schema: getModelSchemaRef(leafCtor)
-                }
-            }
+                    schema: getModelSchemaRef(leafCtor),
+                },
+            },
         })(prototype, method("updateOne"), methodDescriptor);
     };
     const decorateUpdateOneParams = (prototype: any) => {
@@ -803,9 +803,9 @@ export function UpdateControllerMixin<
         requestBody({
             content: {
                 "application/json": {
-                    schema: getModelSchemaRef(leafCtor, { partial: true })
-                }
-            }
+                    schema: getModelSchemaRef(leafCtor, { partial: true }),
+                },
+            },
         })(prototype, method("updateOne"), ids.length);
         param.path.string("id")(prototype, method("updateOne"), ids.length + 1);
     };
@@ -874,7 +874,7 @@ export function DeleteControllerMixin<
 
     const decorateDeleteAllMethod = (prototype: any) => {
         /** Add deleteAll method */
-        prototype[method("deleteAll")] = async function(
+        prototype[method("deleteAll")] = async function (
             ...args: any[]
         ): Promise<Count> {
             /**
@@ -896,7 +896,7 @@ export function DeleteControllerMixin<
             value: prototype[method("deleteAll")],
             writable: true,
             enumerable: false,
-            configurable: true
+            configurable: true,
         };
 
         /** Decorate deleteAll method */
@@ -926,11 +926,11 @@ export function DeleteControllerMixin<
                     description: `Delete multiple ${leafCtor.name} by where`,
                     content: {
                         "application/json": {
-                            schema: CountSchema
-                        }
-                    }
-                }
-            }
+                            schema: CountSchema,
+                        },
+                    },
+                },
+            },
         })(prototype, method("deleteAll"), methodDescriptor);
     };
     const decorateDeleteAllParams = (prototype: any) => {
@@ -940,7 +940,7 @@ export function DeleteControllerMixin<
         });
 
         param.query.object("where", getWhereSchemaFor(leafCtor), {
-            description: `Where ${leafCtor.name}`
+            description: `Where ${leafCtor.name}`,
         })(prototype, method("deleteAll"), ids.length);
     };
     const decorateDeleteAllMetadatas = (prototype: any) => {
@@ -961,7 +961,7 @@ export function DeleteControllerMixin<
 
     const decorateDeleteOneMethod = (prototype: any) => {
         /** Add deleteOne method */
-        prototype[method("deleteOne")] = async function(
+        prototype[method("deleteOne")] = async function (
             ...args: any[]
         ): Promise<Count> {
             /**
@@ -982,7 +982,7 @@ export function DeleteControllerMixin<
             value: prototype[method("deleteOne")],
             writable: true,
             enumerable: false,
-            configurable: true
+            configurable: true,
         };
 
         /** Decorate deleteOne method */
@@ -1012,11 +1012,11 @@ export function DeleteControllerMixin<
                     description: `Delete single ${leafCtor.name} by id`,
                     content: {
                         "application/json": {
-                            schema: CountSchema
-                        }
-                    }
-                }
-            }
+                            schema: CountSchema,
+                        },
+                    },
+                },
+            },
         })(prototype, method("deleteOne"), methodDescriptor);
     };
     const decorateDeleteOneParams = (prototype: any) => {
@@ -1090,7 +1090,7 @@ export function HistoryControllerMixin<
 
     const decorateHistoryOneMethod = (prototype: any) => {
         /** Add historyOne method */
-        prototype[method("historyOne")] = async function(
+        prototype[method("historyOne")] = async function (
             ...args: any[]
         ): Promise<Model[]> {
             /**
@@ -1107,14 +1107,14 @@ export function HistoryControllerMixin<
             return await leafScope
                 .repositoryGetter(this as any)
                 .find(args[ids.length + 3], {
-                    crud: true
+                    crud: true,
                 });
         };
         const methodDescriptor = {
             value: prototype[method("historyOne")],
             writable: true,
             enumerable: false,
-            configurable: true
+            configurable: true,
         };
 
         /** Decorate historyOne method */
@@ -1147,13 +1147,13 @@ export function HistoryControllerMixin<
                             schema: {
                                 type: "array",
                                 items: getModelSchemaRef(leafCtor, {
-                                    includeRelations: true
-                                })
-                            }
-                        }
-                    }
-                }
-            }
+                                    includeRelations: true,
+                                }),
+                            },
+                        },
+                    },
+                },
+            },
         })(prototype, method("historyOne"), methodDescriptor);
     };
     const decorateHistoryOneParams = (prototype: any) => {
@@ -1164,7 +1164,7 @@ export function HistoryControllerMixin<
 
         param.path.string("id")(prototype, method("historyOne"), ids.length);
         param.query.object("filter", getFilterSchemaFor(leafCtor), {
-            description: `Filter ${leafCtor.name}`
+            description: `Filter ${leafCtor.name}`,
         })(prototype, method("historyOne"), ids.length + 1);
     };
     const decorateHistoryOneMetadatas = (prototype: any) => {

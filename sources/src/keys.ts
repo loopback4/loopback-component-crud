@@ -1,13 +1,13 @@
 import { Context, BindingKey, bind } from "@loopback/context";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 import { juggler } from "@loopback/repository";
 import { CoreBindings } from "@loopback/core";
 import { TokenService } from "@loopback/authentication";
 
 import {
     AuthorizationBindings,
-    PrivateAuthorizationBindings
-} from "loopback-authorization-extension";
+    PrivateAuthorizationBindings,
+} from "loopback-component-authorization";
 
 import { MessageHandler, ActivateHandler } from "./types";
 
@@ -18,7 +18,7 @@ import {
     UserRole,
     RolePermission,
     Session,
-    Code
+    Code,
 } from "./models";
 import {
     DefaultUserRepository,
@@ -27,7 +27,7 @@ import {
     DefaultUserRoleRepository,
     DefaultRolePermissionRepository,
     SessionRepository,
-    CodeRepository
+    CodeRepository,
 } from "./repositories";
 
 /**
@@ -165,10 +165,10 @@ export type BindACLKey =
     | "SessionRepository"
     | "CodeRepository";
 export function bindACL(key: BindACLKey) {
-    return bind(binding => {
+    return bind((binding) => {
         binding.tag({
             acl: true,
-            aclKey: key
+            aclKey: key,
         });
 
         return binding;
@@ -177,7 +177,7 @@ export function bindACL(key: BindACLKey) {
 export function findACL(ctx: Context, key: BindACLKey) {
     const binding = ctx.findByTag({
         acl: true,
-        aclKey: key
+        aclKey: key,
     })[0];
 
     if (binding) {

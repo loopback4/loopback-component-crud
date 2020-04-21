@@ -2,11 +2,11 @@ import {
     Interceptor,
     InvocationContext,
     InvocationResult,
-    ValueOrPromise
+    ValueOrPromise,
 } from "@loopback/context";
 import { HttpErrors } from "@loopback/rest";
 import { Entity } from "@loopback/repository";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 
 import { ValidateModel } from "../types";
 

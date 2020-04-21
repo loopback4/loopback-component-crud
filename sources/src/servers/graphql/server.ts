@@ -4,7 +4,7 @@ import {
     Context,
     Server,
     CoreBindings,
-    Application
+    Application,
 } from "@loopback/core";
 
 import { ACLBindings } from "../../keys";
@@ -12,7 +12,7 @@ import { ACLGraphQLServerConfig } from "../../types";
 import { ACLRestServer } from "../../servers";
 
 import { ApolloServer } from "apollo-server";
-import { createGraphQlSchema } from "openapi-to-graphql";
+import { createGraphQLSchema } from "openapi-to-graphql";
 
 @lifeCycleObserver("servers.GraphQL")
 export class ACLGraphQLServer extends Context implements Server {
@@ -41,7 +41,7 @@ export class ACLGraphQLServer extends Context implements Server {
 
         /** hotfix: rest put methods don't return data */
         openApiSpec.paths = Object.entries(openApiSpec.paths)
-            .map(pair => {
+            .map((pair) => {
                 const value = pair[1];
                 if (value.put && value.put.responses["200"]) {
                     delete value.put.responses["200"].schema;
@@ -56,10 +56,10 @@ export class ACLGraphQLServer extends Context implements Server {
             }, {});
 
         /** get OpenAPI specs from restServer and bind REST url to it */
-        const { schema, report } = await createGraphQlSchema(
+        const { schema, report } = await createGraphQLSchema(
             openApiSpec as any,
             {
-                fillEmptyResponses: true
+                fillEmptyResponses: true,
             }
         );
 

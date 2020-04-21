@@ -3,10 +3,10 @@ import {
     post,
     param,
     requestBody,
-    getModelSchemaRef
+    getModelSchemaRef,
 } from "@loopback/rest";
 import { Class, EntityNotFoundError } from "@loopback/repository";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 
 import { Controller } from "../../../../../servers";
 import { Code, User } from "../../../../../models";
@@ -21,9 +21,9 @@ export function GenerateUsersPasswordController<
         @put("/users/password", {
             responses: {
                 "204": {
-                    description: "Resend Reset Password Code"
-                }
-            }
+                    description: "Resend Reset Password Code",
+                },
+            },
         })
         async resend(
             @requestBody({
@@ -34,11 +34,11 @@ export function GenerateUsersPasswordController<
                             exclude: Object.keys(
                                 userCtor.definition.properties
                             ).filter(
-                                key => key !== "email" && key !== "phone"
-                            ) as any
-                        })
-                    }
-                }
+                                (key) => key !== "email" && key !== "phone"
+                            ) as any,
+                        }),
+                    },
+                },
             })
             user: User
         ): Promise<void> {
@@ -55,7 +55,7 @@ export function GenerateUsersPasswordController<
 
             /** Find user object by username or email */
             const userObject = await this.userRepository.findOne({
-                where: user as any
+                where: user as any,
             });
             if (!userObject || Object.keys(user).length <= 0) {
                 throw new EntityNotFoundError(userCtor, user);
@@ -80,9 +80,9 @@ export function GenerateUsersPasswordController<
         @post("/users/password/{code}", {
             responses: {
                 "204": {
-                    description: "Reset Password"
-                }
-            }
+                    description: "Reset Password",
+                },
+            },
         })
         async reset(
             @param.path.string("code") code: string,
@@ -92,10 +92,10 @@ export function GenerateUsersPasswordController<
                         schema: getModelSchemaRef(userCtor, {
                             exclude: Object.keys(
                                 userCtor.definition.properties
-                            ).filter(key => key !== "password") as any
-                        })
-                    }
-                }
+                            ).filter((key) => key !== "password") as any,
+                        }),
+                    },
+                },
             })
             user: User
         ): Promise<void> {
@@ -119,7 +119,7 @@ export function GenerateUsersPasswordController<
             await this.userRepository.updateById(
                 codeObject.userId,
                 new User({
-                    password: user.password
+                    password: user.password,
                 })
             );
         }
@@ -140,7 +140,7 @@ export function GenerateUsersPasswordController<
                 code,
                 new Code({
                     type: "Password",
-                    userId: userId
+                    userId: userId,
                 })
             );
 

@@ -4,8 +4,8 @@ import { TokenService } from "@loopback/authentication";
 
 import {
     AuthorizationBindings,
-    GetUserPermissionsFn
-} from "loopback-authorization-extension";
+    GetUserPermissionsFn,
+} from "loopback-component-authorization";
 
 import { ACLBindings, PrivateACLBindings } from "../../keys";
 import { ACLPermissions } from "../../types";
@@ -62,8 +62,8 @@ export class ACLTokenService implements TokenService {
             where: {
                 username: user.username,
                 password: user.password,
-                status: "Active"
-            }
+                status: "Active",
+            },
         });
         if (!userObject) {
             throw new HttpErrors.Unauthorized(
@@ -78,7 +78,7 @@ export class ACLTokenService implements TokenService {
         const permissions = await this.getUserPermissions(userObject.id);
 
         /** Set constants */
-        const ip = getClientIp(user);
+        const ip = getClientIp(user) || undefined;
         const device = user.headers["user-agent"];
 
         /** Create session */
@@ -87,7 +87,7 @@ export class ACLTokenService implements TokenService {
             ip: ip,
             date: new Date(),
             device: device,
-            permissions: permissions
+            permissions: permissions,
         });
 
         /** Save session */

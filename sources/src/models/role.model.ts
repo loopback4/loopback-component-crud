@@ -3,8 +3,8 @@ import { model, property } from "@loopback/repository";
 import {
     relation,
     Role as RoleModel,
-    RoleRelations as RoleModelRelations
-} from "loopback-authorization-extension";
+    RoleRelations as RoleModelRelations,
+} from "loopback-component-authorization";
 
 import { UserRole, RolePermission } from "./";
 
@@ -16,16 +16,16 @@ import { UserRole, RolePermission } from "./";
     () => RolePermission
 )
 @model({
-    settings: {}
+    settings: {},
 })
 export class Role extends RoleModel {
     @property({
-        type: "string"
+        type: "string",
     })
     name: string;
 
     @property({
-        type: "string"
+        type: "string",
     })
     description: string;
 

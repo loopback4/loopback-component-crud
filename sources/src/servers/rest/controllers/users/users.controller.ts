@@ -1,5 +1,5 @@
 import { Class } from "@loopback/repository";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 
 import { ACLPermissions } from "../../../../types";
 
@@ -17,48 +17,48 @@ export function GenerateUsersController<Model extends User>(
         Controller,
         ctor,
         {
-            repositoryGetter: controller => controller.userRepository,
+            repositoryGetter: (controller) => controller.userRepository,
 
             create: ["USERS_WRITE", async (context, models) => true],
             read: ["USERS_READ", async (context, where) => where],
             update: [
                 "USERS_WRITE",
                 async (context, where) => where,
-                async (context, models) => true
+                async (context, models) => true,
             ],
             delete: ["USERS_WRITE", async (context, where) => where],
             history: ["USERS_HISTORY", async (context, where) => where],
 
             include: {
                 userRoles: {
-                    repositoryGetter: controller =>
+                    repositoryGetter: (controller) =>
                         controller.userRoleRepository,
 
                     create: [
                         "USER_ROLES_WRITE",
-                        async (context, models) => true
+                        async (context, models) => true,
                     ],
                     read: ["USER_ROLES_READ", async (context, where) => where],
                     delete: [
                         "USER_ROLES_WRITE",
-                        async (context, where) => where
+                        async (context, where) => where,
                     ],
 
                     include: {
                         role: {
-                            repositoryGetter: controller =>
+                            repositoryGetter: (controller) =>
                                 controller.roleRepository,
 
                             read: [
                                 "ROLES_READ",
-                                async (context, where) => where
+                                async (context, where) => where,
                             ],
 
-                            include: {}
-                        }
-                    }
-                }
-            }
+                            include: {},
+                        },
+                    },
+                },
+            },
         },
         ""
     ) {}

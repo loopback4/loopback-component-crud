@@ -7,18 +7,18 @@ import {
     RequestContext,
     RestBindings,
     Send,
-    SequenceHandler
+    SequenceHandler,
 } from "@loopback/rest";
 import {
     AuthenticationBindings,
     AuthenticateFn,
     AUTHENTICATION_STRATEGY_NOT_FOUND,
-    USER_PROFILE_NOT_FOUND
+    USER_PROFILE_NOT_FOUND,
 } from "@loopback/authentication";
 import {
     AuthorizationBindings,
-    AuthorizeFn
-} from "loopback-authorization-extension";
+    AuthorizeFn,
+} from "loopback-component-authorization";
 
 import { ACLPermissions } from "../../types";
 

@@ -1,5 +1,5 @@
 import { Class } from "@loopback/repository";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 
 import { ACLPermissions } from "../../../../types";
 
@@ -17,43 +17,43 @@ export function GeneratePermissionsController<Model extends Permission>(
         Controller,
         ctor,
         {
-            repositoryGetter: controller => controller.permissionRepository,
+            repositoryGetter: (controller) => controller.permissionRepository,
 
             read: ["PERMISSIONS_READ", async (context, where) => where],
 
             include: {
                 rolePermissions: {
-                    repositoryGetter: controller =>
+                    repositoryGetter: (controller) =>
                         controller.rolePermissionRepository,
 
                     create: [
                         "ROLE_PERMISSIONS_WRITE",
-                        async (context, models) => true
+                        async (context, models) => true,
                     ],
                     read: [
                         "ROLE_PERMISSIONS_READ",
-                        async (context, where) => where
+                        async (context, where) => where,
                     ],
                     delete: [
                         "ROLE_PERMISSIONS_WRITE",
-                        async (context, where) => where
+                        async (context, where) => where,
                     ],
 
                     include: {
                         role: {
-                            repositoryGetter: controller =>
+                            repositoryGetter: (controller) =>
                                 controller.roleRepository,
 
                             read: [
                                 "ROLES_READ",
-                                async (context, where) => where
+                                async (context, where) => where,
                             ],
 
-                            include: {}
-                        }
-                    }
-                }
-            }
+                            include: {},
+                        },
+                    },
+                },
+            },
         },
         ""
     ) {}

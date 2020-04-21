@@ -3,15 +3,15 @@ import { model } from "@loopback/repository";
 import {
     relation,
     UserRole as UserRoleModel,
-    UserRoleRelations as UserRoleModelRelations
-} from "loopback-authorization-extension";
+    UserRoleRelations as UserRoleModelRelations,
+} from "loopback-component-authorization";
 
 import { User, Role } from "./";
 
 @relation<UserRoleWithRelations, User>("user", () => User)
 @relation<UserRoleWithRelations, Role>("role", () => Role)
 @model({
-    settings: {}
+    settings: {},
 })
 export class UserRole extends UserRoleModel {
     constructor(data?: Partial<UserRole>) {

@@ -4,10 +4,10 @@ import {
     del,
     param,
     requestBody,
-    getModelSchemaRef
+    getModelSchemaRef,
 } from "@loopback/rest";
 import { Class, EntityNotFoundError } from "@loopback/repository";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 
 import { ACLPermissions } from "../../../../../types";
 
@@ -28,9 +28,9 @@ export function GenerateUsersAccountController<
             unique<User, ACLPermissions, Controller>(
                 userCtor,
                 {
-                    repositoryGetter: controller => controller.userRepository,
+                    repositoryGetter: (controller) => controller.userRepository,
                     read: ["USERS_READ", async (context, where) => where],
-                    include: {}
+                    include: {},
                 },
                 0,
                 false
@@ -39,9 +39,9 @@ export function GenerateUsersAccountController<
         @post("/users/account", {
             responses: {
                 "204": {
-                    description: "Create Account"
-                }
-            }
+                    description: "Create Account",
+                },
+            },
         })
         async create(
             @requestBody({
@@ -51,16 +51,16 @@ export function GenerateUsersAccountController<
                             exclude: Object.keys(
                                 userCtor.definition.properties
                             ).filter(
-                                key =>
+                                (key) =>
                                     key === "uid" ||
                                     key === "beginDate" ||
                                     key === "endDate" ||
                                     key === "id" ||
                                     key === "status"
-                            ) as any
-                        })
-                    }
-                }
+                            ) as any,
+                        }),
+                    },
+                },
             })
             user: User
         ): Promise<void> {
@@ -73,7 +73,7 @@ export function GenerateUsersAccountController<
             const userObject = await this.userRepository.create(
                 new User({
                     ...user,
-                    status: "Register"
+                    status: "Register",
                 })
             );
 
@@ -84,9 +84,9 @@ export function GenerateUsersAccountController<
         @put("/users/account", {
             responses: {
                 "204": {
-                    description: "Resend Register Account Code"
-                }
-            }
+                    description: "Resend Register Account Code",
+                },
+            },
         })
         async resend(
             @requestBody({
@@ -97,11 +97,11 @@ export function GenerateUsersAccountController<
                             exclude: Object.keys(
                                 userCtor.definition.properties
                             ).filter(
-                                key => key !== "email" && key !== "phone"
-                            ) as any
-                        })
-                    }
-                }
+                                (key) => key !== "email" && key !== "phone"
+                            ) as any,
+                        }),
+                    },
+                },
             })
             user: User
         ): Promise<void> {
@@ -114,7 +114,7 @@ export function GenerateUsersAccountController<
 
             /** Find user object by username or email */
             const userObject = await this.userRepository.findOne({
-                where: user as any
+                where: user as any,
             });
             if (!userObject || Object.keys(user).length <= 0) {
                 throw new EntityNotFoundError(userCtor, user);
@@ -139,9 +139,9 @@ export function GenerateUsersAccountController<
         @post("/users/account/{code}", {
             responses: {
                 "204": {
-                    description: "Activate Account"
-                }
-            }
+                    description: "Activate Account",
+                },
+            },
         })
         async activate(@param.path.string("code") code: string): Promise<void> {
             /**
@@ -165,21 +165,21 @@ export function GenerateUsersAccountController<
             await this.userRepository.updateById(
                 codeObject.userId,
                 new User({
-                    status: "Active"
+                    status: "Active",
                 })
             );
 
             /** Add user to Users role */
             const usersRole = await this.roleRepository.findOne({
                 where: {
-                    name: "Users"
-                }
+                    name: "Users",
+                },
             });
             if (usersRole) {
                 await this.userRoleRepository.create(
                     new UserRole({
                         userId: codeObject.userId,
-                        roleId: usersRole.id
+                        roleId: usersRole.id,
                     })
                 );
             }
@@ -191,9 +191,9 @@ export function GenerateUsersAccountController<
         @del("/users/account", {
             responses: {
                 "204": {
-                    description: "Delete Account"
-                }
-            }
+                    description: "Delete Account",
+                },
+            },
         })
         async delete(
             @requestBody({
@@ -203,18 +203,19 @@ export function GenerateUsersAccountController<
                             exclude: Object.keys(
                                 userCtor.definition.properties
                             ).filter(
-                                key => key !== "username" && key !== "password"
-                            ) as any
-                        })
-                    }
-                }
+                                (key) =>
+                                    key !== "username" && key !== "password"
+                            ) as any,
+                        }),
+                    },
+                },
             })
             user: User
         ): Promise<void> {
             /** Delete user */
             await this.userRepository.deleteAll({
                 username: user.username,
-                password: user.password
+                password: user.password,
             });
         }
 
@@ -234,7 +235,7 @@ export function GenerateUsersAccountController<
                 code,
                 new Code({
                     type: "Account",
-                    userId: userId
+                    userId: userId,
                 })
             );
 

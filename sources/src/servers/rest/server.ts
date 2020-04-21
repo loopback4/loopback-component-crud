@@ -2,9 +2,9 @@ import {
     inject,
     lifeCycleObserver,
     CoreBindings,
-    Application
+    Application,
 } from "@loopback/core";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 
 /** Swagger binding imports */
 import { RestServer, RestComponent } from "@loopback/rest";
@@ -24,7 +24,7 @@ import {
     UserRole,
     RolePermission,
     Session,
-    Code
+    Code,
 } from "../../models";
 
 import {
@@ -34,7 +34,7 @@ import {
     GenerateUsersAccountController,
     GenerateUsersPasswordController,
     GenerateRolesController,
-    GeneratePermissionsController
+    GeneratePermissionsController,
 } from "../../servers/rest/controllers";
 
 @lifeCycleObserver("servers.REST")
@@ -76,7 +76,7 @@ export class ACLRestServer extends RestServer {
         app.component(RestComponent);
         app.bind("RestExplorerComponent.KEY").to(
             new RestExplorerComponent(this as any, {
-                path: "/explorer"
+                path: "/explorer",
             })
         );
 

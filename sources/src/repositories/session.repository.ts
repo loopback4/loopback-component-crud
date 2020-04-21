@@ -2,9 +2,9 @@ import { inject } from "@loopback/context";
 import {
     juggler,
     BelongsToAccessor,
-    DefaultKeyValueRepository
+    DefaultKeyValueRepository,
 } from "@loopback/repository";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 
 import { bindACL, ACLBindings, PrivateACLBindings } from "../keys";
 

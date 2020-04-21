@@ -1,5 +1,5 @@
-import { HistoryCrudRepositoryMixin } from "loopback-history-extension";
-import { RolePermissionRepositoryMixin } from "loopback-authorization-extension";
+import { HistoryCrudRepositoryMixin } from "loopback-component-history";
+import { RolePermissionRepositoryMixin } from "loopback-component-authorization";
 
 import { RolePermission, RolePermissionRelations } from "../models";
 

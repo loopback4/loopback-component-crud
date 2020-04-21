@@ -2,11 +2,11 @@ import {
     Interceptor,
     InvocationContext,
     InvocationResult,
-    ValueOrPromise
+    ValueOrPromise,
 } from "@loopback/context";
 import { Entity, Where, Filter } from "@loopback/repository";
-import { Ctor } from "loopback-history-extension";
-import { authorizeFn } from "loopback-authorization-extension";
+import { Ctor } from "loopback-component-history";
+import { authorizeFn } from "loopback-component-authorization";
 
 import { ACLPermissions, FilterScope } from "../types";
 
@@ -57,11 +57,11 @@ export function filter<
                             {
                                 or: existId.property.map(
                                     (idProperty: string) => ({
-                                        [idProperty]: existId.value
+                                        [idProperty]: existId.value,
                                     })
-                                )
-                            }
-                        ]
+                                ),
+                            },
+                        ],
                     };
                 } else {
                     idWhere[existId.property] = existId.value;
@@ -114,7 +114,7 @@ export async function filterFn<
     /** Check access object exists */
     if (!modelAccess) {
         return {
-            where: { [modelIdProperty]: null }
+            where: { [modelIdProperty]: null },
         } as any;
     }
 
@@ -125,7 +125,7 @@ export async function filterFn<
     if (filter.include) {
         /** Remove inclusions that not exist in `model` or `scope` relations */
         filter.include = filter.include.filter(
-            inclusion =>
+            (inclusion) =>
                 inclusion.relation in ctor.definition.relations &&
                 inclusion.relation in scope.include
         );
@@ -136,7 +136,7 @@ export async function filterFn<
          * */
         filter.include = (
             await Promise.all(
-                filter.include.map(async inclusion => {
+                filter.include.map(async (inclusion) => {
                     const modelAccess =
                         scope.include[inclusion.relation][access];
 
@@ -156,11 +156,11 @@ export async function filterFn<
                     return undefined;
                 })
             )
-        ).filter(inclusion => inclusion) as any[];
+        ).filter((inclusion) => inclusion) as any[];
 
         /** Filter inclusion scope (Filter), recursively */
         filter.include = await Promise.all(
-            filter.include.map(async inclusion => {
+            filter.include.map(async (inclusion) => {
                 const modelRelation =
                     ctor.definition.relations[inclusion.relation];
 

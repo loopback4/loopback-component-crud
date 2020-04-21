@@ -40,7 +40,7 @@ export class ACLTokenStrategy implements AuthenticationStrategy {
             return parts[1];
         } else if (request.query.access_token) {
             // for example: xyz
-            const authHeaderValue = request.query.access_token;
+            const authHeaderValue = request.query.access_token as string;
 
             return authHeaderValue;
         } else {

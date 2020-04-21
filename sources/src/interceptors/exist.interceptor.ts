@@ -2,11 +2,11 @@ import {
     Interceptor,
     InvocationContext,
     InvocationResult,
-    ValueOrPromise
+    ValueOrPromise,
 } from "@loopback/context";
 import { HttpErrors } from "@loopback/rest";
 import { Entity, Filter, RelationType } from "@loopback/repository";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 
 import { ACLPermissions, FilterScope, RepositoryGetter } from "../types";
 
@@ -131,7 +131,7 @@ async function existFn<Model extends Entity, Controller>(
                         target.target().name === lastCtor.name
                 )
                 .map(([relation, target]) => (target as any).keyFrom),
-            value: internalModel[modelIdProperty]
+            value: internalModel[modelIdProperty],
         };
     }
 
@@ -141,7 +141,7 @@ async function existFn<Model extends Entity, Controller>(
 
     return {
         property: modelIdProperty,
-        value: internalModel[modelIdProperty]
+        value: internalModel[modelIdProperty],
     };
 }
 
@@ -170,7 +170,7 @@ export function generateIds<Model extends Entity>(
 
             return result;
         })
-        .filter(idName => idName) as any;
+        .filter((idName) => idName) as any;
 }
 
 export function generatePath<Model extends Entity>(
@@ -228,7 +228,7 @@ function generateFilter<Model extends Entity>(
         /** Check previous model relation */
         if (relationTypes.shift() === RelationType.hasMany) {
             accumulate.where = {
-                [modelIdProperty]: ids.shift() || ""
+                [modelIdProperty]: ids.shift() || "",
             };
         }
 
@@ -243,8 +243,8 @@ function generateFilter<Model extends Entity>(
         accumulate.include = [
             {
                 relation: relation,
-                scope: {}
-            }
+                scope: {},
+            },
         ];
         return accumulate.include[0].scope as any;
     }, filter);

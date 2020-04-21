@@ -1,15 +1,15 @@
 import { Class, Filter } from "@loopback/repository";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 import {
     get,
     put,
     param,
     requestBody,
     getModelSchemaRef,
-    getFilterSchemaFor
+    getFilterSchemaFor,
 } from "@loopback/rest";
 import { authenticate } from "@loopback/authentication";
-import { authorize } from "loopback-authorization-extension";
+import { authorize } from "loopback-component-authorization";
 
 import { ACLPermissions } from "../../../../../types";
 
@@ -32,12 +32,12 @@ export function GenerateUsersSelfController<UserModel extends User>(
                     content: {
                         "application/json": {
                             schema: getModelSchemaRef(userCtor, {
-                                includeRelations: true
-                            })
-                        }
-                    }
-                }
-            }
+                                includeRelations: true,
+                            }),
+                        },
+                    },
+                },
+            },
         })
         async read(): Promise<User> {
             return await this.userRepository.findById(this.session.userId);
@@ -47,9 +47,9 @@ export function GenerateUsersSelfController<UserModel extends User>(
             unique<User, ACLPermissions, Controller>(
                 userCtor,
                 {
-                    repositoryGetter: controller => controller.userRepository,
+                    repositoryGetter: (controller) => controller.userRepository,
                     read: ["USERS_READ", async (context, where) => where],
-                    include: {}
+                    include: {},
                 },
                 0,
                 false
@@ -60,17 +60,17 @@ export function GenerateUsersSelfController<UserModel extends User>(
         @put("/users/self", {
             responses: {
                 "204": {
-                    description: `Update self`
-                }
-            }
+                    description: `Update self`,
+                },
+            },
         })
         async update(
             @requestBody({
                 content: {
                     "application/json": {
-                        schema: getModelSchemaRef(userCtor, { partial: true })
-                    }
-                }
+                        schema: getModelSchemaRef(userCtor, { partial: true }),
+                    },
+                },
             })
             user: User
         ): Promise<void> {
@@ -81,15 +81,15 @@ export function GenerateUsersSelfController<UserModel extends User>(
             filter<User, ACLPermissions, Controller>(
                 userCtor,
                 {
-                    repositoryGetter: controller => controller.userRepository,
+                    repositoryGetter: (controller) => controller.userRepository,
                     read: ["USERS_READ", async (context, where) => where],
                     history: ["USERS_HISTORY", async (context, where) => where],
-                    include: {}
+                    include: {},
                 },
                 "history",
                 "filter",
                 undefined,
-                controller => controller.session.userId,
+                (controller) => controller.session.userId,
                 { index: 0, type: "filter" }
             )
         )
@@ -104,17 +104,17 @@ export function GenerateUsersSelfController<UserModel extends User>(
                             schema: {
                                 type: "array",
                                 items: getModelSchemaRef(userCtor, {
-                                    includeRelations: true
-                                })
-                            }
-                        }
-                    }
-                }
-            }
+                                    includeRelations: true,
+                                }),
+                            },
+                        },
+                    },
+                },
+            },
         })
         async history(
             @param.query.object("filter", getFilterSchemaFor(userCtor), {
-                description: `Filter self`
+                description: `Filter self`,
             })
             filter?: Filter<UserModel>
         ): Promise<User[]> {

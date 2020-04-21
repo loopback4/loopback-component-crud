@@ -2,11 +2,11 @@ import {
     Entity,
     DefaultCrudRepository,
     Where,
-    Class
+    Class,
 } from "@loopback/repository";
-import { PermissionsList, Condition } from "loopback-authorization-extension";
+import { PermissionsList, Condition } from "loopback-component-authorization";
 import { InvocationContext, Provider } from "@loopback/context";
-import { Ctor } from "loopback-history-extension";
+import { Ctor } from "loopback-component-history";
 
 import { ApplicationConfig } from "@loopback/core";
 import { RestServerConfig } from "@loopback/rest";
