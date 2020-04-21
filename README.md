@@ -14,11 +14,11 @@ npm i --save loopback-component-crud
 
 ## Usage
 
-Follow these steps to add `acl` extension to your loopback4 application
+Follow these steps to add `crud` extension to your loopback4 application
 
 1. Define your Relational and Cache `dataSources`
-2. Add `ACLMixin` to your application
-3. Bind `ACLRestServer`
+2. Add `CRUDMixin` to your application
+3. Bind `CRUDRestServer`
 
 Now, let's try:
 
@@ -26,7 +26,7 @@ Now, let's try:
 
 ### Step 1 (Define DataSource)
 
-Bind your dataSources you want to use for acl tables using `bindRelationalDataSource` and `bindCacheDataSource`
+Bind your dataSources you want to use for tables using `bindRelationalDataSource` and `bindCacheDataSource`
 
 We need two dataSource, one for relational models, and one for cache models
 
@@ -84,10 +84,14 @@ Edit your `application.ts` file:
 
 ```ts
 import { AuthorizationMixin } from "loopback-component-authorization";
-import { ACLMixin, ACLRestServer, ACLGQLServer } from "loopback-component-crud";
+import {
+    CRUDMixin,
+    CRUDRestServer,
+    CRUDGQLServer,
+} from "loopback-component-crud";
 
 export class TestApplication extends AuthorizationMixin(
-    ACLMixin(BootMixin(ServiceMixin(RepositoryMixin(Application))))
+    CRUDMixin(BootMixin(ServiceMixin(RepositoryMixin(Application))))
 ) {
     constructor(options: ApplicationConfig = {}) {
         super(options);
@@ -95,8 +99,8 @@ export class TestApplication extends AuthorizationMixin(
         // ...
 
         // Bind servers
-        this.server(ACLRestServer);
-        this.server(ACLGQLServer);
+        this.server(CRUDRestServer);
+        this.server(CRUDGQLServer);
     }
 }
 ```
