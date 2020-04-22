@@ -6,6 +6,7 @@ import {
     CoreBindings,
     Application,
 } from "@loopback/core";
+import { RestBindings } from "@loopback/rest";
 
 import { CRUDBindings } from "../../keys";
 import { CRUDGraphQLServerConfig } from "../../types";
@@ -32,38 +33,11 @@ export class CRUDGraphQLServer extends Context implements Server {
         return this._listening;
     }
     async start() {
-        const restServer = this.getSync<CRUDRestServer>(
-            "servers.CRUDRestServer"
-        );
+        let openApiSpec = await this.getApiSpec();
 
-        let openApiSpec = await restServer.getApiSpec();
-
-        /** hotfix: openapi default servers not added */
-        openApiSpec.servers = [{ url: restServer.url || "/" }];
-
-        /** hotfix: rest put methods don't return data */
-        openApiSpec.paths = Object.entries(openApiSpec.paths)
-            .map((pair) => {
-                const value = pair[1];
-                if (value.put && value.put.responses["200"]) {
-                    delete value.put.responses["200"].schema;
-                }
-
-                return pair;
-            })
-            .reduce((prev: any, current: any) => {
-                prev[current[0]] = current[1];
-
-                return prev;
-            }, {});
-
-        /** get OpenAPI specs from restServer and bind REST url to it */
-        const { schema, report } = await createGraphQLSchema(
-            openApiSpec as any,
-            {
-                fillEmptyResponses: true,
-            }
-        );
+        const { schema, report } = await createGraphQLSchema(openApiSpec, {
+            fillEmptyResponses: true,
+        });
 
         this._server = new ApolloServer({ schema });
 
@@ -77,5 +51,24 @@ export class CRUDGraphQLServer extends Context implements Server {
         this._listening = false;
 
         console.log(`QraphQL Server is stopped!`);
+    }
+
+    private getApiSpec() {
+        const restServer = this.getSync<CRUDRestServer>(
+            "servers.CRUDRestServer"
+        );
+
+        let spec = Object.assign({}, this.getSync(RestBindings.API_SPEC));
+
+        spec.paths = (restServer as any).httpHandler.describeApiPaths();
+        spec.components = {
+            ...spec.components,
+            schemas: (restServer as any).httpHandler.getApiDefinitions(),
+        };
+
+        /** hotfix: openapi default servers not added */
+        spec.servers = [{ url: restServer.url || "/" }];
+
+        return spec as any;
     }
 }
