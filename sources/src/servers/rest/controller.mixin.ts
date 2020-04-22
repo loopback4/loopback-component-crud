@@ -619,7 +619,7 @@ export function UpdateControllerMixin<
         /** Add updateAll method */
         prototype[method("updateAll")] = async function (
             ...args: any[]
-        ): Promise<Model[]> {
+        ): Promise<void> {
             /**
              * args[0]: id
              * args[1]: id
@@ -634,10 +634,6 @@ export function UpdateControllerMixin<
             await leafScope
                 .repositoryGetter(this as any)
                 .updateAll(args[ids.length], args[ids.length + 3]);
-
-            return await leafScope
-                .repositoryGetter(this as any)
-                .find({ where: args[ids.length + 3] });
         };
 
         const methodDescriptor = {
@@ -680,12 +676,8 @@ export function UpdateControllerMixin<
 
         put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
-                "200": {
+                "204": {
                     description: `Update multiple ${leafCtor.name} by where`,
-                    schema: {
-                        type: "array",
-                        items: getModelSchemaRef(leafCtor),
-                    },
                 },
             },
         })(prototype, method("updateAll"), methodDescriptor);
@@ -727,7 +719,7 @@ export function UpdateControllerMixin<
         /** Add updateOne method */
         prototype[method("updateOne")] = async function (
             ...args: any[]
-        ): Promise<Model> {
+        ): Promise<void> {
             /**
              * args[0]: id
              * args[1]: id
@@ -742,10 +734,6 @@ export function UpdateControllerMixin<
             await leafScope
                 .repositoryGetter(this as any)
                 .updateAll(args[ids.length], args[ids.length + 3]);
-
-            return await leafScope
-                .repositoryGetter(this as any)
-                .findById(args[ids.length + 1]);
         };
         const methodDescriptor = {
             value: prototype[method("updateOne")],
@@ -787,9 +775,8 @@ export function UpdateControllerMixin<
 
         put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
-                "200": {
+                "204": {
                     description: `Update single ${leafCtor.name} by id`,
-                    schema: getModelSchemaRef(leafCtor),
                 },
             },
         })(prototype, method("updateOne"), methodDescriptor);
