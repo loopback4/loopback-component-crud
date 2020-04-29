@@ -44,8 +44,8 @@ export interface FilterScope<
 > {
     repositoryGetter: RepositoryGetter<Model, Controller>;
 
-    read: [AuthorizationMetadata, FilterWhere<Model>];
     create?: [AuthorizationMetadata, ValidateModel<Model>];
+    read: [AuthorizationMetadata, FilterWhere<Model>];
     update?: [AuthorizationMetadata, FilterWhere<Model>, ValidateModel<Model>];
     delete?: [AuthorizationMetadata, FilterWhere<Model>];
     history?: [AuthorizationMetadata, FilterWhere<Model>];

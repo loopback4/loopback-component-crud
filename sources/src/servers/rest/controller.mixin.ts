@@ -14,7 +14,13 @@ import {
 import { authenticate } from "@loopback/authentication";
 import { authorize } from "@loopback/authorization";
 import { intercept } from "@loopback/core";
-import { exist, filter, generateIds, generatePath } from "../../interceptors";
+import {
+    validate,
+    exist,
+    filter,
+    generateIds,
+    generatePath,
+} from "../../interceptors";
 import { Ctor, FilterScope } from "../../types";
 
 import { CRUDController } from "../../servers";
@@ -41,7 +47,7 @@ export function CreateControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    const condition = (leafScope as any).create[0];
+    const authorizer = (leafScope as any).create[0];
     const validator = (leafScope as any).create[1];
 
     const decorateCreateAllMethod = (prototype: any) => {
@@ -59,7 +65,7 @@ export function CreateControllerMixin<
              */
 
             return await leafScope
-                .repositoryGetter(this as any)
+                .repositoryGetter(this)
                 .createAll(args[ids.length]);
         };
 
@@ -76,8 +82,13 @@ export function CreateControllerMixin<
             method("createAll"),
             methodDescriptor
         );
+        intercept(validate(leafCtor, ids.length, validator))(
+            prototype,
+            method("createAll"),
+            methodDescriptor
+        );
 
-        authorize(condition)(prototype, method("createAll"), methodDescriptor);
+        authorize(authorizer)(prototype, method("createAll"), methodDescriptor);
         authenticate("crud")(prototype, method("createAll"), methodDescriptor);
 
         post(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -154,7 +165,7 @@ export function CreateControllerMixin<
              */
 
             return await leafScope
-                .repositoryGetter(this as any)
+                .repositoryGetter(this)
                 .create(args[ids.length]);
         };
         const methodDescriptor = {
@@ -170,8 +181,13 @@ export function CreateControllerMixin<
             method("createOne"),
             methodDescriptor
         );
+        intercept(validate(leafCtor, ids.length, validator))(
+            prototype,
+            method("createOne"),
+            methodDescriptor
+        );
 
-        authorize(condition)(prototype, method("createOne"), methodDescriptor);
+        authorize(authorizer)(prototype, method("createOne"), methodDescriptor);
         authenticate("crud")(prototype, method("createOne"), methodDescriptor);
 
         post(`${generatePath(rootCtor, relations, basePath)}/one`, {
@@ -268,7 +284,7 @@ export function ReadControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    const condition = (leafScope as any).read[0];
+    const authorizer = (leafScope as any).read[0];
 
     const decorateReadAllMethod = (prototype: any) => {
         /** Add readAll method */
@@ -286,7 +302,7 @@ export function ReadControllerMixin<
              */
 
             return await leafScope
-                .repositoryGetter(this as any)
+                .repositoryGetter(this)
                 .find(args[ids.length + 2]);
         };
 
@@ -315,7 +331,7 @@ export function ReadControllerMixin<
             methodDescriptor
         );
 
-        authorize(condition)(prototype, method("readAll"), methodDescriptor);
+        authorize(authorizer)(prototype, method("readAll"), methodDescriptor);
         authenticate("crud")(prototype, method("readAll"), methodDescriptor);
 
         get(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -375,7 +391,7 @@ export function ReadControllerMixin<
              */
 
             return await leafScope
-                .repositoryGetter(this as any)
+                .repositoryGetter(this)
                 .count(args[ids.length + 2]);
         };
 
@@ -404,7 +420,7 @@ export function ReadControllerMixin<
             methodDescriptor
         );
 
-        authorize(condition)(prototype, method("countAll"), methodDescriptor);
+        authorize(authorizer)(prototype, method("countAll"), methodDescriptor);
         authenticate("crud")(prototype, method("countAll"), methodDescriptor);
 
         get(`${generatePath(rootCtor, relations, basePath)}/count`, {
@@ -463,7 +479,7 @@ export function ReadControllerMixin<
              */
 
             return await leafScope
-                .repositoryGetter(this as any)
+                .repositoryGetter(this)
                 .findOne(args[ids.length + 3]);
         };
         const methodDescriptor = {
@@ -491,7 +507,7 @@ export function ReadControllerMixin<
             methodDescriptor
         );
 
-        authorize(condition)(prototype, method("readOne"), methodDescriptor);
+        authorize(authorizer)(prototype, method("readOne"), methodDescriptor);
         authenticate("crud")(prototype, method("readOne"), methodDescriptor);
 
         get(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
@@ -579,7 +595,7 @@ export function UpdateControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    const condition = (leafScope as any).update[0];
+    const authorizer = (leafScope as any).update[0];
     const validator = (leafScope as any).update[2];
 
     const decorateUpdateAllMethod = (prototype: any) => {
@@ -599,7 +615,7 @@ export function UpdateControllerMixin<
              */
 
             await leafScope
-                .repositoryGetter(this as any)
+                .repositoryGetter(this)
                 .updateAll(args[ids.length], args[ids.length + 3]);
         };
 
@@ -627,8 +643,13 @@ export function UpdateControllerMixin<
             method("updateAll"),
             methodDescriptor
         );
+        intercept(validate(leafCtor, ids.length, validator))(
+            prototype,
+            method("updateAll"),
+            methodDescriptor
+        );
 
-        authorize(condition)(prototype, method("updateAll"), methodDescriptor);
+        authorize(authorizer)(prototype, method("updateAll"), methodDescriptor);
         authenticate("crud")(prototype, method("updateAll"), methodDescriptor);
 
         put(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -689,7 +710,7 @@ export function UpdateControllerMixin<
              */
 
             await leafScope
-                .repositoryGetter(this as any)
+                .repositoryGetter(this)
                 .updateAll(args[ids.length], args[ids.length + 3]);
         };
         const methodDescriptor = {
@@ -716,8 +737,13 @@ export function UpdateControllerMixin<
             method("updateOne"),
             methodDescriptor
         );
+        intercept(validate(leafCtor, ids.length, validator))(
+            prototype,
+            method("updateOne"),
+            methodDescriptor
+        );
 
-        authorize(condition)(prototype, method("updateOne"), methodDescriptor);
+        authorize(authorizer)(prototype, method("updateOne"), methodDescriptor);
         authenticate("crud")(prototype, method("updateOne"), methodDescriptor);
 
         put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
@@ -801,7 +827,7 @@ export function DeleteControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    const condition = (leafScope as any).delete[0];
+    const authorizer = (leafScope as any).delete[0];
 
     const decorateDeleteAllMethod = (prototype: any) => {
         /** Add deleteAll method */
@@ -819,7 +845,7 @@ export function DeleteControllerMixin<
              */
 
             return await leafScope
-                .repositoryGetter(this as any)
+                .repositoryGetter(this)
                 .deleteAll(args[ids.length + 2]);
         };
 
@@ -848,7 +874,7 @@ export function DeleteControllerMixin<
             methodDescriptor
         );
 
-        authorize(condition)(prototype, method("deleteAll"), methodDescriptor);
+        authorize(authorizer)(prototype, method("deleteAll"), methodDescriptor);
         authenticate("crud")(prototype, method("deleteAll"), methodDescriptor);
 
         del(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -906,7 +932,7 @@ export function DeleteControllerMixin<
              */
 
             return await leafScope
-                .repositoryGetter(this as any)
+                .repositoryGetter(this)
                 .deleteAll(args[ids.length + 2]);
         };
         const methodDescriptor = {
@@ -934,7 +960,7 @@ export function DeleteControllerMixin<
             methodDescriptor
         );
 
-        authorize(condition)(prototype, method("deleteOne"), methodDescriptor);
+        authorize(authorizer)(prototype, method("deleteOne"), methodDescriptor);
         authenticate("crud")(prototype, method("deleteOne"), methodDescriptor);
 
         del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
@@ -1016,7 +1042,7 @@ export function HistoryControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    const condition = (leafScope as any).history[0];
+    const authorizer = (leafScope as any).history[0];
 
     const decorateHistoryOneMethod = (prototype: any) => {
         /** Add historyOne method */
@@ -1035,7 +1061,7 @@ export function HistoryControllerMixin<
              */
 
             return await leafScope
-                .repositoryGetter(this as any)
+                .repositoryGetter(this)
                 .find(args[ids.length + 3], {
                     crud: true,
                 });
@@ -1065,7 +1091,11 @@ export function HistoryControllerMixin<
             methodDescriptor
         );
 
-        authorize(condition)(prototype, method("historyOne"), methodDescriptor);
+        authorize(authorizer)(
+            prototype,
+            method("historyOne"),
+            methodDescriptor
+        );
         authenticate("crud")(prototype, method("historyOne"), methodDescriptor);
 
         get(`${generatePath(rootCtor, relations, basePath)}/{id}/history`, {
@@ -1154,7 +1184,7 @@ export function ControllerMixin<
             leafScope,
             relations,
             basePath
-        ) as any;
+        );
     }
 
     controllerClass = ReadControllerMixin<Model, Controller>(
@@ -1165,7 +1195,7 @@ export function ControllerMixin<
         leafScope,
         relations,
         basePath
-    ) as any;
+    );
 
     if ("update" in leafScope) {
         controllerClass = UpdateControllerMixin<Model, Controller>(
@@ -1176,7 +1206,7 @@ export function ControllerMixin<
             leafScope,
             relations,
             basePath
-        ) as any;
+        );
     }
 
     if ("delete" in leafScope) {
@@ -1188,7 +1218,7 @@ export function ControllerMixin<
             leafScope,
             relations,
             basePath
-        ) as any;
+        );
     }
 
     if ("history" in leafScope) {
@@ -1200,7 +1230,7 @@ export function ControllerMixin<
             leafScope,
             relations,
             basePath
-        ) as any;
+        );
     }
 
     Object.entries(leafScope.include).forEach(([relation, scope]) => {
@@ -1218,7 +1248,7 @@ export function ControllerMixin<
         }
     });
 
-    return controllerClass as any;
+    return controllerClass;
 }
 
 export function CRUDControllerMixin<
