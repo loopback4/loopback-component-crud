@@ -5,9 +5,8 @@ import {
     ValueOrPromise,
 } from "@loopback/context";
 import { Entity, Where, Filter } from "@loopback/repository";
-import { Ctor } from "loopback-component-history";
 
-import { FilterScope } from "../types";
+import { Ctor, FilterScope } from "../types";
 
 import { CRUDController } from "../servers";
 

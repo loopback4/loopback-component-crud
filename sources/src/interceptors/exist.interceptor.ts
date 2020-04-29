@@ -6,9 +6,8 @@ import {
 } from "@loopback/context";
 import { HttpErrors } from "@loopback/rest";
 import { Entity, Filter, RelationType } from "@loopback/repository";
-import { Ctor } from "loopback-component-history";
 
-import { FilterScope, RepositoryGetter } from "../types";
+import { Ctor, FilterScope, RepositoryGetter } from "../types";
 
 import { CRUDController } from "../servers";
 

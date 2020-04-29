@@ -10,13 +10,12 @@ import {
     getWhereSchemaFor,
     getFilterSchemaFor,
 } from "@loopback/rest";
-import { Ctor } from "loopback-component-history";
 
 import { authenticate } from "@loopback/authentication";
 import { authorize } from "@loopback/authorization";
 import { intercept } from "@loopback/core";
 import { exist, filter, generateIds, generatePath } from "../../interceptors";
-import { FilterScope } from "../../types";
+import { Ctor, FilterScope } from "../../types";
 
 import { CRUDController } from "../../servers";
 

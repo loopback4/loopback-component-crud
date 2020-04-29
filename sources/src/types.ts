@@ -14,6 +14,11 @@ import { Authorizer, AuthorizationMetadata } from "@loopback/authorization";
 
 import { CRUDController } from "./servers";
 
+/** Model Ctor type */
+export type Ctor<Model extends Entity> = typeof Entity & {
+    prototype: Model;
+};
+
 /** Get Repository From Controller */
 export type RepositoryGetter<
     Model extends Entity,
