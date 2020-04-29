@@ -10,7 +10,7 @@ import { ApplicationConfig } from "@loopback/core";
 import { RestServerConfig } from "@loopback/rest";
 import { HttpServerOptions } from "@loopback/http-server";
 import { TokenService, AuthenticationStrategy } from "@loopback/authentication";
-import { Authorizer } from "@loopback/authorization";
+import { Authorizer, AuthorizationMetadata } from "@loopback/authorization";
 
 import { CRUDController } from "./servers";
 
@@ -39,11 +39,11 @@ export interface FilterScope<
 > {
     repositoryGetter: RepositoryGetter<Model, Controller>;
 
-    read: [Condition<Permissions>, FilterWhere<Model>];
-    create?: [Condition<Permissions>, ValidateModel<Model>];
-    update?: [Condition<Permissions>, FilterWhere<Model>, ValidateModel<Model>];
-    delete?: [Condition<Permissions>, FilterWhere<Model>];
-    history?: [Condition<Permissions>, FilterWhere<Model>];
+    read: [AuthorizationMetadata, FilterWhere<Model>];
+    create?: [AuthorizationMetadata, ValidateModel<Model>];
+    update?: [AuthorizationMetadata, FilterWhere<Model>, ValidateModel<Model>];
+    delete?: [AuthorizationMetadata, FilterWhere<Model>];
+    history?: [AuthorizationMetadata, FilterWhere<Model>];
 
     include: {
         [relation: string]: FilterScope<any, Controller>;

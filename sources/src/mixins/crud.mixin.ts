@@ -3,11 +3,16 @@ import { Class } from "@loopback/repository";
 import { CoreBindings } from "@loopback/core";
 
 import { registerAuthenticationStrategy } from "@loopback/authentication";
+import { AuthorizationTags } from "@loopback/authorization";
 
 import { PrivateCRUDBindings } from "../keys";
 import { CRUDMixinConfig } from "../types";
 
-import { CRUDTokenService, CRUDTokenStrategy } from "../providers";
+import {
+    CRUDTokenService,
+    CRUDTokenStrategy,
+    CRUDAuthorizerProvider,
+} from "../providers";
 
 export function CRUDMixin<T extends Class<any>>(superClass: T) {
     const bootObservers = (ctx: Context) => {
@@ -27,10 +32,9 @@ export function CRUDMixin<T extends Class<any>>(superClass: T) {
             ctx,
             configs.tokenStrategy || CRUDTokenStrategy
         );
-
-        ctx.bind(PrivateCRUDBindings.TOKEN_SERVICE).toClass(
-            configs.tokenService || CRUDTokenService
-        );
+        ctx.bind(PrivateCRUDBindings.AUTHORIZER_PROVIDER)
+            .toProvider(configs.authorizerProvider || CRUDAuthorizerProvider)
+            .tag(AuthorizationTags.AUTHORIZER);
     };
 
     return class extends superClass {
