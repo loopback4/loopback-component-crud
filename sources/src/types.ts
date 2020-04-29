@@ -9,7 +9,7 @@ import { InvocationContext, Provider } from "@loopback/context";
 import { ApplicationConfig } from "@loopback/core";
 import { RestServerConfig } from "@loopback/rest";
 import { HttpServerOptions } from "@loopback/http-server";
-import { TokenService, AuthenticationStrategy } from "@loopback/authentication";
+import { TokenService } from "@loopback/authentication";
 import { Authorizer, AuthorizationMetadata } from "@loopback/authorization";
 
 import { CRUDController } from "./servers";
@@ -54,9 +54,8 @@ export interface FilterScope<
  * CRUDMixin configs
  */
 export interface CRUDMixinConfig {
-    tokenService?: Class<TokenService>;
-    tokenStrategy?: Class<AuthenticationStrategy>;
-    authorizerProvider?: Class<Provider<Authorizer>>;
+    tokenService: Class<TokenService>;
+    authorizerProvider: Class<Provider<Authorizer>>;
 }
 
 /**

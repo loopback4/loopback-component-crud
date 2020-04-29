@@ -29,7 +29,7 @@ export namespace PrivateCRUDBindings {
      * Provider key
      *
      * 1. TokenService
-     * 2. Authorizer
+     * 2. AuthorizerProvider
      */
     export const TOKEN_SERVICE = BindingKey.create<TokenService>(
         "private.crud.providers.token"

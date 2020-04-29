@@ -10,7 +10,10 @@ import { RestServer, RestComponent } from "@loopback/rest";
 import { RestExplorerComponent } from "@loopback/rest-explorer";
 
 /** Authentication binding imports */
-import { AuthenticationComponent } from "@loopback/authentication";
+import {
+    AuthenticationComponent,
+    registerAuthenticationStrategy,
+} from "@loopback/authentication";
 
 /** Authorization binding imports */
 import {
@@ -22,6 +25,7 @@ import {
 
 import { CRUDBindings } from "../../keys";
 import { CRUDRestServerConfig } from "../../types";
+import { CRUDTokenStrategy } from "../../providers";
 import { Sequence } from "../../servers";
 
 @lifeCycleObserver("servers.REST")
@@ -44,6 +48,7 @@ export class CRUDRestServer extends RestServer {
 
         /** Bind authentication component */
         app.component(AuthenticationComponent);
+        registerAuthenticationStrategy(app, CRUDTokenStrategy);
 
         /** Bind authorization component */
         app.configure<AuthorizationOptions>(AuthorizationBindings.COMPONENT).to(
