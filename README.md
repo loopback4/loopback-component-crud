@@ -8,7 +8,6 @@ Using this extension you can bind them to your application using a simple and op
 
 ```bash
 npm i --save loopback-component-history
-npm i --save loopback-component-authorization
 npm i --save loopback-component-crud
 ```
 

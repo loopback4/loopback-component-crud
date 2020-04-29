@@ -6,19 +6,14 @@ import {
 } from "@loopback/context";
 import { Entity, Where, Filter } from "@loopback/repository";
 import { Ctor } from "loopback-component-history";
-import { authorizeFn } from "loopback-component-authorization";
 
-import { CRUDPermissions, FilterScope } from "../types";
+import { FilterScope } from "../types";
 
 import { CRUDController } from "../servers";
 
-export function filter<
-    Model extends Entity,
-    Permissions extends CRUDPermissions,
-    Controller
->(
+export function filter<Model extends Entity, Controller extends CRUDController>(
     ctor: Ctor<Model>,
-    scope: FilterScope<Model, Permissions, Controller>,
+    scope: FilterScope<Model, Controller>,
     access: "read" | "update" | "delete" | "history",
     outputType: "where" | "filter",
     pathId?: number,
@@ -98,11 +93,10 @@ export function filter<
 
 export async function filterFn<
     Model extends Entity,
-    Permissions extends CRUDPermissions,
-    Controller
+    Controller extends CRUDController
 >(
     ctor: Ctor<Model>,
-    scope: FilterScope<Model, Permissions, Controller>,
+    scope: FilterScope<Model, Controller>,
     access: "read" | "update" | "delete" | "history",
     filter: Filter<Model> = {},
     invocationCtx: InvocationContext
@@ -164,7 +158,7 @@ export async function filterFn<
                 const modelRelation =
                     ctor.definition.relations[inclusion.relation];
 
-                inclusion.scope = await filterFn<any, Permissions, Controller>(
+                inclusion.scope = await filterFn<any, Controller>(
                     modelRelation.target(),
                     scope.include[inclusion.relation],
                     access,

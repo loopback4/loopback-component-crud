@@ -13,30 +13,22 @@ import {
 import { Ctor } from "loopback-component-history";
 
 import { authenticate } from "@loopback/authentication";
-import { authorize } from "loopback-component-authorization";
+import { authorize } from "@loopback/authorization";
 import { intercept } from "@loopback/core";
-import {
-    validate,
-    unique,
-    exist,
-    filter,
-    generateIds,
-    generatePath,
-} from "../../interceptors";
-import { FilterScope, CRUDPermissions } from "../../types";
+import { exist, filter, generateIds, generatePath } from "../../interceptors";
+import { FilterScope } from "../../types";
 
 import { CRUDController } from "../../servers";
 
 export function CreateControllerMixin<
     Model extends Entity,
-    Permissions extends CRUDPermissions,
     Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
-    rootScope: FilterScope<Model, Permissions, Controller>,
+    rootScope: FilterScope<Model, Controller>,
     leafCtor: Ctor<Model>,
-    leafScope: FilterScope<Model, Permissions, Controller>,
+    leafScope: FilterScope<Model, Controller>,
     relations: string[],
     basePath: string
 ): Class<Controller> {
@@ -81,16 +73,6 @@ export function CreateControllerMixin<
 
         /** Decorate createAll method */
         intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
-            prototype,
-            method("createAll"),
-            methodDescriptor
-        );
-        intercept(unique(leafCtor, leafScope, ids.length, false))(
-            prototype,
-            method("createAll"),
-            methodDescriptor
-        );
-        intercept(validate(leafCtor, ids.length, validator))(
             prototype,
             method("createAll"),
             methodDescriptor
@@ -189,16 +171,6 @@ export function CreateControllerMixin<
             method("createOne"),
             methodDescriptor
         );
-        intercept(unique(leafCtor, leafScope, ids.length, false))(
-            prototype,
-            method("createOne"),
-            methodDescriptor
-        );
-        intercept(validate(leafCtor, ids.length, validator))(
-            prototype,
-            method("createOne"),
-            methodDescriptor
-        );
 
         authorize(condition)(prototype, method("createOne"), methodDescriptor);
         authenticate("crud")(prototype, method("createOne"), methodDescriptor);
@@ -260,9 +232,7 @@ export function CreateControllerMixin<
         /**
          * Create operations
          *
-         * 1. validate
-         * 2. unique
-         * 3. exist
+         * 1. exist
          */
     }
 
@@ -279,14 +249,13 @@ export function CreateControllerMixin<
 
 export function ReadControllerMixin<
     Model extends Entity,
-    Permissions extends CRUDPermissions,
     Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
-    rootScope: FilterScope<Model, Permissions, Controller>,
+    rootScope: FilterScope<Model, Controller>,
     leafCtor: Ctor<Model>,
-    leafScope: FilterScope<Model, Permissions, Controller>,
+    leafScope: FilterScope<Model, Controller>,
     relations: string[],
     basePath: string
 ): Class<Controller> {
@@ -591,14 +560,13 @@ export function ReadControllerMixin<
 
 export function UpdateControllerMixin<
     Model extends Entity,
-    Permissions extends CRUDPermissions,
     Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
-    rootScope: FilterScope<Model, Permissions, Controller>,
+    rootScope: FilterScope<Model, Controller>,
     leafCtor: Ctor<Model>,
-    leafScope: FilterScope<Model, Permissions, Controller>,
+    leafScope: FilterScope<Model, Controller>,
     relations: string[],
     basePath: string
 ): Class<Controller> {
@@ -656,16 +624,6 @@ export function UpdateControllerMixin<
             )
         )(prototype, method("updateAll"), methodDescriptor);
         intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
-            prototype,
-            method("updateAll"),
-            methodDescriptor
-        );
-        intercept(unique(leafCtor, leafScope, ids.length, true))(
-            prototype,
-            method("updateAll"),
-            methodDescriptor
-        );
-        intercept(validate(leafCtor, ids.length, validator))(
             prototype,
             method("updateAll"),
             methodDescriptor
@@ -759,16 +717,6 @@ export function UpdateControllerMixin<
             method("updateOne"),
             methodDescriptor
         );
-        intercept(unique(leafCtor, leafScope, ids.length, true))(
-            prototype,
-            method("updateOne"),
-            methodDescriptor
-        );
-        intercept(validate(leafCtor, ids.length, validator))(
-            prototype,
-            method("updateOne"),
-            methodDescriptor
-        );
 
         authorize(condition)(prototype, method("updateOne"), methodDescriptor);
         authenticate("crud")(prototype, method("updateOne"), methodDescriptor);
@@ -816,10 +764,8 @@ export function UpdateControllerMixin<
         /**
          * Update operations
          *
-         * 1. validate
-         * 2. unique
-         * 3. exist
-         * 4. filter
+         * 1. exist
+         * 2. filter
          */
     }
 
@@ -836,14 +782,13 @@ export function UpdateControllerMixin<
 
 export function DeleteControllerMixin<
     Model extends Entity,
-    Permissions extends CRUDPermissions,
     Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
-    rootScope: FilterScope<Model, Permissions, Controller>,
+    rootScope: FilterScope<Model, Controller>,
     leafCtor: Ctor<Model>,
-    leafScope: FilterScope<Model, Permissions, Controller>,
+    leafScope: FilterScope<Model, Controller>,
     relations: string[],
     basePath: string
 ): Class<Controller> {
@@ -1052,14 +997,13 @@ export function DeleteControllerMixin<
 
 export function HistoryControllerMixin<
     Model extends Entity,
-    Permissions extends CRUDPermissions,
     Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
-    rootScope: FilterScope<Model, Permissions, Controller>,
+    rootScope: FilterScope<Model, Controller>,
     leafCtor: Ctor<Model>,
-    leafScope: FilterScope<Model, Permissions, Controller>,
+    leafScope: FilterScope<Model, Controller>,
     relations: string[],
     basePath: string
 ): Class<Controller> {
@@ -1188,12 +1132,11 @@ export function HistoryControllerMixin<
 
 export function ControllerMixin<
     Model extends Entity,
-    Permissions extends CRUDPermissions,
     Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     ctors: Ctor<Model>[],
-    scopes: FilterScope<Model, Permissions, Controller>[],
+    scopes: FilterScope<Model, Controller>[],
     relations: string[],
     basePath: string
 ): Class<Controller> {
@@ -1204,7 +1147,7 @@ export function ControllerMixin<
     const leafScope = scopes[scopes.length - 1];
 
     if ("create" in leafScope) {
-        controllerClass = CreateControllerMixin<Model, Permissions, Controller>(
+        controllerClass = CreateControllerMixin<Model, Controller>(
             controllerClass,
             rootCtor,
             rootScope,
@@ -1215,7 +1158,7 @@ export function ControllerMixin<
         ) as any;
     }
 
-    controllerClass = ReadControllerMixin<Model, Permissions, Controller>(
+    controllerClass = ReadControllerMixin<Model, Controller>(
         controllerClass,
         rootCtor,
         rootScope,
@@ -1226,7 +1169,7 @@ export function ControllerMixin<
     ) as any;
 
     if ("update" in leafScope) {
-        controllerClass = UpdateControllerMixin<Model, Permissions, Controller>(
+        controllerClass = UpdateControllerMixin<Model, Controller>(
             controllerClass,
             rootCtor,
             rootScope,
@@ -1238,7 +1181,7 @@ export function ControllerMixin<
     }
 
     if ("delete" in leafScope) {
-        controllerClass = DeleteControllerMixin<Model, Permissions, Controller>(
+        controllerClass = DeleteControllerMixin<Model, Controller>(
             controllerClass,
             rootCtor,
             rootScope,
@@ -1250,11 +1193,7 @@ export function ControllerMixin<
     }
 
     if ("history" in leafScope) {
-        controllerClass = HistoryControllerMixin<
-            Model,
-            Permissions,
-            Controller
-        >(
+        controllerClass = HistoryControllerMixin<Model, Controller>(
             controllerClass,
             rootCtor,
             rootScope,
@@ -1270,7 +1209,7 @@ export function ControllerMixin<
         if (relation in leafCtor.definition.relations) {
             const modelRelation = leafCtor.definition.relations[relation];
 
-            controllerClass = ControllerMixin<any, Permissions, any>(
+            controllerClass = ControllerMixin<any, any>(
                 controllerClass,
                 [...ctors, modelRelation.target()],
                 [...scopes, scope],
@@ -1285,15 +1224,14 @@ export function ControllerMixin<
 
 export function CRUDControllerMixin<
     Model extends Entity,
-    Permissions extends CRUDPermissions,
     Controller extends CRUDController
 >(
     controllerClass: Class<Controller>,
     ctor: Ctor<Model>,
-    scope: FilterScope<Model, Permissions, Controller>,
+    scope: FilterScope<Model, Controller>,
     basePath: string
 ): Class<Controller> {
-    return ControllerMixin<Model, Permissions, Controller>(
+    return ControllerMixin<Model, Controller>(
         controllerClass,
         [ctor],
         [scope],

@@ -8,17 +8,15 @@ import { HttpErrors } from "@loopback/rest";
 import { Entity, Filter, RelationType } from "@loopback/repository";
 import { Ctor } from "loopback-component-history";
 
-import { CRUDPermissions, FilterScope, RepositoryGetter } from "../types";
+import { FilterScope, RepositoryGetter } from "../types";
+
+import { CRUDController } from "../servers";
 
 import { filterFn } from "./filter.interceptor";
 
-export function exist<
-    Model extends Entity,
-    Permissions extends CRUDPermissions,
-    Controller
->(
+export function exist<Model extends Entity, Controller extends CRUDController>(
     ctor: Ctor<Model>,
-    scope: FilterScope<Model, Permissions, Controller>,
+    scope: FilterScope<Model, Controller>,
     argIndexBegin: number,
     argIndexEnd: number,
     relations: string[]
@@ -67,7 +65,7 @@ export function exist<
     };
 }
 
-async function existFn<Model extends Entity, Controller>(
+async function existFn<Model extends Entity, Controller extends CRUDController>(
     ctor: Ctor<Model>,
     repositoryGetter: RepositoryGetter<any, Controller>,
     filter: Filter<Model>,
