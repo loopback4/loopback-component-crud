@@ -14,13 +14,7 @@ import {
 import { authenticate } from "@loopback/authentication";
 import { authorize } from "@loopback/authorization";
 import { intercept } from "@loopback/core";
-import {
-    validate,
-    exist,
-    filter,
-    generateIds,
-    generatePath,
-} from "../../interceptors";
+import { validate, exist, generateIds, generatePath } from "../../interceptors";
 import { Ctor, FilterScope } from "../../types";
 
 import { CRUDController } from "../../servers";

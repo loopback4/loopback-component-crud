@@ -4,14 +4,16 @@ import {
     InvocationResult,
     ValueOrPromise,
 } from "@loopback/context";
-import { HttpErrors } from "@loopback/rest";
-import { Entity, Filter, RelationType } from "@loopback/repository";
+import {
+    Entity,
+    Filter,
+    RelationType,
+    EntityNotFoundError,
+} from "@loopback/repository";
 
 import { Ctor, FilterScope, RepositoryGetter } from "../types";
 
 import { CRUDController } from "../servers";
-
-import { filterFn } from "./filter.interceptor";
 
 export function exist<Model extends Entity, Controller extends CRUDController>(
     ctor: Ctor<Model>,
@@ -33,18 +35,10 @@ export function exist<Model extends Entity, Controller extends CRUDController>(
         const pathFilter = generateFilter(ctor, ids, relations);
 
         if (pathFilter && Object.keys(pathFilter).length > 0) {
-            const filter = await filterFn(
-                ctor,
-                scope,
-                "read",
-                pathFilter,
-                invocationCtx
-            );
-
             const id = await existFn(
                 ctor,
                 scope.repositoryGetter,
-                filter,
+                pathFilter,
                 relations,
                 invocationCtx
             );
@@ -52,9 +46,7 @@ export function exist<Model extends Entity, Controller extends CRUDController>(
             if (id) {
                 invocationCtx.args.push(id);
             } else {
-                throw new HttpErrors.Forbidden(
-                    "You don't have required filter to access this model!"
-                );
+                throw new EntityNotFoundError(ctor, ids[ids.length - 1]);
             }
         } else {
             invocationCtx.args.push(undefined);
