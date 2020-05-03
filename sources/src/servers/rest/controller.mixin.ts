@@ -308,17 +308,6 @@ export function ReadControllerMixin<
         };
 
         /** Decorate readAll method */
-        intercept(
-            filter(
-                leafCtor,
-                leafScope,
-                "read",
-                "filter",
-                ids.length + 1,
-                undefined,
-                { index: ids.length, type: "filter" }
-            )
-        )(prototype, method("readAll"), methodDescriptor);
         intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
             prototype,
             method("readAll"),
@@ -397,17 +386,6 @@ export function ReadControllerMixin<
         };
 
         /** Decorate countAll method */
-        intercept(
-            filter(
-                leafCtor,
-                leafScope,
-                "read",
-                "where",
-                ids.length + 1,
-                undefined,
-                { index: ids.length, type: "where" }
-            )
-        )(prototype, method("countAll"), methodDescriptor);
         intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
             prototype,
             method("countAll"),
@@ -484,17 +462,6 @@ export function ReadControllerMixin<
         };
 
         /** Decorate readOne method */
-        intercept(
-            filter(
-                leafCtor,
-                leafScope,
-                "read",
-                "filter",
-                ids.length + 2,
-                ids.length,
-                { index: ids.length + 1, type: "filter" }
-            )
-        )(prototype, method("readOne"), methodDescriptor);
         intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
             prototype,
             method("readOne"),
@@ -621,17 +588,6 @@ export function UpdateControllerMixin<
         };
 
         /** Decorate updateAll method */
-        intercept(
-            filter(
-                leafCtor,
-                leafScope,
-                "update",
-                "where",
-                ids.length + 2,
-                undefined,
-                { index: ids.length + 1, type: "where" }
-            )
-        )(prototype, method("updateAll"), methodDescriptor);
         intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
             prototype,
             method("updateAll"),
@@ -715,17 +671,6 @@ export function UpdateControllerMixin<
         };
 
         /** Decorate updateOne method */
-        intercept(
-            filter(
-                leafCtor,
-                leafScope,
-                "update",
-                "where",
-                ids.length + 2,
-                ids.length + 1,
-                undefined
-            )
-        )(prototype, method("updateOne"), methodDescriptor);
         intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
             prototype,
             method("updateOne"),
@@ -851,17 +796,6 @@ export function DeleteControllerMixin<
         };
 
         /** Decorate deleteAll method */
-        intercept(
-            filter(
-                leafCtor,
-                leafScope,
-                "delete",
-                "where",
-                ids.length + 1,
-                undefined,
-                { index: ids.length, type: "where" }
-            )
-        )(prototype, method("deleteAll"), methodDescriptor);
         intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
             prototype,
             method("deleteAll"),
@@ -937,17 +871,6 @@ export function DeleteControllerMixin<
         };
 
         /** Decorate deleteOne method */
-        intercept(
-            filter(
-                leafCtor,
-                leafScope,
-                "delete",
-                "where",
-                ids.length + 1,
-                ids.length,
-                undefined
-            )
-        )(prototype, method("deleteOne"), methodDescriptor);
         intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
             prototype,
             method("deleteOne"),
@@ -1068,17 +991,6 @@ export function HistoryControllerMixin<
         };
 
         /** Decorate historyOne method */
-        intercept(
-            filter(
-                leafCtor,
-                leafScope,
-                "history",
-                "filter",
-                ids.length + 2,
-                ids.length,
-                { index: ids.length + 1, type: "filter" }
-            )
-        )(prototype, method("historyOne"), methodDescriptor);
         intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
             prototype,
             method("historyOne"),
