@@ -1,9 +1,4 @@
-import {
-    Entity,
-    DefaultCrudRepository,
-    Where,
-    Class,
-} from "@loopback/repository";
+import { Entity, DefaultCrudRepository, Class } from "@loopback/repository";
 import { InvocationContext, Provider } from "@loopback/context";
 
 import { ApplicationConfig } from "@loopback/core";
