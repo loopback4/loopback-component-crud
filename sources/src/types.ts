@@ -31,12 +31,6 @@ export type ValidateModel<Model extends Entity> = (
     models: Model[]
 ) => Promise<boolean>;
 
-/** Filter Where, filters a Where */
-export type FilterWhere<Model extends Entity> = (
-    context: InvocationContext,
-    where: Where<Model>
-) => Promise<Where<Model>>;
-
 /** Filter Scope, passed to filter interceptor for API's business scope definition */
 export interface FilterScope<
     Model extends Entity,
@@ -45,10 +39,10 @@ export interface FilterScope<
     repositoryGetter: RepositoryGetter<Model, Controller>;
 
     create?: [AuthorizationMetadata, ValidateModel<Model>];
-    read: [AuthorizationMetadata, FilterWhere<Model>];
-    update?: [AuthorizationMetadata, FilterWhere<Model>, ValidateModel<Model>];
-    delete?: [AuthorizationMetadata, FilterWhere<Model>];
-    history?: [AuthorizationMetadata, FilterWhere<Model>];
+    read: [AuthorizationMetadata];
+    update?: [AuthorizationMetadata, ValidateModel<Model>];
+    delete?: [AuthorizationMetadata];
+    history?: [AuthorizationMetadata];
 
     include: {
         [relation: string]: FilterScope<any, Controller>;
