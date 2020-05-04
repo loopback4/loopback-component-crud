@@ -55,7 +55,7 @@ export function CreateControllerMixin<
          * 1. validate
          * 2. exist
          */
-        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
         @intercept(validate(leafCtor, 0, leafScope.modelValidator))
         @authorize(leafScope.create || {})
         @authenticate("crud")
@@ -81,15 +81,7 @@ export function CreateControllerMixin<
                         schema: {
                             type: "array",
                             items: getModelSchemaRef(leafCtor, {
-                                exclude: Object.keys(
-                                    leafCtor.definition.properties
-                                ).filter(
-                                    (key) =>
-                                        key === "uid" ||
-                                        key === "beginDate" ||
-                                        key === "endDate" ||
-                                        key === "id"
-                                ) as any,
+                                exclude: leafScope.ctor.exclude,
                             }),
                         },
                     },
@@ -118,7 +110,7 @@ export function CreateControllerMixin<
          * 1. validate
          * 2. exist
          */
-        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
         @intercept(validate(leafCtor, 0, leafScope.modelValidator))
         @authorize(leafScope.create || {})
         @authenticate("crud")
@@ -139,15 +131,7 @@ export function CreateControllerMixin<
                 content: {
                     "application/json": {
                         schema: getModelSchemaRef(leafCtor, {
-                            exclude: Object.keys(
-                                leafCtor.definition.properties
-                            ).filter(
-                                (key) =>
-                                    key === "uid" ||
-                                    key === "beginDate" ||
-                                    key === "endDate" ||
-                                    key === "id"
-                            ) as any,
+                            exclude: leafScope.ctor.exclude,
                         }),
                     },
                 },
@@ -214,7 +198,7 @@ export function ReadControllerMixin<
          *
          * 1. exist
          */
-        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
         @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -257,7 +241,7 @@ export function ReadControllerMixin<
          *
          * 1. exist
          */
-        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
         @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}/count`, {
@@ -295,7 +279,7 @@ export function ReadControllerMixin<
          *
          * 1. exist
          */
-        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
         @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
@@ -390,7 +374,7 @@ export function UpdateControllerMixin<
          * 1. validate
          * 2. exist
          */
-        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
         @intercept(validate(leafCtor, 1, leafScope.modelValidator))
         @authorize(leafScope.update || {})
         @authenticate("crud")
@@ -436,7 +420,7 @@ export function UpdateControllerMixin<
          * 1. validate
          * 2. exist
          */
-        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
         @intercept(validate(leafCtor, 1, leafScope.modelValidator))
         @authorize(leafScope.update || {})
         @authenticate("crud")
@@ -519,7 +503,7 @@ export function DeleteControllerMixin<
          *
          * 1. exist
          */
-        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
         @authorize(leafScope.delete || {})
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -559,7 +543,7 @@ export function DeleteControllerMixin<
          *
          * 1. exist
          */
-        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
         @authorize(leafScope.delete || {})
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
@@ -632,7 +616,7 @@ export function HistoryControllerMixin<
          *
          * 1. exist
          */
-        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
         @authorize(leafScope.history || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}/{id}/history`, {
@@ -673,7 +657,10 @@ export function HistoryControllerMixin<
                 {
                     ...filter,
                     where: {
-                        and: [{ id: id }, filter?.where || {}],
+                        and: [
+                            { [leafScope.ctor.id]: id } as any,
+                            filter?.where || {},
+                        ],
                     },
                 },
                 {

@@ -31,6 +31,11 @@ export interface ControllerScope<
     Model extends Entity,
     Controller extends CRUDController
 > {
+    ctor: {
+        id: keyof Model;
+        exclude: (keyof Model)[];
+    };
+
     repositoryGetter: RepositoryGetter<Model, Controller>;
 
     modelValidator: ModelValidator<Model>;
