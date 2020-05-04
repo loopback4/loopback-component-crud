@@ -1,4 +1,11 @@
-import { Entity, Count, CountSchema, Class } from "@loopback/repository";
+import {
+    Entity,
+    Count,
+    CountSchema,
+    Class,
+    Where,
+    Filter,
+} from "@loopback/repository";
 import {
     get,
     post,
@@ -15,7 +22,7 @@ import { authenticate } from "@loopback/authentication";
 import { authorize } from "@loopback/authorization";
 import { intercept } from "@loopback/core";
 import { validate, exist, generateIds, generatePath } from "../../interceptors";
-import { Ctor, FilterScope } from "../../types";
+import { Ctor, ControllerScope } from "../../types";
 
 import { CRUDController } from "../../servers";
 
@@ -25,9 +32,9 @@ export function CreateControllerMixin<
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
-    rootScope: FilterScope<Model, Controller>,
+    rootScope: ControllerScope<Model, Controller>,
     leafCtor: Ctor<Model>,
-    leafScope: FilterScope<Model, Controller>,
+    leafScope: ControllerScope<Model, Controller>,
     relations: string[],
     basePath: string
 ): Class<Controller> {
@@ -41,51 +48,18 @@ export function CreateControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    const authorizer = (leafScope as any).create[0];
-    const validator = (leafScope as any).create[1];
-
-    const decorateCreateAllMethod = (prototype: any) => {
-        /** Add createAll method */
-        prototype[method("createAll")] = async function (
-            ...args: any[]
-        ): Promise<Model[]> {
-            /**
-             * args[0]: id
-             * args[1]: id
-             * ...
-             * args[n-1]: id
-             * args[n]: Model[]
-             * args[n+1]: id_exist
-             */
-
-            return await leafScope
-                .repositoryGetter(this)
-                .createAll(args[ids.length]);
-        };
-
-        const methodDescriptor = {
-            value: prototype[method("createAll")],
-            writable: true,
-            enumerable: false,
-            configurable: true,
-        };
-
-        /** Decorate createAll method */
-        intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
-            prototype,
-            method("createAll"),
-            methodDescriptor
-        );
-        intercept(validate(leafCtor, ids.length, validator))(
-            prototype,
-            method("createAll"),
-            methodDescriptor
-        );
-
-        authorize(authorizer)(prototype, method("createAll"), methodDescriptor);
-        authenticate("crud")(prototype, method("createAll"), methodDescriptor);
-
-        post(`${generatePath(rootCtor, relations, basePath)}`, {
+    class MixedController extends parentClass {
+        /**
+         * Create all method
+         *
+         * 1. validate
+         * 2. exist
+         */
+        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(validate(leafCtor, 0, leafScope.modelValidator))
+        @authorize(leafScope.create || {})
+        @authenticate("crud")
+        @post(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "200": {
                     description: `Create multiple ${leafCtor.name}`,
@@ -99,20 +73,72 @@ export function CreateControllerMixin<
                     },
                 },
             },
-        })(prototype, method("createAll"), methodDescriptor);
-    };
-    const decorateCreateAllParams = (prototype: any) => {
-        /** Decorate createAll parameters */
-        ids.forEach((id, index) => {
-            param.path.string(id)(prototype, method("createAll"), index);
-        });
+        })
+        async [method("createAll")](
+            @requestBody({
+                content: {
+                    "application/json": {
+                        schema: {
+                            type: "array",
+                            items: getModelSchemaRef(leafCtor, {
+                                exclude: Object.keys(
+                                    leafCtor.definition.properties
+                                ).filter(
+                                    (key) =>
+                                        key === "uid" ||
+                                        key === "beginDate" ||
+                                        key === "endDate" ||
+                                        key === "id"
+                                ) as any,
+                            }),
+                        },
+                    },
+                },
+            })
+            models: Model[]
+        ): Promise<Model[]> {
+            /**
+             * args[0]: Model[]
+             *
+             * args[1]: id
+             * args[2]: id
+             * ...
+             * args[n]: id
+             *
+             */
 
-        requestBody({
-            content: {
-                "application/json": {
-                    schema: {
-                        type: "array",
-                        items: getModelSchemaRef(leafCtor, {
+            return await leafScope
+                .repositoryGetter(this as any)
+                .createAll(models);
+        }
+
+        /**
+         * Create one method
+         *
+         * 1. validate
+         * 2. exist
+         */
+        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(validate(leafCtor, 0, leafScope.modelValidator))
+        @authorize(leafScope.create || {})
+        @authenticate("crud")
+        @post(`${generatePath(rootCtor, relations, basePath)}/one`, {
+            responses: {
+                "200": {
+                    description: `Create single ${leafCtor.name}`,
+                    content: {
+                        "application/json": {
+                            schema: getModelSchemaRef(leafCtor),
+                        },
+                    },
+                },
+            },
+        })
+        async [method("createOne")](
+            @requestBody({
+                content: {
+                    "application/json": {
+                        schema: getModelSchemaRef(leafCtor, {
                             exclude: Object.keys(
                                 leafCtor.definition.properties
                             ).filter(
@@ -125,133 +151,37 @@ export function CreateControllerMixin<
                         }),
                     },
                 },
-            },
-        })(prototype, method("createAll"), ids.length);
-    };
-    const decorateCreateAllMetadatas = (prototype: any) => {
-        /** Decorate createAll metadata */
-        Reflect.metadata("design:type", Function)(
-            prototype,
-            method("createAll")
-        );
-        Reflect.metadata("design:paramtypes", [Object])(
-            prototype,
-            method("createAll")
-        );
-        Reflect.metadata("design:returntype", Promise)(
-            prototype,
-            method("createAll")
-        );
-    };
-
-    const decorateCreateOneMethod = (prototype: any) => {
-        /** Add createOne method */
-        prototype[method("createOne")] = async function (
-            ...args: any[]
+            })
+            model: Model
         ): Promise<Model> {
             /**
-             * args[0]: id
+             * args[0]: Model
+             *
              * args[1]: id
+             * args[2]: id
              * ...
-             * args[n-1]: id
-             * args[n]: Model
-             * args[n+1]: id_exist
+             * args[n]: id
              */
 
-            return await leafScope
-                .repositoryGetter(this)
-                .create(args[ids.length]);
-        };
-        const methodDescriptor = {
-            value: prototype[method("createOne")],
-            writable: true,
-            enumerable: false,
-            configurable: true,
-        };
-
-        /** Decorate createOne method */
-        intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
-            prototype,
-            method("createOne"),
-            methodDescriptor
-        );
-        intercept(validate(leafCtor, ids.length, validator))(
-            prototype,
-            method("createOne"),
-            methodDescriptor
-        );
-
-        authorize(authorizer)(prototype, method("createOne"), methodDescriptor);
-        authenticate("crud")(prototype, method("createOne"), methodDescriptor);
-
-        post(`${generatePath(rootCtor, relations, basePath)}/one`, {
-            responses: {
-                "200": {
-                    description: `Create single ${leafCtor.name}`,
-                    content: {
-                        "application/json": {
-                            schema: getModelSchemaRef(leafCtor),
-                        },
-                    },
-                },
-            },
-        })(prototype, method("createOne"), methodDescriptor);
-    };
-    const decorateCreateOneParams = (prototype: any) => {
-        /** Decorate createOne parameters */
-        ids.forEach((id, index) => {
-            param.path.string(id)(prototype, method("createOne"), index);
-        });
-
-        requestBody({
-            content: {
-                "application/json": {
-                    schema: getModelSchemaRef(leafCtor, {
-                        exclude: Object.keys(
-                            leafCtor.definition.properties
-                        ).filter(
-                            (key) =>
-                                key === "uid" ||
-                                key === "beginDate" ||
-                                key === "endDate" ||
-                                key === "id"
-                        ) as any,
-                    }),
-                },
-            },
-        })(prototype, method("createOne"), ids.length);
-    };
-    const decorateCreateOneMetadatas = (prototype: any) => {
-        /** Decorate createOne metadata */
-        Reflect.metadata("design:type", Function)(
-            prototype,
-            method("createOne")
-        );
-        Reflect.metadata("design:paramtypes", [Object])(
-            prototype,
-            method("createOne")
-        );
-        Reflect.metadata("design:returntype", Promise)(
-            prototype,
-            method("createOne")
-        );
-    };
-
-    class MixedController extends parentClass {
-        /**
-         * Create operations
-         *
-         * 1. exist
-         */
+            return await leafScope.repositoryGetter(this as any).create(model);
+        }
     }
 
-    decorateCreateAllMethod(MixedController.prototype);
-    decorateCreateAllParams(MixedController.prototype);
-    decorateCreateAllMetadatas(MixedController.prototype);
-
-    decorateCreateOneMethod(MixedController.prototype);
-    decorateCreateOneParams(MixedController.prototype);
-    decorateCreateOneMetadatas(MixedController.prototype);
+    /** Decorate path ids */
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            MixedController.prototype,
+            method("createAll"),
+            index + 1
+        );
+    });
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            MixedController.prototype,
+            method("createOne"),
+            index + 1
+        );
+    });
 
     return MixedController as any;
 }
@@ -262,9 +192,9 @@ export function ReadControllerMixin<
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
-    rootScope: FilterScope<Model, Controller>,
+    rootScope: ControllerScope<Model, Controller>,
     leafCtor: Ctor<Model>,
-    leafScope: FilterScope<Model, Controller>,
+    leafScope: ControllerScope<Model, Controller>,
     relations: string[],
     basePath: string
 ): Class<Controller> {
@@ -278,46 +208,16 @@ export function ReadControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    const authorizer = (leafScope as any).read[0];
-
-    const decorateReadAllMethod = (prototype: any) => {
-        /** Add readAll method */
-        prototype[method("readAll")] = async function (
-            ...args: any[]
-        ): Promise<Model[]> {
-            /**
-             * args[0]: id
-             * args[1]: id
-             * ...
-             * args[n-1]: id
-             * args[n]: Filter
-             * args[n+1]: id_exist
-             * args[n+2]: Filter_filter
-             */
-
-            return await leafScope
-                .repositoryGetter(this)
-                .find(args[ids.length + 2]);
-        };
-
-        const methodDescriptor = {
-            value: prototype[method("readAll")],
-            writable: true,
-            enumerable: false,
-            configurable: true,
-        };
-
-        /** Decorate readAll method */
-        intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
-            prototype,
-            method("readAll"),
-            methodDescriptor
-        );
-
-        authorize(authorizer)(prototype, method("readAll"), methodDescriptor);
-        authenticate("crud")(prototype, method("readAll"), methodDescriptor);
-
-        get(`${generatePath(rootCtor, relations, basePath)}`, {
+    class MixedController extends parentClass {
+        /**
+         * Read all method
+         *
+         * 1. exist
+         */
+        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @authorize(leafScope.read || {})
+        @authenticate("crud")
+        @get(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "200": {
                     description: `Read multiple ${leafCtor.name} by filter`,
@@ -333,69 +233,34 @@ export function ReadControllerMixin<
                     },
                 },
             },
-        })(prototype, method("readAll"), methodDescriptor);
-    };
-    const decorateReadAllParams = (prototype: any) => {
-        /** Decorate readAll arguments */
-        ids.forEach((id, index) => {
-            param.path.string(id)(prototype, method("readAll"), index);
-        });
-
-        param.query.object("filter", getFilterSchemaFor(leafCtor), {
-            description: `Filter ${leafCtor.name}`,
-        })(prototype, method("readAll"), ids.length);
-    };
-    const decorateReadAllMetadatas = (prototype: any) => {
-        /** Decorate readAll metadata */
-        Reflect.metadata("design:type", Function)(prototype, method("readAll"));
-        Reflect.metadata("design:paramtypes", [Object])(
-            prototype,
-            method("readAll")
-        );
-        Reflect.metadata("design:returntype", Promise)(
-            prototype,
-            method("readAll")
-        );
-    };
-
-    const decorateCountAllMethod = (prototype: any) => {
-        /** Add countAll method */
-        prototype[method("countAll")] = async function (
-            ...args: any[]
-        ): Promise<Count> {
+        })
+        async [method("readAll")](
+            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
+                description: `Filter ${leafCtor.name}`,
+            })
+            filter: Filter<Model>
+        ): Promise<Model[]> {
             /**
-             * args[0]: id
+             * args[0]: Filter
+             *
              * args[1]: id
+             * args[2]: id
              * ...
-             * args[n-1]: id
-             * args[n]: Where
-             * args[n+1]: id_exist
-             * args[n+2]: Where_filter
+             * args[n]: id
              */
 
-            return await leafScope
-                .repositoryGetter(this)
-                .count(args[ids.length + 2]);
-        };
+            return await leafScope.repositoryGetter(this as any).find(filter);
+        }
 
-        const methodDescriptor = {
-            value: prototype[method("countAll")],
-            writable: true,
-            enumerable: false,
-            configurable: true,
-        };
-
-        /** Decorate countAll method */
-        intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
-            prototype,
-            method("countAll"),
-            methodDescriptor
-        );
-
-        authorize(authorizer)(prototype, method("countAll"), methodDescriptor);
-        authenticate("crud")(prototype, method("countAll"), methodDescriptor);
-
-        get(`${generatePath(rootCtor, relations, basePath)}/count`, {
+        /**
+         * Count all method
+         *
+         * 1. exist
+         */
+        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @authorize(leafScope.read || {})
+        @authenticate("crud")
+        @get(`${generatePath(rootCtor, relations, basePath)}/count`, {
             responses: {
                 "200": {
                     description: `Read ${leafCtor.name} count by where`,
@@ -406,72 +271,34 @@ export function ReadControllerMixin<
                     },
                 },
             },
-        })(prototype, method("countAll"), methodDescriptor);
-    };
-    const decorateCountAllParams = (prototype: any) => {
-        /** Decorate countAll arguments */
-        ids.forEach((id, index) => {
-            param.path.string(id)(prototype, method("countAll"), index);
-        });
-
-        param.query.object("where", getWhereSchemaFor(leafCtor), {
-            description: `Where ${leafCtor.name}`,
-        })(prototype, method("countAll"), ids.length);
-    };
-    const decorateCountAllMetadatas = (prototype: any) => {
-        /** Decorate countAll metadata */
-        Reflect.metadata("design:type", Function)(
-            prototype,
-            method("countAll")
-        );
-        Reflect.metadata("design:paramtypes", [Object])(
-            prototype,
-            method("countAll")
-        );
-        Reflect.metadata("design:returntype", Promise)(
-            prototype,
-            method("countAll")
-        );
-    };
-
-    const decorateReadOneMethod = (prototype: any) => {
-        /** Add readOne method */
-        prototype[method("readOne")] = async function (
-            ...args: any[]
-        ): Promise<Model> {
+        })
+        async [method("countAll")](
+            @param.query.object("where", getWhereSchemaFor(leafCtor), {
+                description: `Where ${leafCtor.name}`,
+            })
+            where: Where<Model>
+        ): Promise<Count> {
             /**
-             * args[0]: id
+             * args[0]: Where
+             *
              * args[1]: id
+             * args[2]: id
              * ...
-             * args[n-1]: id
-             * args[n]: id_model
-             * args[n+1]: Filter
-             * args[n+2]: id_exist
-             * args[n+3]: Filter_filter
+             * args[n]: id
              */
 
-            return await leafScope
-                .repositoryGetter(this)
-                .findOne(args[ids.length + 3]);
-        };
-        const methodDescriptor = {
-            value: prototype[method("readOne")],
-            writable: true,
-            enumerable: false,
-            configurable: true,
-        };
+            return await leafScope.repositoryGetter(this as any).count(where);
+        }
 
-        /** Decorate readOne method */
-        intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
-            prototype,
-            method("readOne"),
-            methodDescriptor
-        );
-
-        authorize(authorizer)(prototype, method("readOne"), methodDescriptor);
-        authenticate("crud")(prototype, method("readOne"), methodDescriptor);
-
-        get(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
+        /**
+         * Read one method
+         *
+         * 1. exist
+         */
+        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @authorize(leafScope.read || {})
+        @authenticate("crud")
+        @get(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
                 "200": {
                     description: `Read single ${leafCtor.name} by id`,
@@ -484,52 +311,52 @@ export function ReadControllerMixin<
                     },
                 },
             },
-        })(prototype, method("readOne"), methodDescriptor);
-    };
-    const decorateReadOneParams = (prototype: any) => {
-        /** Decorate readOne arguments */
-        ids.forEach((id, index) => {
-            param.path.string(id)(prototype, method("readOne"), index);
-        });
+        })
+        async [method("readOne")](
+            @param.path.string("id") id: string,
+            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
+                description: `Filter ${leafCtor.name}`,
+            })
+            filter: Filter<Model>
+        ): Promise<Model> {
+            /**
+             * args[0]: id_model
+             * args[1]: Filter
+             *
+             * args[2]: id
+             * args[3]: id
+             * ...
+             * args[n]: id
+             */
 
-        param.path.string("id")(prototype, method("readOne"), ids.length);
-        param.query.object("filter", getFilterSchemaFor(leafCtor), {
-            description: `Filter ${leafCtor.name}`,
-        })(prototype, method("readOne"), ids.length + 1);
-    };
-    const decorateReadOneMetadatas = (prototype: any) => {
-        /** Decorate readOne metadata */
-        Reflect.metadata("design:type", Function)(prototype, method("readOne"));
-        Reflect.metadata("design:paramtypes", [Object])(
-            prototype,
-            method("readOne")
-        );
-        Reflect.metadata("design:returntype", Promise)(
-            prototype,
-            method("readOne")
-        );
-    };
-
-    class MixedController extends parentClass {
-        /**
-         * Read operations
-         *
-         * 1. exist
-         * 2. filter
-         */
+            return await leafScope
+                .repositoryGetter(this as any)
+                .findById(id, filter);
+        }
     }
 
-    decorateReadAllMethod(MixedController.prototype);
-    decorateReadAllParams(MixedController.prototype);
-    decorateReadAllMetadatas(MixedController.prototype);
-
-    decorateCountAllMethod(MixedController.prototype);
-    decorateCountAllParams(MixedController.prototype);
-    decorateCountAllMetadatas(MixedController.prototype);
-
-    decorateReadOneMethod(MixedController.prototype);
-    decorateReadOneParams(MixedController.prototype);
-    decorateReadOneMetadatas(MixedController.prototype);
+    /** Decorate path ids */
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            MixedController.prototype,
+            method("readAll"),
+            index + 1
+        );
+    });
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            MixedController.prototype,
+            method("countAll"),
+            index + 1
+        );
+    });
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            MixedController.prototype,
+            method("readOne"),
+            index + 2
+        );
+    });
 
     return MixedController as any;
 }
@@ -540,9 +367,9 @@ export function UpdateControllerMixin<
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
-    rootScope: FilterScope<Model, Controller>,
+    rootScope: ControllerScope<Model, Controller>,
     leafCtor: Ctor<Model>,
-    leafScope: FilterScope<Model, Controller>,
+    leafScope: ControllerScope<Model, Controller>,
     relations: string[],
     basePath: string
 ): Class<Controller> {
@@ -556,190 +383,110 @@ export function UpdateControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    const authorizer = (leafScope as any).update[0];
-    const validator = (leafScope as any).update[2];
-
-    const decorateUpdateAllMethod = (prototype: any) => {
-        /** Add updateAll method */
-        prototype[method("updateAll")] = async function (
-            ...args: any[]
-        ): Promise<void> {
-            /**
-             * args[0]: id
-             * args[1]: id
-             * ...
-             * args[n-1]: id
-             * args[n]: Model
-             * args[n+1]: Where
-             * args[n+2]: id_exist,
-             * args[n+3]: Where_filter
-             */
-
-            await leafScope
-                .repositoryGetter(this)
-                .updateAll(args[ids.length], args[ids.length + 3]);
-        };
-
-        const methodDescriptor = {
-            value: prototype[method("updateAll")],
-            writable: true,
-            enumerable: false,
-            configurable: true,
-        };
-
-        /** Decorate updateAll method */
-        intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
-            prototype,
-            method("updateAll"),
-            methodDescriptor
-        );
-        intercept(validate(leafCtor, ids.length, validator))(
-            prototype,
-            method("updateAll"),
-            methodDescriptor
-        );
-
-        authorize(authorizer)(prototype, method("updateAll"), methodDescriptor);
-        authenticate("crud")(prototype, method("updateAll"), methodDescriptor);
-
-        put(`${generatePath(rootCtor, relations, basePath)}`, {
+    class MixedController extends parentClass {
+        /**
+         * Update all method
+         *
+         * 1. validate
+         * 2. exist
+         */
+        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(validate(leafCtor, 1, leafScope.modelValidator))
+        @authorize(leafScope.update || {})
+        @authenticate("crud")
+        @put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "204": {
                     description: `Update multiple ${leafCtor.name} by where`,
                 },
             },
-        })(prototype, method("updateAll"), methodDescriptor);
-    };
-    const decorateUpdateAllParams = (prototype: any) => {
-        /** Decorate updateAll arguments */
-        ids.forEach((id, index) => {
-            param.path.string(id)(prototype, method("updateAll"), index);
-        });
-
-        requestBody({
-            content: {
-                "application/json": {
-                    schema: getModelSchemaRef(leafCtor, { partial: true }),
+        })
+        async [method("updateAll")](
+            @param.query.object("where", getWhereSchemaFor(leafCtor), {
+                description: `Where ${leafCtor.name}`,
+            })
+            where: Where<Model>,
+            @requestBody({
+                content: {
+                    "application/json": {
+                        schema: getModelSchemaRef(leafCtor, { partial: true }),
+                    },
                 },
-            },
-        })(prototype, method("updateAll"), ids.length);
-        param.query.object("where", getWhereSchemaFor(leafCtor), {
-            description: `Where ${leafCtor.name}`,
-        })(prototype, method("updateAll"), ids.length + 1);
-    };
-    const decorateUpdateAllMetadatas = (prototype: any) => {
-        /** Decorate updateAll metadata */
-        Reflect.metadata("design:type", Function)(
-            prototype,
-            method("updateAll")
-        );
-        Reflect.metadata("design:paramtypes", [Object])(
-            prototype,
-            method("updateAll")
-        );
-        Reflect.metadata("design:returntype", Promise)(
-            prototype,
-            method("updateAll")
-        );
-    };
-
-    const decorateUpdateOneMethod = (prototype: any) => {
-        /** Add updateOne method */
-        prototype[method("updateOne")] = async function (
-            ...args: any[]
+            })
+            model: Model
         ): Promise<void> {
             /**
-             * args[0]: id
-             * args[1]: id
+             * args[0]: Where
+             * args[1]: Model
+             *
+             * args[2]: id
+             * args[3]: id
              * ...
-             * args[n-1]: id
-             * args[n]: Model
-             * args[n+1]: id_model
-             * args[n+2]: id_exist
-             * args[n+3]: Where_filter
+             * args[n]: id
              */
 
             await leafScope
-                .repositoryGetter(this)
-                .updateAll(args[ids.length], args[ids.length + 3]);
-        };
-        const methodDescriptor = {
-            value: prototype[method("updateOne")],
-            writable: true,
-            enumerable: false,
-            configurable: true,
-        };
+                .repositoryGetter(this as any)
+                .updateAll(model, where);
+        }
 
-        /** Decorate updateOne method */
-        intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
-            prototype,
-            method("updateOne"),
-            methodDescriptor
-        );
-        intercept(validate(leafCtor, ids.length, validator))(
-            prototype,
-            method("updateOne"),
-            methodDescriptor
-        );
-
-        authorize(authorizer)(prototype, method("updateOne"), methodDescriptor);
-        authenticate("crud")(prototype, method("updateOne"), methodDescriptor);
-
-        put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
+        /**
+         * Update one method
+         *
+         * 1. validate
+         * 2. exist
+         */
+        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @intercept(validate(leafCtor, 1, leafScope.modelValidator))
+        @authorize(leafScope.update || {})
+        @authenticate("crud")
+        @put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
                 "204": {
                     description: `Update single ${leafCtor.name} by id`,
                 },
             },
-        })(prototype, method("updateOne"), methodDescriptor);
-    };
-    const decorateUpdateOneParams = (prototype: any) => {
-        /** Decorate updateOne arguments */
-        ids.forEach((id, index) => {
-            param.path.string(id)(prototype, method("updateOne"), index);
-        });
-
-        requestBody({
-            content: {
-                "application/json": {
-                    schema: getModelSchemaRef(leafCtor, { partial: true }),
+        })
+        async [method("updateOne")](
+            @param.path.string("id") id: string,
+            @requestBody({
+                content: {
+                    "application/json": {
+                        schema: getModelSchemaRef(leafCtor, { partial: true }),
+                    },
                 },
-            },
-        })(prototype, method("updateOne"), ids.length);
-        param.path.string("id")(prototype, method("updateOne"), ids.length + 1);
-    };
-    const decorateUpdateOneMetadatas = (prototype: any) => {
-        /** Decorate updateOne metadata */
-        Reflect.metadata("design:type", Function)(
-            prototype,
-            method("updateOne")
-        );
-        Reflect.metadata("design:paramtypes", [Object])(
-            prototype,
-            method("updateOne")
-        );
-        Reflect.metadata("design:returntype", Promise)(
-            prototype,
-            method("updateOne")
-        );
-    };
+            })
+            model: Model
+        ): Promise<void> {
+            /**
+             * args[0]: id_model
+             * args[1]: Model
+             *
+             * args[2]: id
+             * args[3]: id
+             * ...
+             * args[n]: id
+             */
 
-    class MixedController extends parentClass {
-        /**
-         * Update operations
-         *
-         * 1. exist
-         * 2. filter
-         */
+            await leafScope.repositoryGetter(this as any).updateById(id, model);
+        }
     }
 
-    decorateUpdateAllMethod(MixedController.prototype);
-    decorateUpdateAllParams(MixedController.prototype);
-    decorateUpdateAllMetadatas(MixedController.prototype);
-
-    decorateUpdateOneMethod(MixedController.prototype);
-    decorateUpdateOneParams(MixedController.prototype);
-    decorateUpdateOneMetadatas(MixedController.prototype);
+    /** Decorate path ids */
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            MixedController.prototype,
+            method("updateAll"),
+            index + 2
+        );
+    });
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            MixedController.prototype,
+            method("updateOne"),
+            index + 2
+        );
+    });
 
     return MixedController as any;
 }
@@ -750,9 +497,9 @@ export function DeleteControllerMixin<
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
-    rootScope: FilterScope<Model, Controller>,
+    rootScope: ControllerScope<Model, Controller>,
     leafCtor: Ctor<Model>,
-    leafScope: FilterScope<Model, Controller>,
+    leafScope: ControllerScope<Model, Controller>,
     relations: string[],
     basePath: string
 ): Class<Controller> {
@@ -766,46 +513,16 @@ export function DeleteControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    const authorizer = (leafScope as any).delete[0];
-
-    const decorateDeleteAllMethod = (prototype: any) => {
-        /** Add deleteAll method */
-        prototype[method("deleteAll")] = async function (
-            ...args: any[]
-        ): Promise<Count> {
-            /**
-             * args[0]: id
-             * args[1]: id
-             * ...
-             * args[n-1]: id
-             * args[n]: Where
-             * args[n+1]: id_exist
-             * args[n+2]: Where_filter
-             */
-
-            return await leafScope
-                .repositoryGetter(this)
-                .deleteAll(args[ids.length + 2]);
-        };
-
-        const methodDescriptor = {
-            value: prototype[method("deleteAll")],
-            writable: true,
-            enumerable: false,
-            configurable: true,
-        };
-
-        /** Decorate deleteAll method */
-        intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
-            prototype,
-            method("deleteAll"),
-            methodDescriptor
-        );
-
-        authorize(authorizer)(prototype, method("deleteAll"), methodDescriptor);
-        authenticate("crud")(prototype, method("deleteAll"), methodDescriptor);
-
-        del(`${generatePath(rootCtor, relations, basePath)}`, {
+    class MixedController extends parentClass {
+        /**
+         * Delete all method
+         *
+         * 1. exist
+         */
+        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @authorize(leafScope.delete || {})
+        @authenticate("crud")
+        @del(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "200": {
                     description: `Delete multiple ${leafCtor.name} by where`,
@@ -816,123 +533,73 @@ export function DeleteControllerMixin<
                     },
                 },
             },
-        })(prototype, method("deleteAll"), methodDescriptor);
-    };
-    const decorateDeleteAllParams = (prototype: any) => {
-        /** Decorate deleteAll arguments */
-        ids.forEach((id, index) => {
-            param.path.string(id)(prototype, method("deleteAll"), index);
-        });
-
-        param.query.object("where", getWhereSchemaFor(leafCtor), {
-            description: `Where ${leafCtor.name}`,
-        })(prototype, method("deleteAll"), ids.length);
-    };
-    const decorateDeleteAllMetadatas = (prototype: any) => {
-        /** Decorate deleteAll metadata */
-        Reflect.metadata("design:type", Function)(
-            prototype,
-            method("deleteAll")
-        );
-        Reflect.metadata("design:paramtypes", [Object])(
-            prototype,
-            method("deleteAll")
-        );
-        Reflect.metadata("design:returntype", Promise)(
-            prototype,
-            method("deleteAll")
-        );
-    };
-
-    const decorateDeleteOneMethod = (prototype: any) => {
-        /** Add deleteOne method */
-        prototype[method("deleteOne")] = async function (
-            ...args: any[]
+        })
+        async [method("deleteAll")](
+            @param.query.object("where", getWhereSchemaFor(leafCtor), {
+                description: `Where ${leafCtor.name}`,
+            })
+            where: Where<Model>
         ): Promise<Count> {
             /**
-             * args[0]: id
+             * args[0]: Where
+             *
              * args[1]: id
+             * args[2]: id
              * ...
-             * args[n-1]: id
-             * args[n]: id_model
-             * args[n+1]: id_exist
-             * args[n+2]: Where_filter
+             * args[n]: id
              */
 
             return await leafScope
-                .repositoryGetter(this)
-                .deleteAll(args[ids.length + 2]);
-        };
-        const methodDescriptor = {
-            value: prototype[method("deleteOne")],
-            writable: true,
-            enumerable: false,
-            configurable: true,
-        };
+                .repositoryGetter(this as any)
+                .deleteAll(where);
+        }
 
-        /** Decorate deleteOne method */
-        intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
-            prototype,
-            method("deleteOne"),
-            methodDescriptor
-        );
-
-        authorize(authorizer)(prototype, method("deleteOne"), methodDescriptor);
-        authenticate("crud")(prototype, method("deleteOne"), methodDescriptor);
-
-        del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
-            responses: {
-                "200": {
-                    description: `Delete single ${leafCtor.name} by id`,
-                    content: {
-                        "application/json": {
-                            schema: CountSchema,
-                        },
-                    },
-                },
-            },
-        })(prototype, method("deleteOne"), methodDescriptor);
-    };
-    const decorateDeleteOneParams = (prototype: any) => {
-        /** Decorate deleteOne arguments */
-        ids.forEach((id, index) => {
-            param.path.string(id)(prototype, method("deleteOne"), index);
-        });
-
-        param.path.string("id")(prototype, method("deleteOne"), ids.length);
-    };
-    const decorateDeleteOneMetadatas = (prototype: any) => {
-        /** Decorate deleteOne metadata */
-        Reflect.metadata("design:type", Function)(
-            prototype,
-            method("deleteOne")
-        );
-        Reflect.metadata("design:paramtypes", [Object])(
-            prototype,
-            method("deleteOne")
-        );
-        Reflect.metadata("design:returntype", Promise)(
-            prototype,
-            method("deleteOne")
-        );
-    };
-
-    class MixedController extends parentClass {
         /**
-         * Delete operations
+         * Delete one method
          *
          * 1. exist
-         * 2. filter
          */
+        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @authorize(leafScope.delete || {})
+        @authenticate("crud")
+        @del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
+            responses: {
+                "204": {
+                    description: `Delete single ${leafCtor.name} by id`,
+                },
+            },
+        })
+        async [method("deleteOne")](
+            @param.path.string("id") id: string
+        ): Promise<void> {
+            /**
+             * args[0]: id_model
+             *
+             * args[1]: id
+             * args[2]: id
+             * ...
+             * args[n]: id
+             */
+
+            await leafScope.repositoryGetter(this as any).deleteById(id);
+        }
     }
 
-    decorateDeleteAllMethod(MixedController.prototype);
-    decorateDeleteAllParams(MixedController.prototype);
-    decorateDeleteAllMetadatas(MixedController.prototype);
-
-    decorateDeleteOneMethod(MixedController.prototype);
-    decorateDeleteOneParams(MixedController.prototype);
-    decorateDeleteOneMetadatas(MixedController.prototype);
+    /** Decorate path ids */
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            MixedController.prototype,
+            method("deleteAll"),
+            index + 1
+        );
+    });
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            MixedController.prototype,
+            method("deleteOne"),
+            index + 1
+        );
+    });
 
     return MixedController as any;
 }
@@ -943,9 +610,9 @@ export function HistoryControllerMixin<
 >(
     controllerClass: Class<Controller>,
     rootCtor: Ctor<Model>,
-    rootScope: FilterScope<Model, Controller>,
+    rootScope: ControllerScope<Model, Controller>,
     leafCtor: Ctor<Model>,
-    leafScope: FilterScope<Model, Controller>,
+    leafScope: ControllerScope<Model, Controller>,
     relations: string[],
     basePath: string
 ): Class<Controller> {
@@ -959,52 +626,16 @@ export function HistoryControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    const authorizer = (leafScope as any).history[0];
-
-    const decorateHistoryOneMethod = (prototype: any) => {
-        /** Add historyOne method */
-        prototype[method("historyOne")] = async function (
-            ...args: any[]
-        ): Promise<Model[]> {
-            /**
-             * args[0]: id
-             * args[1]: id
-             * ...
-             * args[n-1]: id
-             * args[n]: id_model
-             * args[n+1]: Filter
-             * args[n+2]: id_exist
-             * args[n+3]: Filter_filter
-             */
-
-            return await leafScope
-                .repositoryGetter(this)
-                .find(args[ids.length + 3], {
-                    crud: true,
-                });
-        };
-        const methodDescriptor = {
-            value: prototype[method("historyOne")],
-            writable: true,
-            enumerable: false,
-            configurable: true,
-        };
-
-        /** Decorate historyOne method */
-        intercept(exist(rootCtor, rootScope, 0, ids.length, relations))(
-            prototype,
-            method("historyOne"),
-            methodDescriptor
-        );
-
-        authorize(authorizer)(
-            prototype,
-            method("historyOne"),
-            methodDescriptor
-        );
-        authenticate("crud")(prototype, method("historyOne"), methodDescriptor);
-
-        get(`${generatePath(rootCtor, relations, basePath)}/{id}/history`, {
+    class MixedController extends parentClass {
+        /**
+         * History one method
+         *
+         * 1. exist
+         */
+        // @intercept(exist(rootCtor, rootScope, 0, ids.length, relations))
+        @authorize(leafScope.history || {})
+        @authenticate("crud")
+        @get(`${generatePath(rootCtor, relations, basePath)}/{id}/history`, {
             responses: {
                 "200": {
                     description: `Get ${leafCtor.name} history by filter`,
@@ -1020,47 +651,46 @@ export function HistoryControllerMixin<
                     },
                 },
             },
-        })(prototype, method("historyOne"), methodDescriptor);
-    };
-    const decorateHistoryOneParams = (prototype: any) => {
-        /** Decorate historyOne arguments */
-        ids.forEach((id, index) => {
-            param.path.string(id)(prototype, method("historyOne"), index);
-        });
+        })
+        async [method("historyOne")](
+            @param.path.string("id") id: string,
+            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
+                description: `Filter ${leafCtor.name}`,
+            })
+            filter?: Filter<Model>
+        ): Promise<Model[]> {
+            /**
+             * args[0]: id_model
+             * args[1]: Filter
+             *
+             * args[2]: id
+             * args[3]: id
+             * ...
+             * args[n]: id
+             */
 
-        param.path.string("id")(prototype, method("historyOne"), ids.length);
-        param.query.object("filter", getFilterSchemaFor(leafCtor), {
-            description: `Filter ${leafCtor.name}`,
-        })(prototype, method("historyOne"), ids.length + 1);
-    };
-    const decorateHistoryOneMetadatas = (prototype: any) => {
-        /** Decorate historyOne metadata */
-        Reflect.metadata("design:type", Function)(
-            prototype,
-            method("historyOne")
-        );
-        Reflect.metadata("design:paramtypes", [Object])(
-            prototype,
-            method("historyOne")
-        );
-        Reflect.metadata("design:returntype", Promise)(
-            prototype,
-            method("historyOne")
-        );
-    };
-
-    class MixedController extends parentClass {
-        /**
-         * History operations
-         *
-         * 1. exist
-         * 2. filter
-         */
+            return await leafScope.repositoryGetter(this as any).find(
+                {
+                    ...filter,
+                    where: {
+                        and: [{ id: id }, filter?.where || {}],
+                    },
+                },
+                {
+                    crud: true,
+                }
+            );
+        }
     }
 
-    decorateHistoryOneMethod(MixedController.prototype);
-    decorateHistoryOneParams(MixedController.prototype);
-    decorateHistoryOneMetadatas(MixedController.prototype);
+    /** Decorate path ids */
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            MixedController.prototype,
+            method("historyOne"),
+            index + 2
+        );
+    });
 
     return MixedController as any;
 }
@@ -1071,13 +701,12 @@ export function ControllerMixin<
 >(
     controllerClass: Class<Controller>,
     ctors: Ctor<Model>[],
-    scopes: FilterScope<Model, Controller>[],
+    scopes: ControllerScope<Model, Controller>[],
     relations: string[],
     basePath: string
 ): Class<Controller> {
     const rootCtor = ctors[0];
     const rootScope = scopes[0];
-
     const leafCtor = ctors[ctors.length - 1];
     const leafScope = scopes[scopes.length - 1];
 
@@ -1093,15 +722,17 @@ export function ControllerMixin<
         );
     }
 
-    controllerClass = ReadControllerMixin<Model, Controller>(
-        controllerClass,
-        rootCtor,
-        rootScope,
-        leafCtor,
-        leafScope,
-        relations,
-        basePath
-    );
+    if ("read" in leafScope) {
+        controllerClass = ReadControllerMixin<Model, Controller>(
+            controllerClass,
+            rootCtor,
+            rootScope,
+            leafCtor,
+            leafScope,
+            relations,
+            basePath
+        );
+    }
 
     if ("update" in leafScope) {
         controllerClass = UpdateControllerMixin<Model, Controller>(
@@ -1163,7 +794,7 @@ export function CRUDControllerMixin<
 >(
     controllerClass: Class<Controller>,
     ctor: Ctor<Model>,
-    scope: FilterScope<Model, Controller>,
+    scope: ControllerScope<Model, Controller>,
     basePath: string
 ): Class<Controller> {
     return ControllerMixin<Model, Controller>(

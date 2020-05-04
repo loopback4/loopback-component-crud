@@ -35,7 +35,7 @@ export class CRUDGraphQLServer extends Context implements Server {
     async start() {
         let openApiSpec = await this.getApiSpec();
 
-        const { schema, report } = await createGraphQLSchema(openApiSpec, {
+        const { schema } = await createGraphQLSchema(openApiSpec, {
             fillEmptyResponses: true,
         });
 

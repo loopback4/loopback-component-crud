@@ -21,26 +21,28 @@ export type RepositoryGetter<
 > = (controller: Controller) => DefaultCrudRepository<Model, any, any>;
 
 /** Validate Model, check model params validity */
-export type ValidateModel<Model extends Entity> = (
+export type ModelValidator<Model extends Entity> = (
     context: InvocationContext,
     models: Model[]
 ) => Promise<boolean>;
 
-/** Filter Scope, passed to filter interceptor for API's business scope definition */
-export interface FilterScope<
+/** Controller Scope used for API's business scope definition */
+export interface ControllerScope<
     Model extends Entity,
     Controller extends CRUDController
 > {
     repositoryGetter: RepositoryGetter<Model, Controller>;
 
-    create?: [AuthorizationMetadata, ValidateModel<Model>];
-    read: [AuthorizationMetadata];
-    update?: [AuthorizationMetadata, ValidateModel<Model>];
-    delete?: [AuthorizationMetadata];
-    history?: [AuthorizationMetadata];
+    modelValidator: ModelValidator<Model>;
+
+    create?: AuthorizationMetadata;
+    read?: AuthorizationMetadata;
+    update?: AuthorizationMetadata;
+    delete?: AuthorizationMetadata;
+    history?: AuthorizationMetadata;
 
     include: {
-        [relation: string]: FilterScope<any, Controller>;
+        [relation: string]: ControllerScope<any, Controller>;
     };
 }
 

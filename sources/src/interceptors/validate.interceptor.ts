@@ -7,12 +7,12 @@ import {
 import { HttpErrors } from "@loopback/rest";
 import { Entity } from "@loopback/repository";
 
-import { Ctor, ValidateModel } from "../types";
+import { Ctor, ModelValidator } from "../types";
 
 export function validate<Model extends Entity>(
     ctor: Ctor<Model>,
     argIndex: number,
-    validator: ValidateModel<Model>
+    validator: ModelValidator<Model>
 ): Interceptor {
     return async (
         invocationCtx: InvocationContext,
@@ -32,7 +32,7 @@ export function validate<Model extends Entity>(
 async function validateFn<Model extends Entity>(
     ctor: Ctor<Model>,
     model: Model,
-    validator: ValidateModel<Model>,
+    validator: ModelValidator<Model>,
     invocationCtx: InvocationContext
 ): Promise<boolean> {
     if (Array.isArray(model)) {

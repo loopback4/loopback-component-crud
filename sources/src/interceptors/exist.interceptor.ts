@@ -11,13 +11,13 @@ import {
     EntityNotFoundError,
 } from "@loopback/repository";
 
-import { Ctor, FilterScope, RepositoryGetter } from "../types";
+import { Ctor, ControllerScope, RepositoryGetter } from "../types";
 
 import { CRUDController } from "../servers";
 
 export function exist<Model extends Entity, Controller extends CRUDController>(
     ctor: Ctor<Model>,
-    scope: FilterScope<Model, Controller>,
+    scope: ControllerScope<Model, Controller>,
     argIndexBegin: number,
     argIndexEnd: number,
     relations: string[]
