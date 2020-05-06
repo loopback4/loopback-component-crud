@@ -31,20 +31,18 @@ export interface ControllerScope<
     Model extends Entity,
     Controller extends CRUDController
 > {
-    ctor: {
+    modelCtor: {
         id: keyof Model;
         exclude: (keyof Model)[];
+        validator: ModelValidator<Model>;
     };
 
     repositoryGetter: RepositoryGetter<Model, Controller>;
-
-    modelValidator: ModelValidator<Model>;
 
     create?: AuthorizationMetadata;
     read?: AuthorizationMetadata;
     update?: AuthorizationMetadata;
     delete?: AuthorizationMetadata;
-    history?: AuthorizationMetadata;
 
     include: {
         [relation: string]: ControllerScope<any, Controller>;

@@ -48,7 +48,63 @@ export function CreateControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    class MixedController extends parentClass {
+    class OneController extends parentClass {
+        /**
+         * Create one method
+         *
+         * 1. validate
+         * 2. exist
+         */
+        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
+        @intercept(validate(leafCtor, 0, leafScope.modelCtor.validator))
+        @authorize(leafScope.create || {})
+        @authenticate("crud")
+        @post(`${generatePath(rootCtor, relations, basePath)}/one`, {
+            responses: {
+                "200": {
+                    description: `Create single ${leafCtor.name}`,
+                    content: {
+                        "application/json": {
+                            schema: getModelSchemaRef(leafCtor),
+                        },
+                    },
+                },
+            },
+        })
+        async [method("createOne")](
+            @requestBody({
+                content: {
+                    "application/json": {
+                        schema: getModelSchemaRef(leafCtor, {
+                            exclude: leafScope.modelCtor.exclude,
+                        }),
+                    },
+                },
+            })
+            model: Model
+        ): Promise<Model> {
+            /**
+             * args[0]: Model
+             *
+             * args[1]: id
+             * args[2]: id
+             * ...
+             * args[n]: id
+             */
+
+            return await leafScope.repositoryGetter(this as any).create(model);
+        }
+    }
+    /** Decorate path ids */
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            OneController.prototype,
+            method("createOne"),
+            index + 1
+        );
+    });
+
+    class AllController extends OneController {
         /**
          * Create all method
          *
@@ -56,7 +112,7 @@ export function CreateControllerMixin<
          * 2. exist
          */
         @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
-        @intercept(validate(leafCtor, 0, leafScope.modelValidator))
+        @intercept(validate(leafCtor, 0, leafScope.modelCtor.validator))
         @authorize(leafScope.create || {})
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -81,7 +137,7 @@ export function CreateControllerMixin<
                         schema: {
                             type: "array",
                             items: getModelSchemaRef(leafCtor, {
-                                exclude: leafScope.ctor.exclude,
+                                exclude: leafScope.modelCtor.exclude,
                             }),
                         },
                     },
@@ -103,71 +159,17 @@ export function CreateControllerMixin<
                 .repositoryGetter(this as any)
                 .createAll(models);
         }
-
-        /**
-         * Create one method
-         *
-         * 1. validate
-         * 2. exist
-         */
-        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
-        @intercept(validate(leafCtor, 0, leafScope.modelValidator))
-        @authorize(leafScope.create || {})
-        @authenticate("crud")
-        @post(`${generatePath(rootCtor, relations, basePath)}/one`, {
-            responses: {
-                "200": {
-                    description: `Create single ${leafCtor.name}`,
-                    content: {
-                        "application/json": {
-                            schema: getModelSchemaRef(leafCtor),
-                        },
-                    },
-                },
-            },
-        })
-        async [method("createOne")](
-            @requestBody({
-                content: {
-                    "application/json": {
-                        schema: getModelSchemaRef(leafCtor, {
-                            exclude: leafScope.ctor.exclude,
-                        }),
-                    },
-                },
-            })
-            model: Model
-        ): Promise<Model> {
-            /**
-             * args[0]: Model
-             *
-             * args[1]: id
-             * args[2]: id
-             * ...
-             * args[n]: id
-             */
-
-            return await leafScope.repositoryGetter(this as any).create(model);
-        }
     }
-
     /** Decorate path ids */
     ids.forEach((id, index) => {
         param.path.string(id)(
-            MixedController.prototype,
+            AllController.prototype,
             method("createAll"),
             index + 1
         );
     });
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            MixedController.prototype,
-            method("createOne"),
-            index + 1
-        );
-    });
 
-    return MixedController as any;
+    return AllController as any;
 }
 
 export function ReadControllerMixin<
@@ -192,88 +194,7 @@ export function ReadControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    class MixedController extends parentClass {
-        /**
-         * Read all method
-         *
-         * 1. exist
-         */
-        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
-        @authorize(leafScope.read || {})
-        @authenticate("crud")
-        @get(`${generatePath(rootCtor, relations, basePath)}`, {
-            responses: {
-                "200": {
-                    description: `Read multiple ${leafCtor.name} by filter`,
-                    content: {
-                        "application/json": {
-                            schema: {
-                                type: "array",
-                                items: getModelSchemaRef(leafCtor, {
-                                    includeRelations: true,
-                                }),
-                            },
-                        },
-                    },
-                },
-            },
-        })
-        async [method("readAll")](
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
-            })
-            filter: Filter<Model>
-        ): Promise<Model[]> {
-            /**
-             * args[0]: Filter
-             *
-             * args[1]: id
-             * args[2]: id
-             * ...
-             * args[n]: id
-             */
-
-            return await leafScope.repositoryGetter(this as any).find(filter);
-        }
-
-        /**
-         * Count all method
-         *
-         * 1. exist
-         */
-        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
-        @authorize(leafScope.read || {})
-        @authenticate("crud")
-        @get(`${generatePath(rootCtor, relations, basePath)}/count`, {
-            responses: {
-                "200": {
-                    description: `Read ${leafCtor.name} count by where`,
-                    content: {
-                        "application/json": {
-                            schema: CountSchema,
-                        },
-                    },
-                },
-            },
-        })
-        async [method("countAll")](
-            @param.query.object("where", getWhereSchemaFor(leafCtor), {
-                description: `Where ${leafCtor.name}`,
-            })
-            where: Where<Model>
-        ): Promise<Count> {
-            /**
-             * args[0]: Where
-             *
-             * args[1]: id
-             * args[2]: id
-             * ...
-             * args[n]: id
-             */
-
-            return await leafScope.repositoryGetter(this as any).count(where);
-        }
-
+    class OneController extends parentClass {
         /**
          * Read one method
          *
@@ -318,31 +239,89 @@ export function ReadControllerMixin<
                 .findById(id, filter);
         }
     }
-
     /** Decorate path ids */
     ids.forEach((id, index) => {
         param.path.string(id)(
-            MixedController.prototype,
+            OneController.prototype,
+            method("readOne"),
+            index + 1
+        );
+    });
+
+    class AllController extends OneController {
+        /**
+         * Read all method
+         *
+         * 1. exist
+         */
+        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
+        @authorize(leafScope.read || {})
+        @authenticate("crud")
+        @get(`${generatePath(rootCtor, relations, basePath)}`, {
+            responses: {
+                "200": {
+                    description: `Read multiple ${leafCtor.name} by filter`,
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "array",
+                                items: getModelSchemaRef(leafCtor, {
+                                    includeRelations: true,
+                                }),
+                            },
+                        },
+                    },
+                },
+            },
+        })
+        async [method("readAll")](
+            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
+                description: `Filter ${leafCtor.name}`,
+            })
+            filter: Filter<Model>
+        ): Promise<Model[]> {
+            /**
+             * args[0]: Filter
+             *
+             * args[1]: id
+             * args[2]: id
+             * ...
+             * args[n]: id
+             */
+
+            // const count = await leafScope
+            //     .repositoryGetter(this as any)
+            //     .count(filter?.where);
+            // this.response.setHeader("X-Total-Count", count.count);
+
+            // return await leafScope.repositoryGetter(this as any).find(
+            //     {
+            //         ...filter,
+            //         where: {
+            //             and: [
+            //                 { [leafScope.modelCtor.id]: id } as any,
+            //                 filter?.where || {},
+            //             ],
+            //         },
+            //     },
+            //     {
+            //         crud: true,
+            //     }
+            // );
+
+            return await leafScope.repositoryGetter(this as any).find(filter);
+        }
+    }
+    /** Decorate path ids */
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            AllController.prototype,
             method("readAll"),
             index + 1
         );
     });
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            MixedController.prototype,
-            method("countAll"),
-            index + 1
-        );
-    });
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            MixedController.prototype,
-            method("readOne"),
-            index + 2
-        );
-    });
 
-    return MixedController as any;
+    return AllController as any;
 }
 
 export function UpdateControllerMixin<
@@ -367,7 +346,58 @@ export function UpdateControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    class MixedController extends parentClass {
+    class OneController extends parentClass {
+        /**
+         * Update one method
+         *
+         * 1. validate
+         * 2. exist
+         */
+        @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
+        @intercept(validate(leafCtor, 1, leafScope.modelCtor.validator))
+        @authorize(leafScope.update || {})
+        @authenticate("crud")
+        @put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
+            responses: {
+                "204": {
+                    description: `Update single ${leafCtor.name} by id`,
+                },
+            },
+        })
+        async [method("updateOne")](
+            @param.path.string("id") id: string,
+            @requestBody({
+                content: {
+                    "application/json": {
+                        schema: getModelSchemaRef(leafCtor, { partial: true }),
+                    },
+                },
+            })
+            model: Model
+        ): Promise<void> {
+            /**
+             * args[0]: id_model
+             * args[1]: Model
+             *
+             * args[2]: id
+             * args[3]: id
+             * ...
+             * args[n]: id
+             */
+
+            await leafScope.repositoryGetter(this as any).updateById(id, model);
+        }
+    }
+    /** Decorate path ids */
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            OneController.prototype,
+            method("updateOne"),
+            index + 2
+        );
+    });
+
+    class AllController extends OneController {
         /**
          * Update all method
          *
@@ -375,7 +405,7 @@ export function UpdateControllerMixin<
          * 2. exist
          */
         @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
-        @intercept(validate(leafCtor, 1, leafScope.modelValidator))
+        @intercept(validate(leafCtor, 1, leafScope.modelCtor.validator))
         @authorize(leafScope.update || {})
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -413,66 +443,17 @@ export function UpdateControllerMixin<
                 .repositoryGetter(this as any)
                 .updateAll(model, where);
         }
-
-        /**
-         * Update one method
-         *
-         * 1. validate
-         * 2. exist
-         */
-        @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
-        @intercept(validate(leafCtor, 1, leafScope.modelValidator))
-        @authorize(leafScope.update || {})
-        @authenticate("crud")
-        @put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
-            responses: {
-                "204": {
-                    description: `Update single ${leafCtor.name} by id`,
-                },
-            },
-        })
-        async [method("updateOne")](
-            @param.path.string("id") id: string,
-            @requestBody({
-                content: {
-                    "application/json": {
-                        schema: getModelSchemaRef(leafCtor, { partial: true }),
-                    },
-                },
-            })
-            model: Model
-        ): Promise<void> {
-            /**
-             * args[0]: id_model
-             * args[1]: Model
-             *
-             * args[2]: id
-             * args[3]: id
-             * ...
-             * args[n]: id
-             */
-
-            await leafScope.repositoryGetter(this as any).updateById(id, model);
-        }
     }
-
     /** Decorate path ids */
     ids.forEach((id, index) => {
         param.path.string(id)(
-            MixedController.prototype,
+            AllController.prototype,
             method("updateAll"),
             index + 2
         );
     });
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            MixedController.prototype,
-            method("updateOne"),
-            index + 2
-        );
-    });
 
-    return MixedController as any;
+    return AllController as any;
 }
 
 export function DeleteControllerMixin<
@@ -497,7 +478,47 @@ export function DeleteControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    class MixedController extends parentClass {
+    class OneController extends parentClass {
+        /**
+         * Delete one method
+         *
+         * 1. exist
+         */
+        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
+        @authorize(leafScope.delete || {})
+        @authenticate("crud")
+        @del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
+            responses: {
+                "204": {
+                    description: `Delete single ${leafCtor.name} by id`,
+                },
+            },
+        })
+        async [method("deleteOne")](
+            @param.path.string("id") id: string
+        ): Promise<void> {
+            /**
+             * args[0]: id_model
+             *
+             * args[1]: id
+             * args[2]: id
+             * ...
+             * args[n]: id
+             */
+
+            await leafScope.repositoryGetter(this as any).deleteById(id);
+        }
+    }
+    /** Decorate path ids */
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            OneController.prototype,
+            method("deleteOne"),
+            index + 1
+        );
+    });
+
+    class AllController extends OneController {
         /**
          * Delete all method
          *
@@ -537,149 +558,17 @@ export function DeleteControllerMixin<
                 .repositoryGetter(this as any)
                 .deleteAll(where);
         }
-
-        /**
-         * Delete one method
-         *
-         * 1. exist
-         */
-        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
-        @authorize(leafScope.delete || {})
-        @authenticate("crud")
-        @del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
-            responses: {
-                "204": {
-                    description: `Delete single ${leafCtor.name} by id`,
-                },
-            },
-        })
-        async [method("deleteOne")](
-            @param.path.string("id") id: string
-        ): Promise<void> {
-            /**
-             * args[0]: id_model
-             *
-             * args[1]: id
-             * args[2]: id
-             * ...
-             * args[n]: id
-             */
-
-            await leafScope.repositoryGetter(this as any).deleteById(id);
-        }
     }
-
     /** Decorate path ids */
     ids.forEach((id, index) => {
         param.path.string(id)(
-            MixedController.prototype,
+            AllController.prototype,
             method("deleteAll"),
             index + 1
         );
     });
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            MixedController.prototype,
-            method("deleteOne"),
-            index + 1
-        );
-    });
 
-    return MixedController as any;
-}
-
-export function HistoryControllerMixin<
-    Model extends Entity,
-    Controller extends CRUDController
->(
-    controllerClass: Class<Controller>,
-    rootCtor: Ctor<Model>,
-    rootScope: ControllerScope<Model, Controller>,
-    leafCtor: Ctor<Model>,
-    leafScope: ControllerScope<Model, Controller>,
-    relations: string[],
-    basePath: string
-): Class<Controller> {
-    const parentClass: Class<CRUDController> = controllerClass;
-
-    const method = (name: string) =>
-        relations.reduce(
-            (accumulate, relation) => accumulate.concat(relation),
-            name
-        );
-
-    const ids = generateIds(rootCtor, relations);
-
-    class MixedController extends parentClass {
-        /**
-         * History one method
-         *
-         * 1. exist
-         */
-        @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
-        @authorize(leafScope.history || {})
-        @authenticate("crud")
-        @get(`${generatePath(rootCtor, relations, basePath)}/{id}/history`, {
-            responses: {
-                "200": {
-                    description: `Get ${leafCtor.name} history by filter`,
-                    content: {
-                        "application/json": {
-                            schema: {
-                                type: "array",
-                                items: getModelSchemaRef(leafCtor, {
-                                    includeRelations: true,
-                                }),
-                            },
-                        },
-                    },
-                },
-            },
-        })
-        async [method("historyOne")](
-            @param.path.string("id") id: string,
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
-            })
-            filter?: Filter<Model>
-        ): Promise<Model[]> {
-            /**
-             * args[0]: id_model
-             * args[1]: Filter
-             *
-             * args[2]: id
-             * args[3]: id
-             * ...
-             * args[n]: id
-             */
-
-            return await leafScope.repositoryGetter(this as any).find(
-                {
-                    ...filter,
-                    where: {
-                        and: [
-                            { [leafScope.ctor.id]: id } as any,
-                            filter?.where || {},
-                        ],
-                    },
-                },
-                {
-                    crud: true,
-                }
-            );
-        }
-    }
-
-    /** Decorate path ids */
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            MixedController.prototype,
-            method("historyOne"),
-            index + 2
-        );
-    });
-
-    return MixedController as any;
+    return AllController as any;
 }
 
 export function ControllerMixin<
@@ -735,18 +624,6 @@ export function ControllerMixin<
 
     if ("delete" in leafScope) {
         controllerClass = DeleteControllerMixin<Model, Controller>(
-            controllerClass,
-            rootCtor,
-            rootScope,
-            leafCtor,
-            leafScope,
-            relations,
-            basePath
-        );
-    }
-
-    if ("history" in leafScope) {
-        controllerClass = HistoryControllerMixin<Model, Controller>(
             controllerClass,
             rootCtor,
             rootScope,
