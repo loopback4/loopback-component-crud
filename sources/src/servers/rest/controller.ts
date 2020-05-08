@@ -1,7 +1,6 @@
 import { inject } from "@loopback/context";
 import { Request, Response, RestBindings } from "@loopback/rest";
-import { AuthenticationBindings } from "@loopback/authentication";
-import { UserProfile } from "@loopback/security";
+import { SecurityBindings, UserProfile } from "@loopback/security";
 
 export class CRUDController {
     constructor(
@@ -9,7 +8,7 @@ export class CRUDController {
         public request: Request,
         @inject(RestBindings.Http.RESPONSE)
         public response: Response,
-        @inject(AuthenticationBindings.CURRENT_USER, { optional: true })
+        @inject(SecurityBindings.USER, { optional: true })
         public session: UserProfile
     ) {}
 }

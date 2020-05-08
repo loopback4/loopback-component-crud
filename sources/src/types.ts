@@ -17,8 +17,12 @@ export type Ctor<Model extends Entity> = typeof Entity & {
 /** Get Repository From Controller */
 export type RepositoryGetter<
     Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
     Controller extends CRUDController
-> = (controller: Controller) => DefaultCrudRepository<Model, any, any>;
+> = (
+    controller: Controller
+) => DefaultCrudRepository<Model, ModelID, ModelRelations>;
 
 /** Validate Model, check model params validity */
 export type ModelValidator<Model extends Entity> = (
@@ -29,15 +33,18 @@ export type ModelValidator<Model extends Entity> = (
 /** Controller Scope used for API's business scope definition */
 export interface ControllerScope<
     Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
     Controller extends CRUDController
 > {
-    modelCtor: {
-        id: keyof Model;
-        exclude: (keyof Model)[];
-        validator: ModelValidator<Model>;
-    };
+    modelValidator: ModelValidator<Model>;
 
-    repositoryGetter: RepositoryGetter<Model, Controller>;
+    repositoryGetter: RepositoryGetter<
+        Model,
+        ModelID,
+        ModelRelations,
+        Controller
+    >;
 
     create?: AuthorizationMetadata;
     read?: AuthorizationMetadata;
@@ -45,7 +52,7 @@ export interface ControllerScope<
     delete?: AuthorizationMetadata;
 
     include: {
-        [relation: string]: ControllerScope<any, Controller>;
+        [relation: string]: ControllerScope<any, any, any, Controller>;
     };
 }
 

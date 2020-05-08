@@ -134,32 +134,51 @@ async function existFn<Model extends Entity, Controller extends CRUDController>(
     };
 }
 
+export function getId<Model extends Entity>(ctor: Ctor<Model>) {
+    if ("id" in ctor.definition.properties) {
+        return "id";
+    }
+
+    return ctor.getIdProperties()[0];
+}
+
 export function generateIds<Model extends Entity>(
     ctor: Ctor<Model>,
     relations: string[]
 ): string[] {
-    let relationTypes = [RelationType.hasMany];
+    relations = [`${ctor.name.toLowerCase()}s`, ...relations];
+    ctor = {
+        definition: {
+            relations: {
+                [`${ctor.name.toLowerCase()}s`]: {
+                    type: RelationType.hasMany,
+                    targetsMany: true,
+                    target: () => ctor,
+                    keyFrom: "",
+                    keyTo: "",
+                },
+            },
+        },
+    };
 
-    return relations
-        .map((relation, index) => {
-            const modelRelation = ctor.definition.relations[relation];
-            const modelIdName = `${ctor.name.toLowerCase()}_id`;
-            let result = undefined;
+    const ids = relations.map((relation, index) => {
+        let result = undefined;
 
-            /** Push previous model relation type to current model to queue */
-            relationTypes.push(modelRelation.type);
+        if (
+            ctor.definition.relations[relation].targetsMany &&
+            index !== relation.length - 1
+        ) {
+            result = `${ctor.definition.relations[relation]
+                .target()
+                .name.toLowerCase()}_id`;
+        }
 
-            /** Get next related model */
-            ctor = modelRelation.target();
+        ctor = ctor.definition.relations[relation].target();
 
-            /** Check previous model relation */
-            if (relationTypes.shift() === RelationType.hasMany) {
-                result = modelIdName;
-            }
+        return result;
+    });
 
-            return result;
-        })
-        .filter((idName) => idName) as any;
+    return ids.filter((id) => Boolean(id)) as string[];
 }
 
 export function generatePath<Model extends Entity>(
@@ -167,76 +186,93 @@ export function generatePath<Model extends Entity>(
     relations: string[],
     basePath: string
 ): string {
-    let relationTypes = [RelationType.hasMany];
+    relations = [`${ctor.name.toLowerCase()}s`, ...relations];
+    ctor = {
+        definition: {
+            relations: {
+                [`${ctor.name.toLowerCase()}s`]: {
+                    type: RelationType.hasMany,
+                    targetsMany: true,
+                    target: () => ctor,
+                    keyFrom: "",
+                    keyTo: "",
+                },
+            },
+        },
+    };
 
-    return relations.reduce((accumulate, relation, index) => {
-        const modelRelation = ctor.definition.relations[relation];
-        const modelIdName = `${ctor.name.toLowerCase()}_id`;
-        const modelRelationName = `${relation.toLowerCase()}`;
-        let result = `${accumulate}/${modelRelationName}`;
+    const tokens = relations.map((relation, index) => {
+        let result = `/${ctor.definition.relations[relation].name}`;
 
-        /** Push previous model relation type to current model to queue */
-        relationTypes.push(modelRelation.type);
-
-        /** Get next related model */
-        ctor = modelRelation.target();
-
-        /** Check previous model relation */
-        if (relationTypes.shift() === RelationType.hasMany) {
-            result = `${accumulate}/{${modelIdName}}/${modelRelationName}`;
+        if (
+            ctor.definition.relations[relation].targetsMany &&
+            index !== relation.length - 1
+        ) {
+            result = `/${
+                ctor.definition.relations[relation].name
+            }/${ctor.definition.relations[relation]
+                .target()
+                .name.toLowerCase()}_id`;
         }
+
+        ctor = ctor.definition.relations[relation].target();
 
         return result;
-    }, `${basePath}/${ctor.name.toLowerCase()}s`);
+    });
+
+    return `${basePath}${tokens.join()}`;
 }
 
-function generateFilter<Model extends Entity>(
+export function generateFilter<Model extends Entity>(
     ctor: Ctor<Model>,
-    ids: string[],
-    relations: string[]
+    relations: string[],
+    ids: string[]
 ): Filter<Model> | undefined {
-    let filter: Filter<any> = {};
-
-    let relationTypes = [RelationType.hasMany];
-
-    ids = [...ids];
-
-    relations.reduce((accumulate, relation, index) => {
-        const modelRelation = ctor.definition.relations[relation];
-        const modelIdProperty =
-            "id" in ctor.definition.properties
-                ? "id"
-                : ctor.getIdProperties()[0];
-
-        /** Push previous model relation type to current model to queue */
-        relationTypes.push(modelRelation.type);
-
-        /** Get next related model */
-        ctor = modelRelation.target();
-
-        /** Check previous model relation */
-        if (relationTypes.shift() === RelationType.hasMany) {
-            accumulate.where = {
-                [modelIdProperty]: ids.shift() || "",
-            };
-        }
-
-        /** If last relation and current relation type is hasMany, filter by model foreign key */
-        if (
-            index === relations.length - 1 &&
-            relationTypes.shift() === RelationType.hasMany
-        ) {
-            return accumulate;
-        }
-
-        accumulate.include = [
-            {
-                relation: relation,
-                scope: {},
+    relations = [`${ctor.name.toLowerCase()}s`, ...relations];
+    ctor = {
+        definition: {
+            relations: {
+                [`${ctor.name.toLowerCase()}s`]: {
+                    type: RelationType.hasMany,
+                    targetsMany: true,
+                    target: () => ctor,
+                    keyFrom: "",
+                    keyTo: "",
+                },
             },
-        ];
-        return accumulate.include[0].scope as any;
+        },
+    };
+
+    let filter: Filter<any> = {};
+    relations.pop();
+
+    filter = relations.reduce((filter, relation) => {
+        if (ctor.definition.relations[relation].targetsMany) {
+            filter.include = [
+                {
+                    relation: relation,
+                    scope: {
+                        where: {
+                            [getId(ctor)]: ids.shift(),
+                        },
+                    },
+                },
+            ];
+        } else {
+            filter.include = [
+                {
+                    relation: relation,
+                    scope: {},
+                },
+            ];
+        }
+
+        ctor = ctor.definition.relations[relation].target();
+
+        return filter.include[0].scope || {};
     }, filter);
 
-    return filter;
+    if (filter.include && filter.include[0]) {
+        return filter.include[0].scope as any;
+    }
 }
