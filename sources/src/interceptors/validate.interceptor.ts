@@ -7,12 +7,11 @@ import {
 import { HttpErrors } from "@loopback/rest";
 import { Entity } from "@loopback/repository";
 
-import { Ctor, ModelValidator } from "../types";
+import { ModelValidator } from "../types";
 
 export function validate<Model extends Entity>(
-    ctor: Ctor<Model>,
-    argIndex: number,
-    validator: ModelValidator<Model>
+    validator: ModelValidator<Model>,
+    argIndex: number
 ): Interceptor {
     return async (
         invocationCtx: InvocationContext,
@@ -21,7 +20,10 @@ export function validate<Model extends Entity>(
         /** Get model from arguments request body */
         const model = invocationCtx.args[argIndex];
 
-        if (!(await validateFn(ctor, model, validator, invocationCtx))) {
+        /** Get model condition from arguments, pushed by exists interceptor */
+        const condition = invocationCtx.args[invocationCtx.args.length - 1];
+
+        if (!(await validateFn(model, condition, validator, invocationCtx))) {
             throw new HttpErrors.UnprocessableEntity("Entity is not valid");
         }
 
@@ -30,8 +32,8 @@ export function validate<Model extends Entity>(
 }
 
 async function validateFn<Model extends Entity>(
-    ctor: Ctor<Model>,
     model: Model,
+    condition: Model,
     validator: ModelValidator<Model>,
     invocationCtx: InvocationContext
 ): Promise<boolean> {
@@ -54,6 +56,11 @@ async function validateFn<Model extends Entity>(
             return false;
         }
     }
+
+    // map model properties with exists condition
+    Object.entries(condition).forEach(([property, value]) => {
+        (model as any)[property] = value;
+    });
 
     return true;
 }
