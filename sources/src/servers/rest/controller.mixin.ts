@@ -333,7 +333,9 @@ export function ReadControllerMixin<
             //     }
             // );
 
-            return await leafScope.repositoryGetter(this as any).find(filter);
+            return await leafScope
+                .repositoryGetter(this as any)
+                .find(arguments[arguments.length - 1]);
         }
 
         /**
@@ -380,9 +382,15 @@ export function ReadControllerMixin<
              * args[n+2]: Limit
              */
 
-            return await leafScope
+            const model = await leafScope
                 .repositoryGetter(this as any)
-                .findById(id, filter);
+                .findOne(arguments[arguments.length - 1]);
+
+            if (model) {
+                return model;
+            } else {
+                throw new Error();
+            }
         }
     }
     /** Decorate path ids */
@@ -408,8 +416,8 @@ export function ReadControllerMixin<
          * 1. exist
          * 2. limit
          */
-        @intercept(limit(leafCtor, leafScope, 0, undefined, 1))
-        @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
+        @intercept(limit(leafCtor, leafScope, undefined, undefined, 0))
+        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
         @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -427,18 +435,16 @@ export function ReadControllerMixin<
             },
         })
         async [method("readOne")](
-            @param.path.string("id") id: string,
             @param.query.object("filter", getFilterSchemaFor(leafCtor), {
                 description: `Filter ${leafCtor.name}`,
             })
             filter: Filter<Model>
         ): Promise<Model> {
             /**
-             * args[0]: id_model
-             * args[1]: Filter
+             * args[0]: Filter
              *
+             * args[1]: id
              * args[2]: id
-             * args[3]: id
              * ...
              * args[n]: id
              *
@@ -446,9 +452,15 @@ export function ReadControllerMixin<
              * args[n+2]: Limit
              */
 
-            return await leafScope
+            const model = await leafScope
                 .repositoryGetter(this as any)
-                .findById(id, filter);
+                .findOne(arguments[arguments.length - 1]);
+
+            if (model) {
+                return model;
+            } else {
+                throw new Error();
+            }
         }
     }
     /** Decorate path ids */
