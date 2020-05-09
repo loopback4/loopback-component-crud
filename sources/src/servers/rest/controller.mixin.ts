@@ -21,7 +21,13 @@ import {
 import { authenticate } from "@loopback/authentication";
 import { authorize } from "@loopback/authorization";
 import { intercept } from "@loopback/core";
-import { validate, exist, generateIds, generatePath } from "../../interceptors";
+import {
+    exist,
+    validate,
+    limit,
+    generateIds,
+    generatePath,
+} from "../../interceptors";
 import { Ctor, ControllerScope } from "../../types";
 
 import { CRUDController } from "../../servers";
@@ -54,11 +60,11 @@ export function CreateControllerMixin<
         /**
          * Create all method
          *
-         * 1. validate
-         * 2. exist
+         * 1. exist
+         * 2. validate
          */
-        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
-        @intercept(validate(leafCtor, 0, leafScope.modelValidator))
+        @intercept(validate(leafScope.modelValidator, 0))
+        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
         @authorize(leafScope.create || {})
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -83,7 +89,9 @@ export function CreateControllerMixin<
                         schema: {
                             type: "array",
                             items: getModelSchemaRef(leafCtor, {
-                                exclude: leafScope.modelCtor.exclude,
+                                exclude:
+                                    leafCtor.definition.settings
+                                        .excludeProperties,
                             }),
                         },
                     },
@@ -99,6 +107,8 @@ export function CreateControllerMixin<
              * ...
              * args[n]: id
              *
+             * args[n+1]: Condition
+             *
              */
 
             return await leafScope
@@ -107,13 +117,13 @@ export function CreateControllerMixin<
         }
 
         /**
-         * Create one method
+         * Create all method
          *
-         * 1. validate
-         * 2. exist
+         * 1. exist
+         * 2. validate
          */
-        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
-        @intercept(validate(leafCtor, 0, leafScope.modelValidator))
+        @intercept(validate(leafScope.modelValidator, 0))
+        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
         @authorize(leafScope.create || {})
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}/one`, {
@@ -133,7 +143,8 @@ export function CreateControllerMixin<
                 content: {
                     "application/json": {
                         schema: getModelSchemaRef(leafCtor, {
-                            exclude: leafScope.modelCtor.exclude,
+                            exclude:
+                                leafCtor.definition.settings.excludeProperties,
                         }),
                     },
                 },
@@ -147,6 +158,8 @@ export function CreateControllerMixin<
              * args[2]: id
              * ...
              * args[n]: id
+             *
+             * args[n+1]: Condition
              */
 
             return await leafScope.repositoryGetter(this as any).create(model);
@@ -170,13 +183,13 @@ export function CreateControllerMixin<
 
     class TargetsOneController extends parentClass {
         /**
-         * Create one method
+         * Create all method
          *
-         * 1. validate
-         * 2. exist
+         * 1. exist
+         * 2. validate
          */
-        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
-        @intercept(validate(leafCtor, 0, leafScope.modelValidator))
+        @intercept(validate(leafScope.modelValidator, 0))
+        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
         @authorize(leafScope.create || {})
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -196,7 +209,8 @@ export function CreateControllerMixin<
                 content: {
                     "application/json": {
                         schema: getModelSchemaRef(leafCtor, {
-                            exclude: leafScope.modelCtor.exclude,
+                            exclude:
+                                leafCtor.definition.settings.excludeProperties,
                         }),
                     },
                 },
@@ -210,6 +224,8 @@ export function CreateControllerMixin<
              * args[2]: id
              * ...
              * args[n]: id
+             *
+             * args[n+1]: Condition
              */
 
             return await leafScope.repositoryGetter(this as any).create(model);
@@ -256,8 +272,10 @@ export function ReadControllerMixin<
          * Read all method
          *
          * 1. exist
+         * 2. limit
          */
-        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
+        @intercept(limit(leafCtor, leafScope, undefined, undefined, 0))
+        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
         @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -290,6 +308,9 @@ export function ReadControllerMixin<
              * args[2]: id
              * ...
              * args[n]: id
+             *
+             * args[n+1]: Condition
+             * args[n+2]: Limit
              */
 
             // const count = await leafScope
@@ -319,8 +340,10 @@ export function ReadControllerMixin<
          * Read one method
          *
          * 1. exist
+         * 2. limit
          */
-        @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
+        @intercept(limit(leafCtor, leafScope, 0, undefined, 1))
+        @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
         @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
@@ -352,6 +375,9 @@ export function ReadControllerMixin<
              * args[3]: id
              * ...
              * args[n]: id
+             *
+             * args[n+1]: Condition
+             * args[n+2]: Limit
              */
 
             return await leafScope
@@ -380,8 +406,10 @@ export function ReadControllerMixin<
          * Read one method
          *
          * 1. exist
+         * 2. limit
          */
-        @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
+        @intercept(limit(leafCtor, leafScope, 0, undefined, 1))
+        @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
         @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -413,6 +441,9 @@ export function ReadControllerMixin<
              * args[3]: id
              * ...
              * args[n]: id
+             *
+             * args[n+1]: Condition
+             * args[n+2]: Limit
              */
 
             return await leafScope
@@ -460,11 +491,13 @@ export function UpdateControllerMixin<
         /**
          * Update all method
          *
-         * 1. validate
-         * 2. exist
+         * 1. exist
+         * 2. validate
+         * 3. limit
          */
-        @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
-        @intercept(validate(leafCtor, 1, leafScope.modelValidator))
+        @intercept(limit(leafCtor, leafScope, undefined, 0, undefined))
+        @intercept(validate(leafScope.modelValidator, 1))
+        @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
         @authorize(leafScope.update || {})
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -496,6 +529,9 @@ export function UpdateControllerMixin<
              * args[3]: id
              * ...
              * args[n]: id
+             *
+             * args[n+1]: Condition
+             * args[n+2]: Limit
              */
 
             await leafScope
@@ -506,11 +542,13 @@ export function UpdateControllerMixin<
         /**
          * Update one method
          *
-         * 1. validate
-         * 2. exist
+         * 1. exist
+         * 2. validate
+         * 3. limit
          */
-        @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
-        @intercept(validate(leafCtor, 1, leafScope.modelValidator))
+        @intercept(limit(leafCtor, leafScope, 0, undefined, undefined))
+        @intercept(validate(leafScope.modelValidator, 1))
+        @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
         @authorize(leafScope.update || {})
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
@@ -539,6 +577,9 @@ export function UpdateControllerMixin<
              * args[3]: id
              * ...
              * args[n]: id
+             *
+             * args[n+1]: Condition
+             * args[n+2]: Limit
              */
 
             await leafScope.repositoryGetter(this as any).updateById(id, model);
@@ -564,11 +605,13 @@ export function UpdateControllerMixin<
         /**
          * Update one method
          *
-         * 1. validate
-         * 2. exist
+         * 1. exist
+         * 2. validate
+         * 3. limit
          */
-        @intercept(exist(rootCtor, rootScope, 2, ids.length + 2, relations))
-        @intercept(validate(leafCtor, 1, leafScope.modelValidator))
+        @intercept(limit(leafCtor, leafScope, 0, undefined, undefined))
+        @intercept(validate(leafScope.modelValidator, 1))
+        @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
         @authorize(leafScope.update || {})
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -597,6 +640,9 @@ export function UpdateControllerMixin<
              * args[3]: id
              * ...
              * args[n]: id
+             *
+             * args[n+1]: Condition
+             * args[n+2]: Limit
              */
 
             await leafScope.repositoryGetter(this as any).updateById(id, model);
@@ -643,8 +689,10 @@ export function DeleteControllerMixin<
          * Delete all method
          *
          * 1. exist
+         * 2. limit
          */
-        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
+        @intercept(limit(leafCtor, leafScope, undefined, 0, undefined))
+        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
         @authorize(leafScope.delete || {})
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -672,6 +720,9 @@ export function DeleteControllerMixin<
              * args[2]: id
              * ...
              * args[n]: id
+             *
+             * args[n+1]: Condition
+             * args[n+2]: Limit
              */
 
             return await leafScope
@@ -683,8 +734,10 @@ export function DeleteControllerMixin<
          * Delete one method
          *
          * 1. exist
+         * 2. limit
          */
-        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
+        @intercept(limit(leafCtor, leafScope, 0, undefined, undefined))
+        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
         @authorize(leafScope.delete || {})
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
@@ -704,6 +757,9 @@ export function DeleteControllerMixin<
              * args[2]: id
              * ...
              * args[n]: id
+             *
+             * args[n+1]: Condition
+             * args[n+2]: Limit
              */
 
             await leafScope.repositoryGetter(this as any).deleteById(id);
@@ -730,8 +786,10 @@ export function DeleteControllerMixin<
          * Delete one method
          *
          * 1. exist
+         * 2. limit
          */
-        @intercept(exist(rootCtor, rootScope, 1, ids.length + 1, relations))
+        @intercept(limit(leafCtor, leafScope, 0, undefined, undefined))
+        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
         @authorize(leafScope.delete || {})
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -749,6 +807,9 @@ export function DeleteControllerMixin<
              * args[2]: id
              * ...
              * args[n]: id
+             *
+             * args[n+1]: Condition
+             * args[n+2]: Limit
              */
 
             await leafScope.repositoryGetter(this as any).deleteById(id);

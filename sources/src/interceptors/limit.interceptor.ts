@@ -4,27 +4,82 @@ import {
     InvocationResult,
     ValueOrPromise,
 } from "@loopback/context";
-import { HttpErrors } from "@loopback/rest";
-import { Entity } from "@loopback/repository";
+import { Entity, Filter, EntityNotFoundError } from "@loopback/repository";
 
-import { Ctor, ModelValidator } from "../types";
+import { Ctor, ControllerScope } from "../types";
 
-export function limit<Model extends Entity>(
+import { CRUDController } from "../servers";
+
+export function limit<
+    Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
+    Controller extends CRUDController
+>(
     ctor: Ctor<Model>,
-    argIndex: number,
-    validator: ModelValidator<Model>
+    scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
+    argsIdIndex?: number,
+    argsWhereIndex?: number,
+    argsFilterIndex?: number
 ): Interceptor {
     return async (
         invocationCtx: InvocationContext,
         next: () => ValueOrPromise<InvocationResult>
     ) => {
-        /** Get model from arguments request body */
-        const model = invocationCtx.args[argIndex];
+        /** Get id from request arguments */
+        const id = invocationCtx.args[argsIdIndex || -1];
 
-        // if (!(await validateFn(ctor, model, validator, invocationCtx))) {
-        //     throw new HttpErrors.UnprocessableEntity("Entity is not valid");
-        // }
+        /** Get where from request arguments */
+        const where = invocationCtx.args[argsWhereIndex || -1];
+
+        /** Get filter from request arguments */
+        const filter = invocationCtx.args[argsFilterIndex || -1];
+
+        /** Get model condition from arguments, pushed by exist interceptor */
+        const condition = invocationCtx.args[invocationCtx.args.length - 1];
+
+        const limit = await limitFn(scope, {
+            ...filter,
+            where: {
+                and: [
+                    id && { id: id },
+                    where,
+                    filter?.where,
+                    condition,
+                ].filter((condition) => Boolean(condition)),
+            },
+        });
+
+        if (limit) {
+            invocationCtx.args.push(limit);
+        } else {
+            throw new EntityNotFoundError(ctor, JSON.stringify(limit));
+        }
 
         return next();
     };
+}
+
+function limitFn<
+    Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
+    Controller extends CRUDController
+>(
+    scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
+    filter: Filter<Model>
+): Filter<Model> {
+    if (filter.include) {
+        filter.include = filter.include
+            .filter((inclusion) => inclusion.relation in scope.include)
+            .map((inclusion) => ({
+                ...inclusion,
+                scope: limitFn(
+                    scope.include[inclusion.relation],
+                    inclusion.scope || {}
+                ),
+            }));
+    }
+
+    return filter;
 }
