@@ -4,7 +4,7 @@ import {
     InvocationResult,
     ValueOrPromise,
 } from "@loopback/context";
-import { Entity, Filter, EntityNotFoundError } from "@loopback/repository";
+import { Entity, Filter } from "@loopback/repository";
 
 import { getId } from "./utils";
 
@@ -52,11 +52,7 @@ export function limit<
             },
         });
 
-        if (limit) {
-            invocationCtx.args.push(limit);
-        } else {
-            throw new EntityNotFoundError(ctor, JSON.stringify(limit));
-        }
+        invocationCtx.args.push(limit);
 
         return next();
     };

@@ -29,24 +29,26 @@ export function generateIds<Model extends Entity>(
         },
     } as any) as Ctor<Model>;
 
-    const ids = relations.map((relation, index) => {
-        let result = undefined;
+    const ids = relations
+        .map((relation, index) => {
+            let result = undefined;
 
-        if (
-            ctor.definition.relations[relation].targetsMany &&
-            index !== relation.length - 1
-        ) {
-            result = `${ctor.definition.relations[relation]
-                .target()
-                .name.toLowerCase()}_id`;
-        }
+            if (
+                ctor.definition.relations[relation].targetsMany &&
+                index !== relation.length - 1
+            ) {
+                result = `${ctor.definition.relations[relation]
+                    .target()
+                    .name.toLowerCase()}_id`;
+            }
 
-        ctor = ctor.definition.relations[relation].target();
+            ctor = ctor.definition.relations[relation].target();
 
-        return result;
-    });
+            return result;
+        })
+        .filter((id) => Boolean(id));
 
-    return ids.filter((id) => Boolean(id)) as string[];
+    return ids as string[];
 }
 
 export function generatePath<Model extends Entity>(
