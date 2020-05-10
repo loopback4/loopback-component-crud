@@ -14,8 +14,8 @@ export function generateIds<Model extends Entity>(
     ctor: Ctor<Model>,
     relations: string[]
 ): string[] {
-    relations = [`${ctor.name.toLowerCase()}s`, ...relations];
-    ctor = ({
+    let rootRelations = [`${ctor.name.toLowerCase()}s`, ...relations];
+    let rootCtor = ({
         definition: {
             relations: {
                 [`${ctor.name.toLowerCase()}s`]: {
@@ -29,20 +29,20 @@ export function generateIds<Model extends Entity>(
         },
     } as any) as Ctor<Model>;
 
-    const ids = relations
+    const ids = rootRelations
         .map((relation, index) => {
             let result = undefined;
 
             if (
-                ctor.definition.relations[relation].targetsMany &&
+                rootCtor.definition.relations[relation].targetsMany &&
                 index !== relation.length - 1
             ) {
-                result = `${ctor.definition.relations[relation]
+                result = `${rootCtor.definition.relations[relation]
                     .target()
                     .name.toLowerCase()}_id`;
             }
 
-            ctor = ctor.definition.relations[relation].target();
+            rootCtor = rootCtor.definition.relations[relation].target();
 
             return result;
         })
@@ -56,8 +56,8 @@ export function generatePath<Model extends Entity>(
     relations: string[],
     basePath: string
 ): string {
-    relations = [`${ctor.name.toLowerCase()}s`, ...relations];
-    ctor = ({
+    let rootRelations = [`${ctor.name.toLowerCase()}s`, ...relations];
+    let rootCtor = ({
         definition: {
             relations: {
                 [`${ctor.name.toLowerCase()}s`]: {
@@ -71,21 +71,21 @@ export function generatePath<Model extends Entity>(
         },
     } as any) as Ctor<Model>;
 
-    const tokens = relations.map((relation, index) => {
-        let result = `/${ctor.definition.relations[relation].name}`;
+    const tokens = rootRelations.map((relation, index) => {
+        let result = `/${rootCtor.definition.relations[relation].name}`;
 
         if (
-            ctor.definition.relations[relation].targetsMany &&
+            rootCtor.definition.relations[relation].targetsMany &&
             index !== relation.length - 1
         ) {
             result = `/${
-                ctor.definition.relations[relation].name
-            }/${ctor.definition.relations[relation]
+                rootCtor.definition.relations[relation].name
+            }/${rootCtor.definition.relations[relation]
                 .target()
                 .name.toLowerCase()}_id`;
         }
 
-        ctor = ctor.definition.relations[relation].target();
+        rootCtor = rootCtor.definition.relations[relation].target();
 
         return result;
     });
@@ -98,8 +98,8 @@ export function generateFilter<Model extends Entity>(
     relations: string[],
     ids: string[]
 ): Filter<Model> | undefined {
-    relations = [`${ctor.name.toLowerCase()}s`, ...relations];
-    ctor = ({
+    let rootRelations = [`${ctor.name.toLowerCase()}s`, ...relations];
+    let rootCtor = ({
         definition: {
             relations: {
                 [`${ctor.name.toLowerCase()}s`]: {
@@ -114,16 +114,16 @@ export function generateFilter<Model extends Entity>(
     } as any) as Ctor<Model>;
 
     let filter: Filter<any> = {};
-    relations.pop();
+    rootRelations.pop();
 
-    filter = relations.reduce((filter, relation) => {
-        if (ctor.definition.relations[relation].targetsMany) {
+    filter = rootRelations.reduce((filter, relation) => {
+        if (rootCtor.definition.relations[relation].targetsMany) {
             filter.include = [
                 {
                     relation: relation,
                     scope: {
                         where: {
-                            [getId(ctor)]: ids.shift(),
+                            [getId(rootCtor)]: ids.shift(),
                         },
                     },
                 },
@@ -137,7 +137,7 @@ export function generateFilter<Model extends Entity>(
             ];
         }
 
-        ctor = ctor.definition.relations[relation].target();
+        rootCtor = rootCtor.definition.relations[relation].target();
 
         return filter.include[0].scope || {};
     }, filter);
@@ -151,8 +151,8 @@ export function generateCondition<Model extends Entity>(
     ctor: Ctor<Model>,
     relations: string[]
 ) {
-    relations = [`${ctor.name.toLowerCase()}s`, ...relations];
-    ctor = ({
+    let rootRelations = [`${ctor.name.toLowerCase()}s`, ...relations];
+    let rootCtor = ({
         definition: {
             relations: {
                 [`${ctor.name.toLowerCase()}s`]: {
@@ -166,10 +166,10 @@ export function generateCondition<Model extends Entity>(
         },
     } as any) as Ctor<Model>;
 
-    return relations.reduce((relationMetadata, relation) => {
-        relationMetadata = ctor.definition.relations[relation];
+    return rootRelations.reduce((relationMetadata, relation) => {
+        relationMetadata = rootCtor.definition.relations[relation];
 
-        ctor = relationMetadata.target();
+        rootCtor = relationMetadata.target();
 
         return relationMetadata;
     }, undefined as any);
