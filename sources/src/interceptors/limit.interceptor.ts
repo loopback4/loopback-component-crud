@@ -6,6 +6,8 @@ import {
 } from "@loopback/context";
 import { Entity, Filter, EntityNotFoundError } from "@loopback/repository";
 
+import { getId } from "./utils";
+
 import { Ctor, ControllerScope } from "../types";
 
 import { CRUDController } from "../servers";
@@ -42,7 +44,7 @@ export function limit<
             ...filter,
             where: {
                 and: [
-                    id && { id: id },
+                    id && { [getId(ctor)]: id },
                     where,
                     filter?.where,
                     condition,
