@@ -15,12 +15,6 @@ import {
     AUTHENTICATION_STRATEGY_NOT_FOUND,
     USER_PROFILE_NOT_FOUND,
 } from "@loopback/authentication";
-import {
-    AuthorizationBindings,
-    AuthorizeFn,
-} from "loopback-component-authorization";
-
-import { CRUDPermissions } from "../../types";
 
 const SequenceActions = RestBindings.SequenceActions;
 
@@ -32,8 +26,6 @@ export class Sequence implements SequenceHandler {
         protected parseParams: ParseParams,
         @inject(AuthenticationBindings.AUTH_ACTION)
         protected authenticateRequest: AuthenticateFn,
-        @inject(AuthorizationBindings.AUTHORIZE_ACTION)
-        protected authorizeRequest: AuthorizeFn<CRUDPermissions>,
         @inject(SequenceActions.INVOKE_METHOD)
         protected invoke: InvokeMethod,
         @inject(SequenceActions.SEND)
@@ -46,11 +38,8 @@ export class Sequence implements SequenceHandler {
         try {
             const { request, response } = context;
             const route = this.findRoute(request);
+            await this.authenticateRequest(request);
             const args = await this.parseParams(request, route);
-            const session = await this.authenticateRequest(request);
-            if (session) {
-                await this.authorizeRequest(session.permissions, args);
-            }
             const result = await this.invoke(route, args);
             this.send(response, result);
         } catch (error) {

@@ -6,23 +6,27 @@ import {
 } from "@loopback/context";
 import { HttpErrors } from "@loopback/rest";
 import { Entity } from "@loopback/repository";
-import { Ctor } from "loopback-component-history";
 
-import { ValidateModel } from "../types";
+import { ModelValidator } from "../types";
 
 export function validate<Model extends Entity>(
-    ctor: Ctor<Model>,
-    argIndex: number,
-    validator: ValidateModel<Model>
+    validator: ModelValidator<Model>,
+    argIndex: number
 ): Interceptor {
     return async (
         invocationCtx: InvocationContext,
         next: () => ValueOrPromise<InvocationResult>
     ) => {
-        /** Get model from arguments request body */
-        const model = invocationCtx.args[argIndex];
+        /** Get model from request arguments */
+        let models = invocationCtx.args[argIndex];
+        if (!Array.isArray(models)) {
+            models = [models];
+        }
 
-        if (!(await validateFn(ctor, model, validator, invocationCtx))) {
+        /** Get model condition from arguments, pushed by exist interceptor */
+        const condition = invocationCtx.args[invocationCtx.args.length - 1];
+
+        if (!(await validateFn(models, condition, validator, invocationCtx))) {
             throw new HttpErrors.UnprocessableEntity("Entity is not valid");
         }
 
@@ -31,30 +35,27 @@ export function validate<Model extends Entity>(
 }
 
 async function validateFn<Model extends Entity>(
-    ctor: Ctor<Model>,
-    model: Model,
-    validator: ValidateModel<Model>,
+    models: Model[],
+    condition: Model,
+    validator: ModelValidator<Model>,
     invocationCtx: InvocationContext
 ): Promise<boolean> {
-    if (Array.isArray(model)) {
-        for (let item of model) {
-            if (!item) {
-                return false;
-            }
-        }
-
-        if (!(await validator(invocationCtx, model))) {
-            return false;
-        }
-    } else {
-        if (!model) {
-            return false;
-        }
-
-        if (!(await validator(invocationCtx, [model]))) {
+    for (let item of models) {
+        if (!item) {
             return false;
         }
     }
+
+    if (!(await validator(invocationCtx, models))) {
+        return false;
+    }
+
+    // map models properties with exist condition
+    models.forEach((model: any) =>
+        Object.entries(condition).forEach(([property, value]) => {
+            model[property] = value;
+        })
+    );
 
     return true;
 }

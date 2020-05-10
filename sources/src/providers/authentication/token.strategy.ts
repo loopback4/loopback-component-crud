@@ -1,7 +1,6 @@
 import { inject } from "@loopback/context";
 import { HttpErrors, Request } from "@loopback/rest";
 import { AuthenticationStrategy, TokenService } from "@loopback/authentication";
-import { UserProfile } from "@loopback/security";
 
 import { PrivateCRUDBindings } from "../../keys";
 
@@ -13,12 +12,12 @@ export class CRUDTokenStrategy implements AuthenticationStrategy {
         public tokenService: TokenService
     ) {}
 
-    async authenticate(request: Request): Promise<UserProfile | undefined> {
+    async authenticate(request: Request) {
         const token: string = this.extractCredentials(request);
 
         return await this.tokenService.verifyToken(token);
     }
-    private extractCredentials(request: Request): string {
+    private extractCredentials(request: Request) {
         if (request.headers.authorization) {
             // for example: Bearer xyz
             const authHeaderValue = request.headers.authorization;
