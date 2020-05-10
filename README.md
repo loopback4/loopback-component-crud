@@ -1,8 +1,14 @@
 # loopback-component-crud
 
-Creating `User`, `Role`, `Permission` models and repositories and crud controllers in any application is a repetitive and futile task.
+Creating `CRUD` controllers in any application is a repetitive and futile task.
 
-Using this extension you can bind them to your application using a simple and optional configurations.
+Using this extension you can generate a configurable `CRUD` controller with these features:
+
+1. **Authentication**
+2. **Authorization**
+3. **Filtering**
+4. **Validating**
+5. etc
 
 ## Installation
 
@@ -12,7 +18,7 @@ npm i --save loopback-component-crud
 
 ## Usage
 
-Follow these steps to add `crud` extension to your loopback4 application
+Follow these steps to add `CRUD` extension to your loopback4 application
 
 1. Define your Relational and Cache `dataSources`
 2. Add `CRUDMixin` to your application
@@ -22,85 +28,56 @@ Now, let's try:
 
 ---
 
-### Step 1 (Define DataSource)
-
-Bind your dataSources you want to use for tables using `bindRelationalDataSource` and `bindCacheDataSource`
-
-We need two dataSource, one for relational models, and one for cache models
-
-1. **Relational Models**: `CRUD`
-    1. `User`
-    2. `Role`
-    3. `Permission`
-    4. `UserRole`
-    5. `RolePermission`
-2. **Cache Models**: `Key-Value`
-    1. `Session`
-    2. `Code`
-
-See this example of binding relational dataSource:
-
-```ts
-import { bindRelationalDataSource } from "loopback-component-authorization";
-
-@bindRelationalDataSource()
-export class MySqlDataSource extends juggler.DataSource {
-    static dataSourceName = "MySQL";
-
-    constructor(
-        @inject("datasources.config.MySQL", { optional: true })
-        dsConfig: object = config
-    ) {
-        super(dsConfig);
-    }
-}
-```
-
-See this example of binding cache dataSource:
-
-```ts
-import { bindCacheDataSource } from "loopback-component-crud";
-
-@bindCacheDataSource()
-export class RedisDataSource extends juggler.DataSource {
-    static dataSourceName = "Redis";
-
-    constructor(
-        @inject("datasources.config.Redis", { optional: true })
-        dsConfig: object = config
-    ) {
-        super(dsConfig);
-    }
-}
-```
-
----
-
-### Step 2,3 (Application Mixin)
+### Step 1 (Application Mixin)
 
 Edit your `application.ts` file:
 
 ```ts
-import { AuthorizationMixin } from "loopback-component-authorization";
 import {
     CRUDMixin,
     CRUDRestServer,
     CRUDGQLServer,
 } from "loopback-component-crud";
 
-export class TestApplication extends AuthorizationMixin(
-    CRUDMixin(BootMixin(ServiceMixin(RepositoryMixin(Application))))
+import { MyTokenService, MyAuthorizerProvider } from "./providers";
+
+export class TestApplication extends CRUDMixin(
+    BootMixin(ServiceMixin(RepositoryMixin(Application)))
 ) {
     constructor(options: ApplicationConfig = {}) {
         super(options);
 
-        // ...
+        // Add configs to crud mixin
+        this.crudConfigs = {
+            tokenService: MyTokenService,
+            authorizerProvider: MyAuthorizerProvider,
+        };
 
         // Bind servers
         this.server(CRUDRestServer);
         this.server(CRUDGQLServer);
     }
 }
+```
+
+---
+
+### Step 2 (Controller Mixin)
+
+Now, you can generate your `CRUD` controller using `CRUDControllerMixin`:
+
+```ts
+import { CRUDControllerMixin, CRUDController } from "loopback-component-crud";
+
+export class UserController extends CRUDControllerMixin(
+    User,
+    CRUDController,
+    {
+        modelValidator: (context, models) => true,
+        repositoryGetter: (controller) => controller.usersController,
+    },
+    ""
+) {}
 ```
 
 ---
