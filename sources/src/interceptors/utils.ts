@@ -35,7 +35,7 @@ export function generateIds<Model extends Entity>(
 
             if (
                 rootCtor.definition.relations[relation].targetsMany &&
-                index !== relation.length - 1
+                index !== rootRelations.length - 1
             ) {
                 result = `${rootCtor.definition.relations[relation]
                     .target()
@@ -72,17 +72,17 @@ export function generatePath<Model extends Entity>(
     } as any) as Ctor<Model>;
 
     const tokens = rootRelations.map((relation, index) => {
-        let result = `/${rootCtor.definition.relations[relation].name}`;
+        let result = `/${rootCtor.definition.relations[
+            relation
+        ].name.toLowerCase()}`;
 
         if (
             rootCtor.definition.relations[relation].targetsMany &&
-            index !== relation.length - 1
+            index !== rootRelations.length - 1
         ) {
-            result = `/${
-                rootCtor.definition.relations[relation].name
-            }/${rootCtor.definition.relations[relation]
+            result = `${result}/{${rootCtor.definition.relations[relation]
                 .target()
-                .name.toLowerCase()}_id`;
+                .name.toLowerCase()}_id}`;
         }
 
         rootCtor = rootCtor.definition.relations[relation].target();
@@ -90,7 +90,7 @@ export function generatePath<Model extends Entity>(
         return result;
     });
 
-    return `${basePath}${tokens.join()}`;
+    return `${basePath}${tokens.join("")}`;
 }
 
 export function generateFilter<Model extends Entity>(
