@@ -48,7 +48,10 @@ export function limit<
                     where,
                     filter?.where,
                     condition,
-                ].filter((condition) => Boolean(condition)),
+                ].filter(
+                    (condition) =>
+                        Boolean(condition) && Object.keys(condition).length > 0
+                ),
             },
         });
 
