@@ -1,5 +1,7 @@
 # loopback-component-crud
 
+[![Build Status](https://travis-ci.com/loopback4/loopback-component-crud.svg?branch=master)](https://travis-ci.com/loopback4/loopback-component-crud)
+
 Creating `CRUD` controllers in any application is a repetitive and futile task.
 
 Using this extension you can generate a configurable `CRUD` controller with these features:
