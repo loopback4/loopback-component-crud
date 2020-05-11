@@ -324,7 +324,7 @@ export function ReadControllerMixin<
              * args[n+2]: Limit
              */
 
-            if (this.request.headers["X-Total"] === "true") {
+            if (this.request.headers["x-total"] === "true") {
                 const count = await leafScope
                     .repositoryGetter(this as any)
                     .count(arguments[arguments.length - 1].where);
@@ -383,7 +383,7 @@ export function ReadControllerMixin<
              * args[n+2]: Limit
              */
 
-            if (this.request.headers["X-Total"] === "true") {
+            if (this.request.headers["x-total"] === "true") {
                 const count = await leafScope
                     .repositoryGetter(this as any)
                     .count(arguments[arguments.length - 1].where, {
@@ -473,7 +473,7 @@ export function ReadControllerMixin<
              * args[n+2]: Limit
              */
 
-            if (this.request.headers["X-Total"] === "true") {
+            if (this.request.headers["x-total"] === "true") {
                 const count = await leafScope
                     .repositoryGetter(this as any)
                     .count(arguments[arguments.length - 1].where, {
