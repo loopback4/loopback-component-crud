@@ -92,7 +92,7 @@ export function CreateControllerMixin<
                             type: "array",
                             items: getModelSchemaRef(leafCtor, {
                                 exclude:
-                                    leafCtor.definition.settings
+                                    leafCtor.definition?.settings
                                         .excludeProperties,
                             }),
                         },
@@ -147,7 +147,7 @@ export function CreateControllerMixin<
                     "application/json": {
                         schema: getModelSchemaRef(leafCtor, {
                             exclude:
-                                leafCtor.definition.settings.excludeProperties,
+                                leafCtor.definition?.settings.excludeProperties,
                         }),
                     },
                 },
@@ -214,7 +214,7 @@ export function CreateControllerMixin<
                     "application/json": {
                         schema: getModelSchemaRef(leafCtor, {
                             exclude:
-                                leafCtor.definition.settings.excludeProperties,
+                                leafCtor.definition?.settings.excludeProperties,
                         }),
                     },
                 },
