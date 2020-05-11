@@ -113,9 +113,10 @@ export function generateFilter<Model extends Entity>(
         },
     } as any) as Ctor<Model>;
 
+    let filter: Filter<any> = {};
     rootRelations.pop();
 
-    return rootRelations.reduce((filter, relation) => {
+    rootRelations.reduce((filter, relation) => {
         if (rootCtor.definition.relations[relation].targetsMany) {
             filter.include = [
                 {
@@ -141,7 +142,11 @@ export function generateFilter<Model extends Entity>(
         rootCtor = rootCtor.definition.relations[relation].target();
 
         return filter.include[0].scope || {};
-    }, {} as Filter<any>);
+    }, filter);
+
+    if (filter.include && filter.include[0]) {
+        return filter.include[0].scope as any;
+    }
 }
 
 export function generateCondition<Model extends Entity>(
