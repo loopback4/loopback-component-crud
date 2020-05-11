@@ -64,22 +64,20 @@ async function existFn<
 ): Promise<Model | undefined> {
     const filter = generateFilter(ctor, relations, ids);
 
-    let model: any = undefined;
-
-    if (filter) {
-        model = await repository.findOne(filter);
+    if (!filter) {
+        return {} as any;
     }
 
-    model = relations.reduce(
-        (model, relation) => model && model[relation],
-        model
+    let lastModel = relations.reduce(
+        (model: any, relation) => model && model[relation],
+        await repository.findOne(filter)
     );
 
     const condition = generateCondition(ctor, relations);
 
-    if (model) {
+    if (lastModel) {
         return {
-            [condition.keyTo]: model[condition.keyFrom],
+            [condition.keyTo]: lastModel[condition.keyFrom],
         } as any;
     }
 }
