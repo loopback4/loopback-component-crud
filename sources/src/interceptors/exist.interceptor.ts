@@ -64,7 +64,7 @@ async function existFn<
 ): Promise<Model | undefined> {
     const filter = generateFilter(ctor, relations, ids);
 
-    if (!filter) {
+    if (!filter || Object.keys(filter).length === 0) {
         return {} as any;
     }
 
