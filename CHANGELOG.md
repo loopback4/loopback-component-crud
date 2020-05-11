@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.0
+
+-   **Feat**: add CI file
+-   **Feat**: add `excludeProperties` to model settings
+-   **Fix**: filter generator, fix bugs
+-   **Fix**: add http `X-Total` header for count
+-   **Fix**: change `interceptors` order
+
 ## v0.5.0
 
 -   **Deps**: update packages
