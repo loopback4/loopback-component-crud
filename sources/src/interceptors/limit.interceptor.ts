@@ -29,13 +29,13 @@ export function limit<
         next: () => ValueOrPromise<InvocationResult>
     ) => {
         /** Get id from request arguments */
-        const id = invocationCtx.args[argsIdIndex || -1];
+        const id = invocationCtx.args[argsIdIndex as number];
 
         /** Get where from request arguments */
-        const where = invocationCtx.args[argsWhereIndex || -1];
+        const where = invocationCtx.args[argsWhereIndex as number];
 
         /** Get filter from request arguments */
-        const filter = invocationCtx.args[argsFilterIndex || -1];
+        const filter = invocationCtx.args[argsFilterIndex as number];
 
         /** Get model condition from arguments, pushed by exist interceptor */
         const condition = invocationCtx.args[invocationCtx.args.length - 1];

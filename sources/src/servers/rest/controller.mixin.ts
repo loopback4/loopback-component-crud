@@ -65,8 +65,8 @@ export function CreateControllerMixin<
          * 1. exist
          * 2. validate
          */
-        @intercept(validate(leafScope.modelValidator, 0))
         @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(validate(leafScope.modelValidator, 0))
         @authorize(leafScope.create || {})
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -125,8 +125,8 @@ export function CreateControllerMixin<
          * 1. exist
          * 2. validate
          */
-        @intercept(validate(leafScope.modelValidator, 0))
         @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(validate(leafScope.modelValidator, 0))
         @authorize(leafScope.create || {})
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}/one`, {
@@ -192,8 +192,8 @@ export function CreateControllerMixin<
          * 1. exist
          * 2. validate
          */
-        @intercept(validate(leafScope.modelValidator, 0))
         @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(validate(leafScope.modelValidator, 0))
         @authorize(leafScope.create || {})
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -283,8 +283,8 @@ export function ReadControllerMixin<
          * 1. exist
          * 2. limit
          */
-        @intercept(limit(leafCtor, leafScope, undefined, undefined, 0))
         @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(limit(leafCtor, leafScope, undefined, undefined, 0))
         @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -343,8 +343,8 @@ export function ReadControllerMixin<
          * 1. exist
          * 2. limit
          */
-        @intercept(limit(leafCtor, leafScope, 0, undefined, 1))
         @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
+        @intercept(limit(leafCtor, leafScope, 0, undefined, 1))
         @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
@@ -435,8 +435,8 @@ export function ReadControllerMixin<
          * 1. exist
          * 2. limit
          */
-        @intercept(limit(leafCtor, leafScope, undefined, undefined, 0))
         @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(limit(leafCtor, leafScope, undefined, undefined, 0))
         @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -550,9 +550,9 @@ export function UpdateControllerMixin<
          * 2. validate
          * 3. limit
          */
-        @intercept(limit(leafCtor, leafScope, undefined, 1, undefined))
-        @intercept(validate(leafScope.modelValidator, 0))
         @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
+        @intercept(validate(leafScope.modelValidator, 0))
+        @intercept(limit(leafCtor, leafScope, undefined, 1, undefined))
         @authorize(leafScope.update || {})
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -603,9 +603,9 @@ export function UpdateControllerMixin<
          * 2. validate
          * 3. limit
          */
-        @intercept(limit(leafCtor, leafScope, 1, undefined, undefined))
-        @intercept(validate(leafScope.modelValidator, 0))
         @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
+        @intercept(validate(leafScope.modelValidator, 0))
+        @intercept(limit(leafCtor, leafScope, 1, undefined, undefined))
         @authorize(leafScope.update || {})
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
@@ -668,8 +668,8 @@ export function UpdateControllerMixin<
          * 1. exist
          * 2. validate
          */
-        @intercept(validate(leafScope.modelValidator, 0))
         @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(validate(leafScope.modelValidator, 0))
         @authorize(leafScope.update || {})
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -753,8 +753,8 @@ export function DeleteControllerMixin<
          * 1. exist
          * 2. limit
          */
-        @intercept(limit(leafCtor, leafScope, undefined, 0, undefined))
         @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(limit(leafCtor, leafScope, undefined, 0, undefined))
         @authorize(leafScope.delete || {})
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}`, {
@@ -800,8 +800,8 @@ export function DeleteControllerMixin<
          * 1. exist
          * 2. limit
          */
-        @intercept(limit(leafCtor, leafScope, 0, undefined, undefined))
         @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(limit(leafCtor, leafScope, 0, undefined, undefined))
         @authorize(leafScope.delete || {})
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
