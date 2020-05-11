@@ -593,7 +593,7 @@ export function UpdateControllerMixin<
 
             await leafScope
                 .repositoryGetter(this as any)
-                .updateAll(model, arguments[arguments.length - 1]);
+                .updateAll(model, arguments[arguments.length - 1].where);
         }
 
         /**
@@ -643,7 +643,7 @@ export function UpdateControllerMixin<
 
             await leafScope
                 .repositoryGetter(this as any)
-                .updateAll(model, arguments[arguments.length - 1]);
+                .updateAll(model, arguments[arguments.length - 1].where);
         }
     }
     ids.forEach((id, index) => {
@@ -704,7 +704,7 @@ export function UpdateControllerMixin<
 
             await leafScope
                 .repositoryGetter(this as any)
-                .updateAll(model, arguments[arguments.length - 1]);
+                .updateAll(model, arguments[arguments.length - 1].where);
         }
     }
     ids.forEach((id, index) => {
@@ -791,7 +791,7 @@ export function DeleteControllerMixin<
 
             return await leafScope
                 .repositoryGetter(this as any)
-                .deleteAll(arguments[arguments.length - 1]);
+                .deleteAll(arguments[arguments.length - 1].where);
         }
 
         /**
@@ -830,7 +830,7 @@ export function DeleteControllerMixin<
 
             await leafScope
                 .repositoryGetter(this as any)
-                .deleteAll(arguments[arguments.length - 1]);
+                .deleteAll(arguments[arguments.length - 1].where);
         }
     }
     ids.forEach((id, index) => {
@@ -879,7 +879,7 @@ export function DeleteControllerMixin<
 
             await leafScope
                 .repositoryGetter(this as any)
-                .deleteAll(arguments[arguments.length - 1]);
+                .deleteAll(arguments[arguments.length - 1].where);
         }
     }
     ids.forEach((id, index) => {
