@@ -116,14 +116,16 @@ export function generateFilter<Model extends Entity>(
     let filter: Filter<any> = {};
     rootRelations.pop();
 
-    filter = rootRelations.reduce((filter, relation) => {
+    rootRelations.reduce((filter, relation) => {
         if (rootCtor.definition.relations[relation].targetsMany) {
             filter.include = [
                 {
                     relation: relation,
                     scope: {
                         where: {
-                            [getId(rootCtor)]: ids.shift(),
+                            [getId(
+                                rootCtor.definition.relations[relation].target()
+                            )]: ids.shift(),
                         },
                     },
                 },
