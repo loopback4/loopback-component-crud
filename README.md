@@ -77,6 +77,8 @@ export class UserController extends CRUDControllerMixin(
     {
         modelValidator: (context, models) => true,
         repositoryGetter: (controller) => controller.usersController,
+
+        include: {},
     },
     ""
 ) {}

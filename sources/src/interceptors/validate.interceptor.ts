@@ -7,10 +7,17 @@ import {
 import { HttpErrors } from "@loopback/rest";
 import { Entity } from "@loopback/repository";
 
-import { ModelValidator } from "../types";
+import { ControllerScope } from "../types";
 
-export function validate<Model extends Entity>(
-    validator: ModelValidator<Model>,
+import { CRUDController } from "../servers";
+
+export function validate<
+    Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
+    Controller extends CRUDController
+>(
+    scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
     argIndex: number
 ): Interceptor {
     return async (
@@ -26,7 +33,7 @@ export function validate<Model extends Entity>(
         /** Get model condition from arguments, pushed by exist interceptor */
         const condition = invocationCtx.args[invocationCtx.args.length - 1];
 
-        if (!(await validateFn(models, condition, validator, invocationCtx))) {
+        if (!(await validateFn(models, condition, scope, invocationCtx))) {
             throw new HttpErrors.UnprocessableEntity("Entity is not valid");
         }
 
@@ -34,10 +41,15 @@ export function validate<Model extends Entity>(
     };
 }
 
-async function validateFn<Model extends Entity>(
+async function validateFn<
+    Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
+    Controller extends CRUDController
+>(
     models: Model[],
     condition: Model,
-    validator: ModelValidator<Model>,
+    scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
     invocationCtx: InvocationContext
 ): Promise<boolean> {
     for (let item of models) {
@@ -46,7 +58,7 @@ async function validateFn<Model extends Entity>(
         }
     }
 
-    if (!(await validator(invocationCtx, models))) {
+    if (!(await scope.modelValidator(invocationCtx, models))) {
         return false;
     }
 

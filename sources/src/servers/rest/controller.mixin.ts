@@ -3,7 +3,6 @@ import {
     Count,
     CountSchema,
     Class,
-    Where,
     Filter,
     EntityNotFoundError,
 } from "@loopback/repository";
@@ -15,7 +14,6 @@ import {
     param,
     requestBody,
     getModelSchemaRef,
-    getWhereSchemaFor,
     getFilterSchemaFor,
 } from "@loopback/rest";
 
@@ -567,7 +565,7 @@ export function UpdateControllerMixin<
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "204": {
-                    description: `Update multiple ${leafCtor.name} targets many, by where`,
+                    description: `Update multiple ${leafCtor.name} targets many, by filter`,
                 },
             },
         })
@@ -583,14 +581,14 @@ export function UpdateControllerMixin<
                 },
             })
             model: Model,
-            @param.query.object("where", getWhereSchemaFor(leafCtor), {
-                description: `Where ${leafCtor.name}`,
+            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
+                description: `Filter ${leafCtor.name}`,
             })
-            where?: Where<Model>
+            filter?: Filter<Model>
         ): Promise<void> {
             /**
              * args[0]: Model
-             * args[1]: Where
+             * args[1]: Filter
              *
              *
              * args[2]: id
@@ -602,10 +600,9 @@ export function UpdateControllerMixin<
              * args[n+1]: Condition
              * args[n+2]: Limit
              */
-
-            await leafScope
-                .repositoryGetter(this as any)
-                .updateAll(model, arguments[arguments.length - 1].where);
+            // await leafScope
+            //     .repositoryGetter(this as any)
+            //     .updateAll(model, arguments[arguments.length - 1].where);
         }
 
         /**
@@ -639,11 +636,16 @@ export function UpdateControllerMixin<
                 },
             })
             model: Model,
-            @param.path.string("id") id: string
+            @param.path.string("id") id: string,
+            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
+                description: `Filter ${leafCtor.name}`,
+            })
+            filter?: Filter<Model>
         ): Promise<void> {
             /**
              * args[0]: Model
              * args[1]: id_model
+             * args[2]: Filter
              *
              *
              * args[2]: id
@@ -655,10 +657,9 @@ export function UpdateControllerMixin<
              * args[n+1]: Condition
              * args[n+2]: Limit
              */
-
-            await leafScope
-                .repositoryGetter(this as any)
-                .updateAll(model, arguments[arguments.length - 1].where);
+            // await leafScope
+            //     .repositoryGetter(this as any)
+            //     .updateAll(model, arguments[arguments.length - 1].where);
         }
     }
     ids.forEach((id, index) => {
@@ -719,10 +720,9 @@ export function UpdateControllerMixin<
              *
              * args[n+1]: Condition
              */
-
-            await leafScope
-                .repositoryGetter(this as any)
-                .updateAll(model, arguments[arguments.length - 1].where);
+            // await leafScope
+            //     .repositoryGetter(this as any)
+            //     .updateAll(model, arguments[arguments.length - 1].where);
         }
     }
     ids.forEach((id, index) => {
@@ -778,7 +778,7 @@ export function DeleteControllerMixin<
         @del(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "200": {
-                    description: `Delete multiple ${leafCtor.name} targets many, by where`,
+                    description: `Delete multiple ${leafCtor.name} targets many, by filter`,
                     content: {
                         "application/json": {
                             schema: CountSchema,
@@ -788,13 +788,13 @@ export function DeleteControllerMixin<
             },
         })
         async [method("deleteAll")](
-            @param.query.object("where", getWhereSchemaFor(leafCtor), {
-                description: `Where ${leafCtor.name}`,
+            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
+                description: `Filter ${leafCtor.name}`,
             })
-            where?: Where<Model>
+            filter?: Filter<Model>
         ): Promise<Count> {
             /**
-             * args[0]: Where
+             * args[0]: Filter
              *
              *
              * args[1]: id
@@ -806,10 +806,9 @@ export function DeleteControllerMixin<
              * args[n+1]: Condition
              * args[n+2]: Limit
              */
-
-            return await leafScope
-                .repositoryGetter(this as any)
-                .deleteAll(arguments[arguments.length - 1].where);
+            // return await leafScope
+            //     .repositoryGetter(this as any)
+            //     .deleteAll(arguments[arguments.length - 1].where);
         }
 
         /**
@@ -830,10 +829,15 @@ export function DeleteControllerMixin<
             },
         })
         async [method("deleteOne")](
-            @param.path.string("id") id: string
+            @param.path.string("id") id: string,
+            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
+                description: `Filter ${leafCtor.name}`,
+            })
+            filter?: Filter<Model>
         ): Promise<void> {
             /**
              * args[0]: id_model
+             * args[1]: Filter
              *
              *
              * args[1]: id
@@ -845,10 +849,9 @@ export function DeleteControllerMixin<
              * args[n+1]: Condition
              * args[n+2]: Limit
              */
-
-            await leafScope
-                .repositoryGetter(this as any)
-                .deleteAll(arguments[arguments.length - 1].where);
+            // await leafScope
+            //     .repositoryGetter(this as any)
+            //     .deleteAll(arguments[arguments.length - 1].where);
         }
     }
     ids.forEach((id, index) => {
@@ -882,8 +885,14 @@ export function DeleteControllerMixin<
                 },
             },
         })
-        async [method("deleteOne")](): Promise<void> {
+        async [method("deleteOne")](
+            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
+                description: `Filter ${leafCtor.name}`,
+            })
+            filter?: Filter<Model>
+        ): Promise<void> {
             /**
+             * args[0]: Filter
              *
              *
              * args[0]: id
@@ -894,10 +903,9 @@ export function DeleteControllerMixin<
              *
              * args[n+1]: Condition
              */
-
-            await leafScope
-                .repositoryGetter(this as any)
-                .deleteAll(arguments[arguments.length - 1].where);
+            // await leafScope
+            //     .repositoryGetter(this as any)
+            //     .deleteAll(arguments[arguments.length - 1].where);
         }
     }
     ids.forEach((id, index) => {
