@@ -10,7 +10,7 @@ import {
     DefaultCrudRepository,
 } from "@loopback/repository";
 
-import { generateFilter, generateCondition } from "./utils";
+import { generateFilter, generateRelation } from "./utils";
 
 import { Ctor, ControllerScope } from "../types";
 
@@ -73,11 +73,11 @@ async function existFn<
         await repository.findOne(filter)
     );
 
-    const condition = generateCondition(ctor, relations);
+    const relation = generateRelation(ctor, relations);
 
     if (lastModel) {
         return {
-            [condition.keyTo]: lastModel[condition.keyFrom],
+            [relation.keyTo]: lastModel[relation.keyFrom],
         } as any;
     }
 }

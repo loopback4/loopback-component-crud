@@ -149,7 +149,7 @@ export function generateFilter<Model extends Entity>(
     }
 }
 
-export function generateCondition<Model extends Entity>(
+export function generateRelation<Model extends Entity>(
     ctor: Ctor<Model>,
     relations: string[]
 ) {

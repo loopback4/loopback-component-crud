@@ -18,10 +18,10 @@ export function limit<
     ModelRelations extends object,
     Controller extends CRUDController
 >(
+    type: "create" | "read" | "update" | "delete",
     ctor: Ctor<Model>,
     scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
     argsIdIndex?: number,
-    argsWhereIndex?: number,
     argsFilterIndex?: number
 ): Interceptor {
     return async (
@@ -31,21 +31,17 @@ export function limit<
         /** Get id from request arguments */
         const id = invocationCtx.args[argsIdIndex as number];
 
-        /** Get where from request arguments */
-        const where = invocationCtx.args[argsWhereIndex as number];
-
         /** Get filter from request arguments */
         const filter = invocationCtx.args[argsFilterIndex as number];
 
         /** Get model condition from arguments, pushed by exist interceptor */
         const condition = invocationCtx.args[invocationCtx.args.length - 1];
 
-        const limit = await limitFn(scope, {
+        const limit = await limitFn(type, scope, {
             ...filter,
             where: {
                 and: [
                     id && { [getId(ctor)]: id },
-                    where,
                     filter?.where,
                     condition,
                 ].filter(
@@ -67,15 +63,18 @@ function limitFn<
     ModelRelations extends object,
     Controller extends CRUDController
 >(
+    type: "create" | "read" | "update" | "delete",
     scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
     filter: Filter<Model>
-): Filter<Model> {
+): Filter<Model> | undefined {
     if (filter.include) {
         filter.include = filter.include
             .filter((inclusion) => inclusion.relation in scope.include)
+            .filter((inclusion) => type in scope.include[inclusion.relation])
             .map((inclusion) => ({
                 ...inclusion,
                 scope: limitFn(
+                    type,
                     scope.include[inclusion.relation],
                     inclusion.scope || {}
                 ),

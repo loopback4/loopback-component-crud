@@ -26,7 +26,7 @@ import {
     limit,
     generateIds,
     generatePath,
-    generateCondition,
+    generateRelation,
 } from "../../interceptors";
 import { Ctor, ControllerScope } from "../../types";
 
@@ -252,7 +252,7 @@ export function CreateControllerMixin<
         );
     });
 
-    if (generateCondition(rootCtor, relations).targetsMany) {
+    if (generateRelation(rootCtor, relations).targetsMany) {
         return TargetsManyController as any;
     } else {
         return TargetsOneController as any;
@@ -518,7 +518,7 @@ export function ReadControllerMixin<
         );
     });
 
-    if (generateCondition(rootCtor, relations).targetsMany) {
+    if (generateRelation(rootCtor, relations).targetsMany) {
         return TargetsManyController as any;
     } else {
         return TargetsOneController as any;
@@ -733,7 +733,7 @@ export function UpdateControllerMixin<
         );
     });
 
-    if (generateCondition(rootCtor, relations).targetsMany) {
+    if (generateRelation(rootCtor, relations).targetsMany) {
         return TargetsManyController as any;
     } else {
         return TargetsOneController as any;
@@ -916,7 +916,7 @@ export function DeleteControllerMixin<
         );
     });
 
-    if (generateCondition(rootCtor, relations).targetsMany) {
+    if (generateRelation(rootCtor, relations).targetsMany) {
         return TargetsManyController as any;
     } else {
         return TargetsOneController as any;
