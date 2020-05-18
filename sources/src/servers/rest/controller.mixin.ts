@@ -77,7 +77,9 @@ export function CreateControllerMixin<
                         "application/json": {
                             schema: {
                                 type: "array",
-                                items: getModelSchemaRef(leafCtor),
+                                items: getModelSchemaRef(leafCtor, {
+                                    includeRelations: true,
+                                }),
                             },
                         },
                     },
@@ -91,6 +93,7 @@ export function CreateControllerMixin<
                         schema: {
                             type: "array",
                             items: getModelSchemaRef(leafCtor, {
+                                includeRelations: true,
                                 exclude:
                                     leafCtor.definition?.settings
                                         .excludeProperties,
@@ -135,7 +138,9 @@ export function CreateControllerMixin<
                     description: `Create single ${leafCtor.name} targets many`,
                     content: {
                         "application/json": {
-                            schema: getModelSchemaRef(leafCtor),
+                            schema: getModelSchemaRef(leafCtor, {
+                                includeRelations: true,
+                            }),
                         },
                     },
                 },
@@ -146,6 +151,7 @@ export function CreateControllerMixin<
                 content: {
                     "application/json": {
                         schema: getModelSchemaRef(leafCtor, {
+                            includeRelations: true,
                             exclude:
                                 leafCtor.definition?.settings.excludeProperties,
                         }),
@@ -202,7 +208,9 @@ export function CreateControllerMixin<
                     description: `Create single ${leafCtor.name} targets one`,
                     content: {
                         "application/json": {
-                            schema: getModelSchemaRef(leafCtor),
+                            schema: getModelSchemaRef(leafCtor, {
+                                includeRelations: true,
+                            }),
                         },
                     },
                 },
@@ -213,6 +221,7 @@ export function CreateControllerMixin<
                 content: {
                     "application/json": {
                         schema: getModelSchemaRef(leafCtor, {
+                            includeRelations: true,
                             exclude:
                                 leafCtor.definition?.settings.excludeProperties,
                         }),
@@ -566,7 +575,10 @@ export function UpdateControllerMixin<
             @requestBody({
                 content: {
                     "application/json": {
-                        schema: getModelSchemaRef(leafCtor, { partial: true }),
+                        schema: getModelSchemaRef(leafCtor, {
+                            includeRelations: true,
+                            partial: true,
+                        }),
                     },
                 },
             })
@@ -619,7 +631,10 @@ export function UpdateControllerMixin<
             @requestBody({
                 content: {
                     "application/json": {
-                        schema: getModelSchemaRef(leafCtor, { partial: true }),
+                        schema: getModelSchemaRef(leafCtor, {
+                            includeRelations: true,
+                            partial: true,
+                        }),
                     },
                 },
             })
@@ -683,7 +698,10 @@ export function UpdateControllerMixin<
             @requestBody({
                 content: {
                     "application/json": {
-                        schema: getModelSchemaRef(leafCtor, { partial: true }),
+                        schema: getModelSchemaRef(leafCtor, {
+                            includeRelations: true,
+                            partial: true,
+                        }),
                     },
                 },
             })
