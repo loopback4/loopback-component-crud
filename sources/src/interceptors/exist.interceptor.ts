@@ -33,7 +33,7 @@ export function exist<
         next: () => ValueOrPromise<InvocationResult>
     ) => {
         /** Get ids from arguments array */
-        let ids: string[] = invocationCtx.args.slice(argsBegin, argsEnd);
+        const ids: string[] = invocationCtx.args.slice(argsBegin, argsEnd);
 
         const condition = await existFn(
             ctor,
@@ -75,7 +75,7 @@ async function existFn<
 
     const relation = generateRelation(ctor, relations);
 
-    if (lastModel) {
+    if (lastModel && lastModel[relation.keyFrom]) {
         return {
             [relation.keyTo]: lastModel[relation.keyFrom],
         } as any;

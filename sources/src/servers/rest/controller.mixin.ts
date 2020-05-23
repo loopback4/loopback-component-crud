@@ -5,6 +5,7 @@ import {
     Class,
     Filter,
     EntityNotFoundError,
+    RelationType,
 } from "@loopback/repository";
 import {
     get,
@@ -56,7 +57,7 @@ export function CreateControllerMixin<
 
     const ids = generateIds(rootCtor, relations);
 
-    class TargetsManyController extends parentClass {
+    class HasManyController extends parentClass {
         /**
          * Create all method
          *
@@ -176,20 +177,20 @@ export function CreateControllerMixin<
     }
     ids.forEach((id, index) => {
         param.path.string(id)(
-            TargetsManyController.prototype,
+            HasManyController.prototype,
             method("createAll"),
             index + 1
         );
     });
     ids.forEach((id, index) => {
         param.path.string(id)(
-            TargetsManyController.prototype,
+            HasManyController.prototype,
             method("createOne"),
             index + 1
         );
     });
 
-    class TargetsOneController extends parentClass {
+    class HasOneController extends parentClass {
         /**
          * Create one method
          *
@@ -246,16 +247,84 @@ export function CreateControllerMixin<
     }
     ids.forEach((id, index) => {
         param.path.string(id)(
-            TargetsOneController.prototype,
+            HasOneController.prototype,
             method("createOne"),
             index + 1
         );
     });
 
-    if (generateRelation(rootCtor, relations).targetsMany) {
-        return TargetsManyController as any;
-    } else {
-        return TargetsOneController as any;
+    class BelongsToController extends parentClass {
+        /**
+         * Create one method
+         *
+         * 1. exist
+         * 2. validate
+         */
+        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(validate(leafScope.modelValidator, 0))
+        @authorize(leafScope.create || {})
+        @authenticate("crud")
+        @post(`${generatePath(rootCtor, relations, basePath)}`, {
+            responses: {
+                "200": {
+                    description: `Create single ${leafCtor.name} targets one`,
+                    content: {
+                        "application/json": {
+                            schema: getModelSchemaRef(leafCtor, {
+                                includeRelations: true,
+                            }),
+                        },
+                    },
+                },
+            },
+        })
+        async [method("createOne")](
+            @requestBody({
+                content: {
+                    "application/json": {
+                        schema: getModelSchemaRef(leafCtor, {
+                            includeRelations: true,
+                            exclude:
+                                leafCtor.definition?.settings.excludeProperties,
+                        }),
+                    },
+                },
+            })
+            model: Model
+        ): Promise<Model> {
+            /**
+             * args[0]: Model
+             *
+             *
+             * args[1]: id
+             * args[2]: id
+             * ...
+             * args[n]: id
+             *
+             *
+             * args[n+1]: Condition
+             */
+
+            return await leafScope.repositoryGetter(this as any).create(model);
+        }
+    }
+    ids.forEach((id, index) => {
+        param.path.string(id)(
+            BelongsToController.prototype,
+            method("createOne"),
+            index + 1
+        );
+    });
+
+    switch (generateRelation(rootCtor, relations).type) {
+        case RelationType.hasMany:
+            return HasManyController as any;
+        case RelationType.hasOne:
+            return HasOneController as any;
+        case RelationType.belongsTo:
+            return BelongsToController as any;
+        default:
+            return parentClass as any;
     }
 }
 

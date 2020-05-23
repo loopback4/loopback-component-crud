@@ -10,24 +10,56 @@ export function getId<Model extends Entity>(ctor: Ctor<Model>) {
     return ctor.getIdProperties()[0];
 }
 
+/**
+ *
+ *  Ctor:       X
+ *  Relations:  [ys, z, t]
+ *
+ *  RootCtor:       ()
+ *  RootRelations:  [xs, ys, z, t]
+ *
+ *  () --xs         --> [X] --ys        --> [Y] --z         --> [Z] --t         --> [T]
+ *  () --HasMany    --> [X] --HasMany   --> [Y] --BelongsTo --> [Z] --HasOne    --> [T]
+ *
+ * ----------------------------------------------------------------------------------------
+ *
+ *  Algorithm:
+ *
+ *      RootCtor;
+ *      RootRelations.map(relation => {
+ *          if (RootCtor[relation].targetsMany) {
+ *              return Y_id;
+ *          }
+ *
+ *          RootCtor = RootCtor[relation].target();
+ *      }).filter(id => Boolean(id));
+ *
+ * ----------------------------------------------------------------------------------------
+ *
+ *  Result:
+ *
+ *      1. x_id
+ *      2. y_id
+ *
+ */
 export function generateIds<Model extends Entity>(
     ctor: Ctor<Model>,
     relations: string[]
 ): string[] {
-    let rootRelations = [`${ctor.name.toLowerCase()}s`, ...relations];
     let rootCtor = ({
         definition: {
             relations: {
                 [`${ctor.name.toLowerCase()}s`]: {
+                    name: `${ctor.name.toLowerCase()}s`,
                     type: RelationType.hasMany,
                     targetsMany: true,
-                    name: `${ctor.name.toLowerCase()}s`,
                     source: ctor,
                     target: () => ctor,
                 },
             },
         },
     } as any) as Ctor<Model>;
+    let rootRelations = [`${ctor.name.toLowerCase()}s`, ...relations];
 
     const ids = rootRelations
         .map((relation, index) => {
@@ -51,25 +83,61 @@ export function generateIds<Model extends Entity>(
     return ids as string[];
 }
 
+/**
+ *
+ *  Ctor:       X
+ *  Relations:  [ys, z, t]
+ *
+ *  RootCtor:       ()
+ *  RootRelations:  [xs, ys, z, t]
+ *
+ *  () --xs         --> [X] --ys        --> [Y] --z         --> [Z] --t         --> [T]
+ *  () --HasMany    --> [X] --HasMany   --> [Y] --BelongsTo --> [Z] --HasOne    --> [T]
+ *
+ * ----------------------------------------------------------------------------------------
+ *
+ *  Algorithm:
+ *
+ *      RootCtor;
+ *      RootRelations.map(relation => {
+ *          if (RootCtor[relation].targetsMany) {
+ *              return Relation.name/{Y_id};
+ *          } else {
+ *              return Relation.name;
+ *          }
+ *
+ *          RootCtor = RootCtor[relation].target();
+ *      });
+ *
+ * ----------------------------------------------------------------------------------------
+ *
+ *  Result:
+ *
+ *      1. /xs/{x_id}
+ *      2. /ys/{y_id}
+ *      3. /z
+ *      4. /t
+ *
+ */
 export function generatePath<Model extends Entity>(
     ctor: Ctor<Model>,
     relations: string[],
     basePath: string
 ): string {
-    let rootRelations = [`${ctor.name.toLowerCase()}s`, ...relations];
     let rootCtor = ({
         definition: {
             relations: {
                 [`${ctor.name.toLowerCase()}s`]: {
+                    name: `${ctor.name.toLowerCase()}s`,
                     type: RelationType.hasMany,
                     targetsMany: true,
-                    name: `${ctor.name.toLowerCase()}s`,
                     source: ctor,
                     target: () => ctor,
                 },
             },
         },
     } as any) as Ctor<Model>;
+    let rootRelations = [`${ctor.name.toLowerCase()}s`, ...relations];
 
     const tokens = rootRelations.map((relation, index) => {
         let result = `/${rootCtor.definition.relations[
@@ -93,25 +161,97 @@ export function generatePath<Model extends Entity>(
     return `${basePath}${tokens.join("")}`;
 }
 
+/**
+ *
+ *  Ctor:       X
+ *  Relations:  [ys, z, t]
+ *
+ *  RootCtor:       ()
+ *  RootRelations:  [xs, ys, z, t]
+ *
+ *  () --xs         --> [X] --ys        --> [Y] --z         --> [Z] --t         --> [T]
+ *  () --HasMany    --> [X] --HasMany   --> [Y] --BelongsTo --> [Z] --HasOne    --> [T]
+ *
+ * ----------------------------------------------------------------------------------------
+ *
+ *  Algorithm:
+ *
+ *      Filter = {};
+ *      RootCtor;
+ *      RootRelations.reduce((filter, relation) => {
+ *          if (RootCtor[relation].targetsMany) {
+ *              filter.include = [
+ *                  relation: relation,
+ *                  scope: {
+ *                      where: {id: ids.shift()}
+ *                  }
+ *              ];
+ *          } else {
+ *              filter.include = [
+ *                  relation: relation,
+ *                  scope: {}
+ *              ];
+ *          }
+ *
+ *          RootCtor = RootCtor[relation].target();
+ *
+ *          return filter.include[0].scope || {};
+ *      }, filter);
+ *
+ * ----------------------------------------------------------------------------------------
+ *
+ *  Result:
+ *
+ *      {
+ *          include: [{
+ *              relation: xs
+ *              scope: {
+ *                  where: {id: x_id},
+ *
+ *                  include: [{
+ *                      relation: ys,
+ *                      scope: {
+ *                          where: {id: y_id},
+ *
+ *                          include: [{
+ *                              relation: z,
+ *                              scope: {
+ *
+ *                                  include: [{
+ *                                      relation: t,
+ *                                      scope: {}
+ *                                  }]
+ *
+ *                              }
+ *                          }]
+ *
+ *                      }
+ *                  }]
+ *
+ *              }
+ *          }]
+ *      }
+ *
+ */
 export function generateFilter<Model extends Entity>(
     ctor: Ctor<Model>,
     relations: string[],
     ids: string[]
 ): Filter<Model> | undefined {
-    let rootRelations = [`${ctor.name.toLowerCase()}s`, ...relations];
     let rootCtor = ({
         definition: {
             relations: {
                 [`${ctor.name.toLowerCase()}s`]: {
+                    name: `${ctor.name.toLowerCase()}s`,
                     type: RelationType.hasMany,
                     targetsMany: true,
-                    name: `${ctor.name.toLowerCase()}s`,
                     source: ctor,
                     target: () => ctor,
                 },
             },
         },
     } as any) as Ctor<Model>;
+    let rootRelations = [`${ctor.name.toLowerCase()}s`, ...relations];
 
     let filter: Filter<any> = {};
     rootRelations.pop();
@@ -149,24 +289,59 @@ export function generateFilter<Model extends Entity>(
     }
 }
 
-export function generateRelation<Model extends Entity>(
+/**
+ *
+ *  Ctor:       X
+ *  Relations:  [ys, z, t]
+ *
+ *  RootCtor:       ()
+ *  RootRelations:  [xs, ys, z, t]
+ *
+ *  () --xs         --> [X] --ys        --> [Y] --z         --> [Z] --t         --> [T]
+ *  () --HasMany    --> [X] --HasMany   --> [Y] --BelongsTo --> [Z] --HasOne    --> [T]
+ *
+ * ----------------------------------------------------------------------------------------
+ *
+ *  Algorithm:
+ *
+ *      RootCtor;
+ *      RootRelations.reduce((metadata, relation) => {
+ *          return RootCtor[relation];
+ *
+ *          RootCtor = RootCtor[relation].target();
+ *      }, undefined);
+ *
+ * ----------------------------------------------------------------------------------------
+ *
+ *  Result:
+ *
+ *      {
+ *          name: t,
+ *          type: RelationType.hasOne,
+ *          tagetsMany: false,
+ *          source: () => Z,
+ *          target: () => T
+ *      }
+ *
+ */
+export function generateMetadata<Model extends Entity>(
     ctor: Ctor<Model>,
     relations: string[]
 ) {
-    let rootRelations = [`${ctor.name.toLowerCase()}s`, ...relations];
     let rootCtor = ({
         definition: {
             relations: {
                 [`${ctor.name.toLowerCase()}s`]: {
+                    name: `${ctor.name.toLowerCase()}s`,
                     type: RelationType.hasMany,
                     targetsMany: true,
-                    name: `${ctor.name.toLowerCase()}s`,
                     source: ctor,
                     target: () => ctor,
                 },
             },
         },
     } as any) as Ctor<Model>;
+    let rootRelations = [`${ctor.name.toLowerCase()}s`, ...relations];
 
     return rootRelations.reduce((relationMetadata, relation) => {
         relationMetadata = rootCtor.definition.relations[relation];

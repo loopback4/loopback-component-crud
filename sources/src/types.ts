@@ -24,11 +24,11 @@ export type RepositoryGetter<
     controller: Controller
 ) => DefaultCrudRepository<Model, ModelID, ModelRelations>;
 
-/** Validate Model, check model params validity */
-export type ModelValidator<Model extends Entity> = (
+/** Map Model, check model params validity or map them into new models with valid properties */
+export type ModelMapper<Model extends Entity> = (
     context: InvocationContext,
     models: Model[]
-) => Promise<boolean>;
+) => Promise<Model[]>;
 
 /** Controller Scope used for API's business scope definition */
 export interface ControllerScope<
@@ -37,7 +37,7 @@ export interface ControllerScope<
     ModelRelations extends object,
     Controller extends CRUDController
 > {
-    modelValidator: ModelValidator<Model>;
+    modelMapper: ModelMapper<Model>;
 
     repositoryGetter: RepositoryGetter<
         Model,

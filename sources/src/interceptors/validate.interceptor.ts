@@ -25,18 +25,25 @@ export function validate<
         invocationCtx: InvocationContext,
         next: () => ValueOrPromise<InvocationResult>
     ) => {
-        /** Get model from request arguments */
-        let models = invocationCtx.args[argIndex];
-        if (!Array.isArray(models)) {
-            models = [models];
-        }
+        /** Get model or models from request arguments */
+        const models: Model | Model[] = invocationCtx.args[argIndex];
 
         /** Get model condition from arguments, pushed by exist interceptor */
         const condition = invocationCtx.args[invocationCtx.args.length - 1];
 
-        if (
-            !(await validateFn(type, scope, models, condition, invocationCtx))
-        ) {
+        const entities = await validateFn(
+            type,
+            scope,
+            [].concat(models as any),
+            condition,
+            invocationCtx
+        );
+
+        if (entities && entities.length > 0) {
+            invocationCtx.args[argIndex] = Array.isArray(models)
+                ? entities
+                : entities[0];
+        } else {
             throw new HttpErrors.UnprocessableEntity("Entity is not valid");
         }
 
@@ -55,8 +62,8 @@ async function validateFn<
     models: Model[],
     condition: Model,
     invocationCtx: InvocationContext
-): Promise<boolean> {
-    models = models
+): Promise<Model[]> {
+    const result = models
         .filter((model) => type in scope && model)
         .map((model) =>
             Object.fromEntries<any>(
@@ -79,12 +86,6 @@ async function validateFn<
             )
         );
 
-    for (let item of models) {
-        if (!item) {
-            return false;
-        }
-    }
-
     if (!(await scope.modelValidator(invocationCtx, models))) {
         return false;
     }
@@ -94,6 +95,4 @@ async function validateFn<
             model[property] = value;
         })
     );
-
-    return true;
 }
