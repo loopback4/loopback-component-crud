@@ -42,9 +42,9 @@ export function exist<
             [...ids]
         );
 
-        if (condition) {
-            invocationCtx.args.push(condition);
-        } else {
+        invocationCtx.args.push(condition);
+
+        if (!condition) {
             throw new EntityNotFoundError(ctor, ids[ids.length - 1]);
         }
 

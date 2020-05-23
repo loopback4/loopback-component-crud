@@ -39,11 +39,11 @@ export function validate<
             invocationCtx
         );
 
-        if (entities && entities.length > 0) {
-            invocationCtx.args[argIndex] = Array.isArray(models)
-                ? entities
-                : entities[0];
-        } else {
+        invocationCtx.args[argIndex] = Array.isArray(models)
+            ? entities
+            : entities[0];
+
+        if (!invocationCtx.args[argIndex]) {
             throw new HttpErrors.UnprocessableEntity("Entity is not valid");
         }
 
@@ -63,36 +63,57 @@ async function validateFn<
     condition: Model,
     invocationCtx: InvocationContext
 ): Promise<Model[]> {
-    const result = models
-        .filter((model) => type in scope && model)
-        .map((model) =>
-            Object.fromEntries<any>(
-                Object.entries(model)
-                    .filter(([key, value]) => {
-                        if (typeof value === "object") {
-                            if (Array.isArray(value)) {
-                            } else {
-                            }
-                        }
+    const entities = await scope.modelMapper(
+        invocationCtx,
+        models.map<any>((model) => {
+            const modelProps = Object.entries(model).filter(
+                ([_, value]) => typeof value !== "object"
+            );
 
-                        return true;
-                    })
-                    // map models properties with exist condition
-                    .map(([key, value]) =>
-                        key in condition
-                            ? [key, value]
-                            : [key, (condition as any)[key]]
-                    )
+            return {
+                ...Object.fromEntries(modelProps),
+                ...condition,
+            };
+        })
+    );
+
+    const entitiesIncludeRelations = entities.map(async (entity, index) => {
+        /** Check entity is not filtered by modelMapper */
+        if (!entity) {
+            return undefined;
+        }
+
+        const relationProps = Object.entries(models[index])
+            .filter(([_, value]) => typeof value === "object")
+            .filter(
+                ([key, _]) => key in scope.include && type in scope.include[key]
             )
+            .map(async ([key, value]) => {
+                const validatedValue = await validateFn(
+                    type,
+                    scope.include[key],
+                    [].concat(value),
+                    {},
+                    invocationCtx
+                );
+
+                return [
+                    key,
+                    Array.isArray(value) ? validatedValue : validatedValue[0],
+                ];
+            });
+
+        const filteredRelationProps = (await Promise.all(relationProps)).filter(
+            ([_, value]) => value
         );
 
-    if (!(await scope.modelValidator(invocationCtx, models))) {
-        return false;
-    }
+        return {
+            ...entity,
+            ...Object.fromEntries(filteredRelationProps),
+        };
+    });
 
-    models.forEach((model: any) =>
-        Object.entries(condition).forEach(([property, value]) => {
-            model[property] = value;
-        })
+    return (await Promise.all(entitiesIncludeRelations)).filter(
+        (entity) => entity
     );
 }
