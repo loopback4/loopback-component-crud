@@ -10,7 +10,7 @@ import {
     DefaultCrudRepository,
 } from "@loopback/repository";
 
-import { generateFilter, generateRelation } from "./utils";
+import { generateFilter, generateMetadata } from "./utils";
 
 import { Ctor, ControllerScope } from "../types";
 
@@ -73,11 +73,11 @@ async function existFn<
         await repository.findOne(filter)
     );
 
-    const relation = generateRelation(ctor, relations);
+    const metadata = generateMetadata(ctor, relations);
 
-    if (lastModel && lastModel[relation.keyFrom]) {
+    if (lastModel && lastModel[metadata.keyFrom]) {
         return {
-            [relation.keyTo]: lastModel[relation.keyFrom],
+            [metadata.keyTo]: lastModel[metadata.keyFrom],
         } as any;
     }
 }
