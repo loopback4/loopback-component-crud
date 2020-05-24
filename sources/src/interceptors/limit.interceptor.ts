@@ -69,8 +69,11 @@ function limitFn<
 ): Filter<Model> | undefined {
     if (filter.include) {
         filter.include = filter.include
-            .filter((inclusion) => inclusion.relation in scope.include)
-            .filter((inclusion) => type in scope.include[inclusion.relation])
+            .filter(
+                (inclusion) =>
+                    inclusion.relation in scope.include &&
+                    type in scope.include[inclusion.relation]
+            )
             .map((inclusion) => ({
                 ...inclusion,
                 scope: limitFn(
