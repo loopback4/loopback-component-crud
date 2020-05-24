@@ -7,7 +7,11 @@ import {
 
 /** Swagger binding imports */
 import { RestServer, RestComponent } from "@loopback/rest";
-import { RestExplorerComponent } from "@loopback/rest-explorer";
+import {
+    RestExplorerComponent,
+    RestExplorerBindings,
+    RestExplorerConfig,
+} from "@loopback/rest-explorer";
 
 /** Authentication binding imports */
 import {
@@ -46,9 +50,18 @@ export class CRUDRestServer extends RestServer {
             this.static("/", config.homePath);
         }
 
+        /** Bind rest component */
+        app.component(RestComponent);
+
+        /** Bind swagger component */
+        app.configure<RestExplorerConfig>(RestExplorerBindings.COMPONENT).to({
+            path: "/explorer",
+        });
+        app.component(RestExplorerComponent);
+
         /** Bind authentication component */
-        app.component(AuthenticationComponent);
         registerAuthenticationStrategy(app, CRUDTokenStrategy);
+        app.component(AuthenticationComponent);
 
         /** Bind authorization component */
         app.configure<AuthorizationOptions>(AuthorizationBindings.COMPONENT).to(
@@ -58,14 +71,6 @@ export class CRUDRestServer extends RestServer {
             }
         );
         app.component(AuthorizationComponent);
-
-        /** Bind swagger component */
-        app.component(RestComponent);
-        app.bind("RestExplorerComponent.KEY").to(
-            new RestExplorerComponent(this as any, {
-                path: "/explorer",
-            })
-        );
 
         /** Set up the custom sequence */
         this.sequence(Sequence);

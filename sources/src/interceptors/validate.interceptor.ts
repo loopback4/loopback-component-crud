@@ -7,26 +7,43 @@ import {
 import { HttpErrors } from "@loopback/rest";
 import { Entity } from "@loopback/repository";
 
-import { ModelValidator } from "../types";
+import { ControllerScope } from "../types";
 
-export function validate<Model extends Entity>(
-    validator: ModelValidator<Model>,
+import { CRUDController } from "../servers";
+
+export function validate<
+    Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
+    Controller extends CRUDController
+>(
+    type: "create" | "read" | "update" | "delete",
+    scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
     argIndex: number
 ): Interceptor {
     return async (
         invocationCtx: InvocationContext,
         next: () => ValueOrPromise<InvocationResult>
     ) => {
-        /** Get model from request arguments */
-        let models = invocationCtx.args[argIndex];
-        if (!Array.isArray(models)) {
-            models = [models];
-        }
+        /** Get model or models from request arguments */
+        const models: Model | Model[] = invocationCtx.args[argIndex];
 
         /** Get model condition from arguments, pushed by exist interceptor */
         const condition = invocationCtx.args[invocationCtx.args.length - 1];
 
-        if (!(await validateFn(models, condition, validator, invocationCtx))) {
+        const entities = await validateFn(
+            type,
+            scope,
+            [].concat(models as any),
+            condition,
+            invocationCtx
+        );
+
+        invocationCtx.args[argIndex] = Array.isArray(models)
+            ? entities
+            : entities[0];
+
+        if (!invocationCtx.args[argIndex]) {
             throw new HttpErrors.UnprocessableEntity("Entity is not valid");
         }
 
@@ -34,28 +51,69 @@ export function validate<Model extends Entity>(
     };
 }
 
-async function validateFn<Model extends Entity>(
+async function validateFn<
+    Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
+    Controller extends CRUDController
+>(
+    type: "create" | "read" | "update" | "delete",
+    scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
     models: Model[],
     condition: Model,
-    validator: ModelValidator<Model>,
     invocationCtx: InvocationContext
-): Promise<boolean> {
-    for (let item of models) {
-        if (!item) {
-            return false;
-        }
-    }
+): Promise<Model[]> {
+    const entities = await scope.modelMapper(
+        invocationCtx,
+        models.map<any>((model) => {
+            const modelProps = Object.entries(model).filter(
+                ([_, value]) => typeof value !== "object"
+            );
 
-    if (!(await validator(invocationCtx, models))) {
-        return false;
-    }
-
-    // map models properties with exist condition
-    models.forEach((model: any) =>
-        Object.entries(condition).forEach(([property, value]) => {
-            model[property] = value;
+            return {
+                ...Object.fromEntries(modelProps),
+                ...condition,
+            };
         })
     );
 
-    return true;
+    const entitiesIncludeRelations = entities.map(async (entity, index) => {
+        /** Check entity is not filtered by modelMapper */
+        if (!entity) {
+            return undefined;
+        }
+
+        const relationProps = Object.entries(models[index])
+            .filter(([_, value]) => typeof value === "object")
+            .filter(
+                ([key, _]) => key in scope.include && type in scope.include[key]
+            )
+            .map(async ([key, value]) => {
+                const validatedValue = await validateFn(
+                    type,
+                    scope.include[key],
+                    [].concat(value),
+                    {},
+                    invocationCtx
+                );
+
+                return [
+                    key,
+                    Array.isArray(value) ? validatedValue : validatedValue[0],
+                ];
+            });
+
+        const filteredRelationProps = (await Promise.all(relationProps)).filter(
+            ([_, value]) => value
+        );
+
+        return {
+            ...entity,
+            ...Object.fromEntries(filteredRelationProps),
+        };
+    });
+
+    return (await Promise.all(entitiesIncludeRelations)).filter(
+        (entity) => entity
+    );
 }

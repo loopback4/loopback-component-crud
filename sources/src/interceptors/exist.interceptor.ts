@@ -10,7 +10,7 @@ import {
     DefaultCrudRepository,
 } from "@loopback/repository";
 
-import { generateFilter, generateCondition } from "./utils";
+import { generateFilter, generateMetadata } from "./utils";
 
 import { Ctor, ControllerScope } from "../types";
 
@@ -33,7 +33,7 @@ export function exist<
         next: () => ValueOrPromise<InvocationResult>
     ) => {
         /** Get ids from arguments array */
-        let ids: string[] = invocationCtx.args.slice(argsBegin, argsEnd);
+        const ids: string[] = invocationCtx.args.slice(argsBegin, argsEnd);
 
         const condition = await existFn(
             ctor,
@@ -42,9 +42,9 @@ export function exist<
             [...ids]
         );
 
-        if (condition) {
-            invocationCtx.args.push(condition);
-        } else {
+        invocationCtx.args.push(condition);
+
+        if (!condition) {
             throw new EntityNotFoundError(ctor, ids[ids.length - 1]);
         }
 
@@ -73,11 +73,11 @@ async function existFn<
         await repository.findOne(filter)
     );
 
-    const condition = generateCondition(ctor, relations);
+    const metadata = generateMetadata(ctor, relations);
 
-    if (lastModel) {
+    if (lastModel && lastModel[metadata.keyFrom]) {
         return {
-            [condition.keyTo]: lastModel[condition.keyFrom],
+            [metadata.keyTo]: lastModel[metadata.keyFrom],
         } as any;
     }
 }
