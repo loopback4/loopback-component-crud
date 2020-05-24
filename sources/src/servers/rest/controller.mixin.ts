@@ -402,7 +402,7 @@ export function ReadControllerMixin<
                 const count = await leafScope
                     .repositoryGetter(this as any)
                     .count(arguments[arguments.length - 1].where, {
-                        crud: true,
+                        history: true,
                     });
 
                 this.response.setHeader("X-Total-Count", count.count);
@@ -410,7 +410,7 @@ export function ReadControllerMixin<
                 return (await leafScope
                     .repositoryGetter(this as any)
                     .find(arguments[arguments.length - 1], {
-                        crud: true,
+                        history: true,
                     })) as any;
             } else {
                 const model = await leafScope
@@ -492,7 +492,7 @@ export function ReadControllerMixin<
                 const count = await leafScope
                     .repositoryGetter(this as any)
                     .count(arguments[arguments.length - 1].where, {
-                        crud: true,
+                        history: true,
                     });
 
                 this.response.setHeader("X-Total-Count", count.count);
@@ -500,7 +500,7 @@ export function ReadControllerMixin<
                 return (await leafScope
                     .repositoryGetter(this as any)
                     .find(arguments[arguments.length - 1], {
-                        crud: true,
+                        history: true,
                     })) as any;
             } else {
                 const model = await leafScope
@@ -575,7 +575,7 @@ export function ReadControllerMixin<
                 const count = await leafScope
                     .repositoryGetter(this as any)
                     .count(arguments[arguments.length - 1].where, {
-                        crud: true,
+                        history: true,
                     });
 
                 this.response.setHeader("X-Total-Count", count.count);
@@ -583,7 +583,7 @@ export function ReadControllerMixin<
                 return (await leafScope
                     .repositoryGetter(this as any)
                     .find(arguments[arguments.length - 1], {
-                        crud: true,
+                        history: true,
                     })) as any;
             } else {
                 const model = await leafScope
