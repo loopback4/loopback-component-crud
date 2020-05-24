@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.8.0
+
+-   **Feat**: add `Filter` instead of `Where` for `Update`, `Delete`, for cascade support
+-   **Feat**: add unit tests for `utils.ts`
+-   **Fix**: change `crud` option to `history`
+-   **Fix**: check nested models in `validate` interceptor
+-   **Deps**: update packages
+
 ## v0.6.0
 
 -   **Feat**: add CI file
