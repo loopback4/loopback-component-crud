@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.0
+## v0.8.1
 
 -   **Feat**: add `Filter` instead of `Where` for `Update`, `Delete`, for cascade support
 -   **Feat**: add unit tests for `utils.ts`
