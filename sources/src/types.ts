@@ -28,7 +28,7 @@ export type RepositoryGetter<
 export type ModelMapper<Model extends Entity> = (
     context: InvocationContext,
     models: Model[]
-) => Promise<Model[]>;
+) => Promise<(Model | undefined)[]>;
 
 /** Controller Scope used for API's business scope definition */
 export interface ControllerScope<
