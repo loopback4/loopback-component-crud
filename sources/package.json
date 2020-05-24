@@ -18,7 +18,6 @@
         "start": "node .",
         "start:watch": "nodemon .",
         "test": "lb-mocha --allow-console-logs \"test/**/*.test.ts\"",
-        "test:watch": "lb-mocha --watch-extensions ts --watch --allow-console-logs \"test/**/*.test.ts\"",
         "prepublishOnly": "npm run build"
     },
     "repository": {
