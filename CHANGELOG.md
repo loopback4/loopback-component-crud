@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.0
+
+-   **Fix**: swagger component bind `app`
+-   **Deps**: update packages
+
 ## v0.8.1
 
 -   **Feat**: add `Filter` instead of `Where` for `Update`, `Delete`, for cascade support

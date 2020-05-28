@@ -5,13 +5,11 @@ import {
     Application,
 } from "@loopback/core";
 
-/** Swagger binding imports */
+/** REST binding imports */
 import { RestServer, RestComponent } from "@loopback/rest";
-import {
-    RestExplorerComponent,
-    RestExplorerBindings,
-    RestExplorerConfig,
-} from "@loopback/rest-explorer";
+
+/** Swagger binding imports */
+import { RestExplorerComponent } from "@loopback/rest-explorer";
 
 /** Authentication binding imports */
 import {
@@ -54,10 +52,11 @@ export class CRUDRestServer extends RestServer {
         app.component(RestComponent);
 
         /** Bind swagger component */
-        app.configure<RestExplorerConfig>(RestExplorerBindings.COMPONENT).to({
-            path: "/explorer",
-        });
-        app.component(RestExplorerComponent);
+        app.bind("RestExplorerComponent.KEY").to(
+            new RestExplorerComponent(this as any, {
+                path: "/explorer",
+            })
+        );
 
         /** Bind authentication component */
         registerAuthenticationStrategy(app, CRUDTokenStrategy);
