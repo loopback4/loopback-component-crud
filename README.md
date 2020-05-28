@@ -75,9 +75,13 @@ export class UserController extends CRUDControllerMixin(
     User,
     CRUDController,
     {
-        modelMapper: (context, models) => models,
-
+        modelMapper: async (context, models) => models,
         repositoryGetter: (controller) => controller.usersController,
+
+        create: {},
+        read: {},
+        update: {},
+        delete: {},
 
         include: {},
     },
