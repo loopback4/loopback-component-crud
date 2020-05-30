@@ -5,9 +5,9 @@ import {
     ValueOrPromise,
 } from "@loopback/context";
 import { HttpErrors } from "@loopback/rest";
-import { Entity } from "@loopback/repository";
+import { Entity, RelationType } from "@loopback/repository";
 
-import { ControllerScope } from "../types";
+import { Ctor, ControllerScope } from "../types";
 
 import { CRUDController } from "../servers";
 
@@ -18,6 +18,7 @@ export function validate<
     Controller extends CRUDController
 >(
     type: "create" | "read" | "update" | "delete",
+    ctor: Ctor<Model>,
     scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
     argIndex: number
 ): Interceptor {
@@ -33,6 +34,7 @@ export function validate<
 
         const entities = await validateFn(
             type,
+            ctor,
             scope,
             [].concat(models as any),
             condition,
@@ -58,6 +60,7 @@ async function validateFn<
     Controller extends CRUDController
 >(
     type: "create" | "read" | "update" | "delete",
+    ctor: Ctor<Model>,
     scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
     models: Model[],
     condition: Model,
@@ -88,9 +91,16 @@ async function validateFn<
             .filter(
                 ([key, _]) => key in scope.include && type in scope.include[key]
             )
+            .filter(
+                ([key, _]) =>
+                    key in ctor.definition.relations &&
+                    ctor.definition.relations[key].type !==
+                        RelationType.belongsTo
+            )
             .map(async ([key, value]) => {
                 const validatedValue = await validateFn(
                     type,
+                    ctor.definition.relations[key].target(),
                     scope.include[key],
                     [].concat(value),
                     {},
