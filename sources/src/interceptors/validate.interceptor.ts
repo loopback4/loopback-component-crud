@@ -26,8 +26,8 @@ export function validate<
         invocationCtx: InvocationContext,
         next: () => ValueOrPromise<InvocationResult>
     ) => {
-        /** Get model or models from request arguments */
-        const models: Model | Model[] = invocationCtx.args[argIndex];
+        /** Get models or model from request arguments */
+        const models: Model[] | Model = invocationCtx.args[argIndex];
 
         /** Get model condition from arguments, pushed by exist interceptor */
         const condition = invocationCtx.args[invocationCtx.args.length - 1];
