@@ -1,6 +1,6 @@
 import { Entity, Filter, RelationType } from "@loopback/repository";
 
-import { Ctor } from "../types";
+import { Ctor, ControllerScope } from "../types";
 
 export function getId<Model extends Entity>(ctor: Ctor<Model>) {
     if ("id" in ctor.definition.properties) {
@@ -351,3 +351,49 @@ export function generateMetadata<Model extends Entity>(
         return relationMetadata;
     }, undefined as any);
 }
+
+/**
+ *
+ *  Ctor:       X
+ *  Relations:  [ys, z, t]
+ *
+ *  RootCtor:       ()
+ *  RootRelations:  [xs, ys, z, t]
+ *
+ *  () --xs         --> [X] --ys        --> [Y] --z         --> [Z] --t         --> [T]
+ *  () --HasMany    --> [X] --HasMany   --> [Y] --BelongsTo --> [Z] --HasOne    --> [T]
+ *
+ * ----------------------------------------------------------------------------------------
+ *
+ *  Algorithm:
+ *
+ *      RootCtor;
+ *      RootRelations.reduce((metadata, relation) => {
+ *          return RootCtor[relation];
+ *
+ *          RootCtor = RootCtor[relation].target();
+ *      }, undefined);
+ *
+ * ----------------------------------------------------------------------------------------
+ *
+ *  Result:
+ *
+ *      {
+ *          name: t,
+ *          type: RelationType.hasOne,
+ *          tagetsMany: false,
+ *          source: () => Z,
+ *          target: () => T
+ *      }
+ *
+ */
+export function generateAccess<
+    Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
+    Controller extends CRUDController
+>(
+    type: "create" | "read" | "update" | "delete",
+    scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
+    relations: string[]
+);
