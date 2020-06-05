@@ -19,8 +19,9 @@ export function access<
     Controller extends CRUDController
 >(
     type: "create" | "read" | "update" | "delete",
-    ctor: Ctor<Model>,
-    scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
+    rootScope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
+    leafScope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
+    relations: string[],
     argIndex: number
 ): Interceptor {
     return async (
@@ -70,6 +71,17 @@ export function access<
         return next();
     };
 }
+
+function getRootAccess <
+Model extends Entity,
+ModelID,
+ModelRelations extends object,
+Controller extends CRUDController
+>(
+    type: "create" | "read" | "update" | "delete",
+    scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
+    relations: string[],
+)
 
 function accessModelsFn<
     Model extends Entity,

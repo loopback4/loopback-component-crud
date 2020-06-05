@@ -63,10 +63,11 @@ export function CreateControllerMixin<
          *
          * 1. exist
          * 2. validate
+         * 3. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
         @intercept(validate("create", leafCtor, leafScope, 0))
-        @intercept(access("create", leafCtor, leafScope, 0))
+        @intercept(access("create", rootScope, leafScope, relations, 0))
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -104,7 +105,7 @@ export function CreateControllerMixin<
             models: Model[]
         ): Promise<Model[]> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: (Model[])
              *
@@ -128,10 +129,11 @@ export function CreateControllerMixin<
          *
          * 1. exist
          * 2. validate
+         * 3. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
         @intercept(validate("create", leafCtor, leafScope, 0))
-        @intercept(access("create", leafCtor, leafScope, 0))
+        @intercept(access("create", rootScope, leafScope, relations, 0))
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}/one`, {
             responses: {
@@ -162,7 +164,7 @@ export function CreateControllerMixin<
             model: Model
         ): Promise<Model> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: (Model)
              *
@@ -200,10 +202,11 @@ export function CreateControllerMixin<
          *
          * 1. exist
          * 2. validate
+         * 3. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
         @intercept(validate("create", leafCtor, leafScope, 0))
-        @intercept(access("create", leafCtor, leafScope, 0))
+        @intercept(access("create", rootScope, leafScope, relations, 0))
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -234,7 +237,7 @@ export function CreateControllerMixin<
             model: Model
         ): Promise<Model> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: (Model)
              *
@@ -303,10 +306,13 @@ export function ReadControllerMixin<
          *
          * 1. exist
          * 2. limit
+         * 3. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
         @intercept(limit("read", leafCtor, leafScope, undefined, 0))
-        @intercept(access("read", leafCtor, leafScope, ids.length + 2))
+        @intercept(
+            access("read", rootScope, leafScope, relations, ids.length + 2)
+        )
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -332,7 +338,7 @@ export function ReadControllerMixin<
             filter?: Filter<Model>
         ): Promise<Model[]> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: Filter
              *
@@ -365,10 +371,13 @@ export function ReadControllerMixin<
          *
          * 1. exist
          * 2. limit
+         * 3. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
+        @intercept(exist(rootCtor, rootScope, relations, 2, ids.length + 2))
         @intercept(limit("read", leafCtor, leafScope, 0, 1))
-        @intercept(access("read", leafCtor, leafScope, ids.length + 3))
+        @intercept(
+            access("read", rootScope, leafScope, relations, ids.length + 3)
+        )
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
@@ -392,7 +401,7 @@ export function ReadControllerMixin<
             filter?: Filter<Model>
         ): Promise<Model> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: id_model
              * args[1]: Filter
@@ -459,10 +468,13 @@ export function ReadControllerMixin<
          *
          * 1. exist
          * 2. limit
+         * 3. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
         @intercept(limit("read", leafCtor, leafScope, undefined, 0))
-        @intercept(access("read", leafCtor, leafScope, ids.length + 2))
+        @intercept(
+            access("read", rootScope, leafScope, relations, ids.length + 2)
+        )
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -485,7 +497,7 @@ export function ReadControllerMixin<
             filter?: Filter<Model>
         ): Promise<Model> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: Filter
              *
@@ -544,10 +556,13 @@ export function ReadControllerMixin<
          *
          * 1. exist
          * 2. limit
+         * 3. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
         @intercept(limit("read", leafCtor, leafScope, undefined, 0))
-        @intercept(access("read", leafCtor, leafScope, ids.length + 2))
+        @intercept(
+            access("read", rootScope, leafScope, relations, ids.length + 2)
+        )
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -570,7 +585,7 @@ export function ReadControllerMixin<
             filter?: Filter<Model>
         ): Promise<Model> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: Filter
              *
@@ -666,11 +681,12 @@ export function UpdateControllerMixin<
          * 1. exist
          * 2. validate
          * 3. limit
+         * 4. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
+        @intercept(exist(rootCtor, rootScope, relations, 2, ids.length + 2))
         @intercept(validate("update", leafCtor, leafScope, 0))
         @intercept(limit("update", leafCtor, leafScope, undefined, 1))
-        @intercept(access("update", leafCtor, leafScope, 0))
+        @intercept(access("update", rootScope, leafScope, relations, 0))
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -697,7 +713,7 @@ export function UpdateControllerMixin<
             filter?: Filter<Model>
         ): Promise<void> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: (Model)
              * args[1]: Filter
@@ -726,11 +742,12 @@ export function UpdateControllerMixin<
          * 1. exist
          * 2. validate
          * 3. limit
+         * 4. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 3, ids.length + 3))
+        @intercept(exist(rootCtor, rootScope, relations, 3, ids.length + 3))
         @intercept(validate("update", leafCtor, leafScope, 0))
         @intercept(limit("update", leafCtor, leafScope, 1, 2))
-        @intercept(access("update", leafCtor, leafScope, 0))
+        @intercept(access("update", rootScope, leafScope, relations, 0))
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
@@ -758,7 +775,7 @@ export function UpdateControllerMixin<
             filter?: Filter<Model>
         ): Promise<void> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: (Model)
              * args[1]: id_model
@@ -804,11 +821,12 @@ export function UpdateControllerMixin<
          * 1. exist
          * 2. validate
          * 3. limit
+         * 4. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
+        @intercept(exist(rootCtor, rootScope, relations, 2, ids.length + 2))
         @intercept(validate("update", leafCtor, leafScope, 0))
         @intercept(limit("update", leafCtor, leafScope, undefined, 1))
-        @intercept(access("update", leafCtor, leafScope, 0))
+        @intercept(access("update", rootScope, leafScope, relations, 0))
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -835,7 +853,7 @@ export function UpdateControllerMixin<
             filter?: Filter<Model>
         ): Promise<void> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: (Model)
              * args[1]: Filter
@@ -873,11 +891,12 @@ export function UpdateControllerMixin<
          * 1. exist
          * 2. validate
          * 3. limit
+         * 4. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
+        @intercept(exist(rootCtor, rootScope, relations, 2, ids.length + 2))
         @intercept(validate("update", leafCtor, leafScope, 0))
         @intercept(limit("update", leafCtor, leafScope, undefined, 1))
-        @intercept(access("update", leafCtor, leafScope, 0))
+        @intercept(access("update", rootScope, leafScope, relations, 0))
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -904,7 +923,7 @@ export function UpdateControllerMixin<
             filter?: Filter<Model>
         ): Promise<void> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: (Model)
              * args[1]: Filter
@@ -977,10 +996,13 @@ export function DeleteControllerMixin<
          *
          * 1. exist
          * 2. limit
+         * 3. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
         @intercept(limit("delete", leafCtor, leafScope, undefined, 0))
-        @intercept(access("delete", leafCtor, leafScope, ids.length + 2))
+        @intercept(
+            access("delete", rootScope, leafScope, relations, ids.length + 2)
+        )
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -1001,7 +1023,7 @@ export function DeleteControllerMixin<
             filter?: Filter<Model>
         ): Promise<Count> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: Filter
              *
@@ -1028,10 +1050,13 @@ export function DeleteControllerMixin<
          *
          * 1. exist
          * 2. limit
+         * 3. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 2, ids.length + 2))
+        @intercept(exist(rootCtor, rootScope, relations, 2, ids.length + 2))
         @intercept(limit("delete", leafCtor, leafScope, 0, 1))
-        @intercept(access("delete", leafCtor, leafScope, ids.length + 2))
+        @intercept(
+            access("delete", rootScope, leafScope, relations, ids.length + 2)
+        )
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
@@ -1048,7 +1073,7 @@ export function DeleteControllerMixin<
             filter?: Filter<Model>
         ): Promise<void> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: id_model
              * args[1]: Filter
@@ -1092,10 +1117,13 @@ export function DeleteControllerMixin<
          *
          * 1. exist
          * 2. limit
+         * 3. access
          */
-        @intercept(exist(rootCtor, relations, rootScope, 1, ids.length + 1))
+        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
         @intercept(limit("delete", leafCtor, leafScope, undefined, 0))
-        @intercept(access("delete", leafCtor, leafScope, ids.length + 2))
+        @intercept(
+            access("delete", rootScope, leafScope, relations, ids.length + 2)
+        )
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -1111,7 +1139,7 @@ export function DeleteControllerMixin<
             filter?: Filter<Model>
         ): Promise<void> {
             /**
-             * (): Nested access checking
+             * (): Nested authorize checking
              *
              * args[0]: Filter
              *

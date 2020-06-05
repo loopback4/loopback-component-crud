@@ -23,8 +23,8 @@ export function exist<
     Controller extends CRUDController
 >(
     ctor: Ctor<Model>,
-    relations: string[],
     scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
+    relations: string[],
     argsBegin: number,
     argsEnd: number
 ): Interceptor {
