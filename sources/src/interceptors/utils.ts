@@ -1,6 +1,10 @@
 import { Entity, Filter, RelationType } from "@loopback/repository";
 
+import { AuthorizationMetadata } from "@loopback/authorization";
+
 import { Ctor, ControllerScope } from "../types";
+
+import { CRUDController } from "../servers";
 
 export function getId<Model extends Entity>(ctor: Ctor<Model>) {
     if ("id" in ctor.definition.properties) {
@@ -354,40 +358,33 @@ export function generateMetadata<Model extends Entity>(
 
 /**
  *
- *  Ctor:       X
+ *  Scope:      {X}
  *  Relations:  [ys, z, t]
  *
- *  RootCtor:       ()
- *  RootRelations:  [xs, ys, z, t]
- *
- *  () --xs         --> [X] --ys        --> [Y] --z         --> [Z] --t         --> [T]
- *  () --HasMany    --> [X] --HasMany   --> [Y] --BelongsTo --> [Z] --HasOne    --> [T]
+ *  {X} --ys        --> {Y} --z         --> {Z} --t         --> {T}
  *
  * ----------------------------------------------------------------------------------------
  *
  *  Algorithm:
  *
- *      RootCtor;
- *      RootRelations.reduce((metadata, relation) => {
- *          return RootCtor[relation];
+ *      Scope;
+ *      Relations.reduce((metadata, relation) => {
+ *          metadata.push(Scope[type]);
  *
- *          RootCtor = RootCtor[relation].target();
- *      }, undefined);
+ *          Scope = Scope.include[relation];
+ *      }, {voters: [], scopes: []});
  *
  * ----------------------------------------------------------------------------------------
  *
  *  Result:
  *
  *      {
- *          name: t,
- *          type: RelationType.hasOne,
- *          tagetsMany: false,
- *          source: () => Z,
- *          target: () => T
+ *          voters: [...],
+ *          scopes: [...]
  *      }
  *
  */
-export function generateAccess<
+export function generateRootAccess<
     Model extends Entity,
     ModelID,
     ModelRelations extends object,
@@ -396,4 +393,123 @@ export function generateAccess<
     type: "create" | "read" | "update" | "delete",
     scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
     relations: string[]
-);
+): AuthorizationMetadata {
+    return relations.reduce<AuthorizationMetadata>(
+        (authorizationMetadata, relation) => {
+            const metadata = scope[type];
+
+            authorizationMetadata.voters?.push(...(metadata?.voters || []));
+            authorizationMetadata.scopes?.push(...(metadata?.scopes || []));
+
+            scope = scope.include[relation];
+
+            return authorizationMetadata;
+        },
+        { voters: [], scopes: [] }
+    );
+}
+
+/**
+ *
+ *  Scope:      {X}
+ *
+ * ----------------------------------------------------------------------------------------
+ *
+ *  Algorithm:
+ *
+ *      Scope;
+ *      Models[].reduce((metadata, model) => {
+ *
+ *          metadata.push(getMetadata(type, scope, model)[type]);
+ *
+ *      }, {voters: [], scopes: [], ...Scope[type]});
+ *
+ *      Scope;
+ *      Object.keys(Models).filter(([_, value]) => typeof value === "object").reduce((metadata, [key, value]) => {
+ *
+ *          metadata.push(getMetadata(type, scope.include[key], value)[type]);
+ *
+ *      }, {voters: [], scopes: [], ...Scope[type]});
+ *
+ *      Scope;
+ *      (Filter.include || []).reduce((metadata, inclusion) => {
+ *
+ *          metadata.push(getMetadata(type, scope.include[inclusion.relation], inclusion.scope)[type]);
+ *
+ *      }, {voters: [], scopes: [], ...Scope[type]});
+ *
+ * ----------------------------------------------------------------------------------------
+ *
+ *  Result:
+ *
+ *      {
+ *          voters: [...],
+ *          scopes: [...]
+ *      }
+ *
+ */
+export function generateLeafAccess<
+    Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
+    Controller extends CRUDController
+>(
+    type: "create" | "read" | "update" | "delete",
+    scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
+    entity: Model[] | Model | Filter
+): AuthorizationMetadata {
+    if (type === "create" && Array.isArray(entity)) {
+        // Model[]
+        return entity.reduce<AuthorizationMetadata>(
+            (authorizationMetadata, model) => {
+                const metadata = generateLeafAccess(type, scope, model);
+
+                authorizationMetadata.voters?.push(...(metadata?.voters || []));
+                authorizationMetadata.scopes?.push(...(metadata?.scopes || []));
+
+                return authorizationMetadata;
+            },
+            { voters: [], scopes: [], ...scope[type] }
+        );
+    } else if (type === "create" || type === "update") {
+        // Model
+        return Object.keys(entity)
+            .filter(([_, value]) => typeof value === "object")
+            .reduce<AuthorizationMetadata>(
+                (authorizationMetadata, [key, value]) => {
+                    const metadata = generateLeafAccess(
+                        type,
+                        scope.include[key],
+                        value
+                    );
+
+                    authorizationMetadata.voters?.push(
+                        ...(metadata?.voters || [])
+                    );
+                    authorizationMetadata.scopes?.push(
+                        ...(metadata?.scopes || [])
+                    );
+
+                    return authorizationMetadata;
+                },
+                { voters: [], scopes: [], ...scope[type] }
+            );
+    } else {
+        // Filter
+        return ((entity as Filter).include || []).reduce<AuthorizationMetadata>(
+            (authorizationMetadata, inclusion) => {
+                const metadata = generateLeafAccess(
+                    type,
+                    scope.include[inclusion.relation],
+                    inclusion.scope
+                );
+
+                authorizationMetadata.voters?.push(...(metadata?.voters || []));
+                authorizationMetadata.scopes?.push(...(metadata?.scopes || []));
+
+                return authorizationMetadata;
+            },
+            { voters: [], scopes: [], ...scope[type] }
+        );
+    }
+}
