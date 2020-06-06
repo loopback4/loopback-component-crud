@@ -4,7 +4,7 @@ import { User } from "./test.model";
 
 import { generateFilter } from "../../src";
 
-describe("Generate Filter Test", () => {
+describe("Generate Filter", () => {
     it("generateFilter Test", () => {
         expect(generateFilter(User, [], [])).deepEqual(undefined);
 

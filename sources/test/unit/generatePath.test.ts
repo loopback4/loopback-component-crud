@@ -4,7 +4,7 @@ import { User } from "./test.model";
 
 import { generatePath } from "../../src";
 
-describe("Generate Path Test", () => {
+describe("Generate Path", () => {
     it("generatePath Test", () => {
         expect(generatePath(User, [], "")).deepEqual("/users");
 

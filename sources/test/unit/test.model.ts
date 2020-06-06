@@ -7,6 +7,8 @@ import {
     hasMany,
 } from "@loopback/repository";
 
+import { ControllerScope } from "../../src";
+
 @model()
 export class User extends Entity {
     @property()
@@ -69,3 +71,27 @@ class Permission extends Entity {
     @property()
     key: string;
 }
+
+export const UsersScope: ControllerScope<any, any, any, any> = {
+    modelMapper: async (context, models) => models,
+    repositoryGetter: (controller) => undefined as any,
+
+    create: { scopes: ["USER_CREATE"] },
+    read: { scopes: ["READ_USER"] },
+    update: { scopes: ["UPDATE_USER"] },
+    delete: { scopes: ["DELETE_USER"] },
+
+    include: {
+        parent: {
+            modelMapper: async (context, models) => models,
+            repositoryGetter: (controller) => undefined as any,
+
+            create: {},
+            read: {},
+            update: {},
+            delete: {},
+
+            include: {},
+        },
+    },
+};

@@ -4,7 +4,7 @@ import { User } from "./test.model";
 
 import { generateIds } from "../../src";
 
-describe("Generate IDs Test", () => {
+describe("Generate IDs", () => {
     it("generateIds Test", () => {
         expect(generateIds(User, [])).deepEqual([]);
 

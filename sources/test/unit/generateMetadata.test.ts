@@ -4,7 +4,7 @@ import { User } from "./test.model";
 
 import { generateMetadata } from "../../src";
 
-describe("Generate Metadata Test", () => {
+describe("Generate Metadata", () => {
     it("generateMetadata Test", () => {
         expect({
             ...generateMetadata(User, []),
