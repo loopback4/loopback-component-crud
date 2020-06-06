@@ -357,6 +357,44 @@ export function generateMetadata<Model extends Entity>(
 }
 
 /**
+ *  Result:
+ *
+ *      {
+ *          allowedRoles: union(first, second),
+ *          deniedRoles: union(first, secord),
+ *          voters: union(first, secord),
+ *          scopes: union(first, secord)
+ *      }
+ *
+ */
+export function mergeAccess(
+    first: AuthorizationMetadata,
+    second: AuthorizationMetadata
+): AuthorizationMetadata {
+    return {
+        ...first,
+        allowedRoles: Array.from(
+            new Set([
+                ...(first.allowedRoles || []),
+                ...(second.allowedRoles || []),
+            ])
+        ),
+        deniedRoles: Array.from(
+            new Set([
+                ...(first.deniedRoles || []),
+                ...(second.deniedRoles || []),
+            ])
+        ),
+        voters: Array.from(
+            new Set([...(first.voters || []), ...(second.voters || [])])
+        ),
+        scopes: Array.from(
+            new Set([...(first.scopes || []), ...(second.scopes || [])])
+        ),
+    };
+}
+
+/**
  *
  *  Scope:      {X}
  *  Relations:  [ys, z, t]
@@ -373,6 +411,8 @@ export function generateMetadata<Model extends Entity>(
  *
  *          Scope = Scope.include[relation];
  *      }, {voters: [], scopes: []});
+ *
+ *  Tip: ignore leaf node metadata (will add by generateLeafAccess)
  *
  * ----------------------------------------------------------------------------------------
  *
@@ -396,16 +436,16 @@ export function generateRootAccess<
 ): AuthorizationMetadata {
     return relations.reduce<AuthorizationMetadata>(
         (authorizationMetadata, relation) => {
-            const metadata = scope[type];
-
-            authorizationMetadata.voters?.push(...(metadata?.voters || []));
-            authorizationMetadata.scopes?.push(...(metadata?.scopes || []));
+            const result = mergeAccess(
+                authorizationMetadata,
+                scope[type] || {}
+            );
 
             scope = scope.include[relation];
 
-            return authorizationMetadata;
+            return result;
         },
-        { voters: [], scopes: [] }
+        {}
     );
 }
 
@@ -438,6 +478,9 @@ export function generateRootAccess<
  *
  *      }, {voters: [], scopes: [], ...Scope[type]});
  *
+ *
+ *  Tip: ignore leaf node metadata (will add by generateLeafAccess)
+ *
  * ----------------------------------------------------------------------------------------
  *
  *  Result:
@@ -461,55 +504,38 @@ export function generateLeafAccess<
     if (type === "create" && Array.isArray(entity)) {
         // Model[]
         return entity.reduce<AuthorizationMetadata>(
-            (authorizationMetadata, model) => {
-                const metadata = generateLeafAccess(type, scope, model);
-
-                authorizationMetadata.voters?.push(...(metadata?.voters || []));
-                authorizationMetadata.scopes?.push(...(metadata?.scopes || []));
-
-                return authorizationMetadata;
-            },
-            { voters: [], scopes: [], ...scope[type] }
+            (authorizationMetadata, model) =>
+                mergeAccess(
+                    authorizationMetadata,
+                    generateLeafAccess(type, scope, model)
+                ),
+            scope[type] || {}
         );
     } else if (type === "create" || type === "update") {
         // Model
-        return Object.keys(entity)
+        return Object.entries(entity)
             .filter(([_, value]) => typeof value === "object")
             .reduce<AuthorizationMetadata>(
-                (authorizationMetadata, [key, value]) => {
-                    const metadata = generateLeafAccess(
-                        type,
-                        scope.include[key],
-                        value
-                    );
-
-                    authorizationMetadata.voters?.push(
-                        ...(metadata?.voters || [])
-                    );
-                    authorizationMetadata.scopes?.push(
-                        ...(metadata?.scopes || [])
-                    );
-
-                    return authorizationMetadata;
-                },
-                { voters: [], scopes: [], ...scope[type] }
+                (authorizationMetadata, [key, value]) =>
+                    mergeAccess(
+                        authorizationMetadata,
+                        generateLeafAccess(type, scope.include[key], value)
+                    ),
+                scope[type] || {}
             );
     } else {
         // Filter
         return ((entity as Filter).include || []).reduce<AuthorizationMetadata>(
-            (authorizationMetadata, inclusion) => {
-                const metadata = generateLeafAccess(
-                    type,
-                    scope.include[inclusion.relation],
-                    inclusion.scope
-                );
-
-                authorizationMetadata.voters?.push(...(metadata?.voters || []));
-                authorizationMetadata.scopes?.push(...(metadata?.scopes || []));
-
-                return authorizationMetadata;
-            },
-            { voters: [], scopes: [], ...scope[type] }
+            (authorizationMetadata, inclusion) =>
+                mergeAccess(
+                    authorizationMetadata,
+                    generateLeafAccess(
+                        type,
+                        scope.include[inclusion.relation],
+                        inclusion.scope
+                    )
+                ),
+            scope[type] || {}
         );
     }
 }
