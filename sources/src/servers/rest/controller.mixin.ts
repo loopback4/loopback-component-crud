@@ -313,6 +313,7 @@ export function ReadControllerMixin<
         @intercept(
             access("read", rootScope, leafScope, relations, ids.length + 2)
         )
+        @intercept("authorize")
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -378,6 +379,7 @@ export function ReadControllerMixin<
         @intercept(
             access("read", rootScope, leafScope, relations, ids.length + 3)
         )
+        @intercept("authorize")
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {

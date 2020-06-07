@@ -56,6 +56,25 @@ export interface ControllerScope<
     };
 }
 
+/** CRUD decorator metadata stored via Reflection API */
+export interface CRUDMetadata<
+    Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
+    Controller extends CRUDController
+> {
+    type: "create" | "read" | "update" | "delete";
+    rootCtor: Ctor<Model>;
+    rootScope: ControllerScope<Model, ModelID, ModelRelations, Controller>;
+    leafCtor: Ctor<Model>;
+    leafScope: ControllerScope<Model, ModelID, ModelRelations, Controller>;
+    relations: string[];
+    idsIndex: number[];
+    modelIndex?: number;
+    idIndex?: number;
+    filterIndex?: number;
+}
+
 /**
  * CRUDMixin configs
  */

@@ -44,7 +44,12 @@ export function access<
         await authorize(access)(
             invocationCtx.target,
             invocationCtx.methodName,
-            { value: invocationCtx.targetClass }
+            {
+                value: (...args: any[]) => {
+                    console.log(args);
+                    // invocationCtx.targetClass
+                },
+            }
         );
 
         return next();

@@ -1,7 +1,9 @@
-import { BindingKey } from "@loopback/context";
+import { BindingKey, MetadataAccessor } from "@loopback/context";
 import { CoreBindings } from "@loopback/core";
 import { TokenService } from "@loopback/authentication";
 import { Authorizer } from "@loopback/authorization";
+
+import { CRUDMetadata } from "./types";
 
 /**
  * Public bindings used in application scope
@@ -38,3 +40,8 @@ export namespace PrivateCRUDBindings {
         "private.crud.providers.authorizer"
     );
 }
+
+export const CRUD_METHOD_KEY = MetadataAccessor.create<
+    CRUDMetadata<any, any, any, any>,
+    MethodDecorator
+>("crud:method");
