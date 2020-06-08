@@ -32,6 +32,7 @@ import {
 import { Ctor, ControllerScope } from "../../types";
 
 import { CRUDController } from "../../servers";
+import { authorize } from "@loopback/authorization";
 
 export function CreateControllerMixin<
     Model extends Entity,

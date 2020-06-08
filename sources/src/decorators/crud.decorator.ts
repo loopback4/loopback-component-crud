@@ -21,10 +21,7 @@ export function getCRUDMetadata<
     ModelID,
     ModelRelations extends object,
     Controller extends CRUDController
->(
-    target: object,
-    methodName: string
-): CRUDMetadata<Model, ModelID, ModelRelations, Controller> | undefined {
+>(target: object, methodName: string) {
     return MetadataInspector.getMethodMetadata<
         CRUDMetadata<Model, ModelID, ModelRelations, Controller>
     >(CRUD_METHOD_KEY, target, methodName);
