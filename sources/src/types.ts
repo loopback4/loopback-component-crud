@@ -1,13 +1,10 @@
-import { Entity, DefaultCrudRepository, Class } from "@loopback/repository";
-import { InvocationContext, Provider } from "@loopback/context";
+import { inject } from "@loopback/core";
+import { InvocationContext } from "@loopback/context";
+import { Entity, DefaultCrudRepository } from "@loopback/repository";
 
-import { ApplicationConfig } from "@loopback/core";
-import { RestServerConfig } from "@loopback/rest";
-import { HttpServerOptions } from "@loopback/http-server";
-import { TokenService } from "@loopback/authentication";
-import { Authorizer, AuthorizationMetadata } from "@loopback/authorization";
-
-import { CRUDController } from "./servers";
+import { RestBindings, Request, Response } from "@loopback/rest";
+import { SecurityBindings, UserProfile } from "@loopback/security";
+import { AuthorizationMetadata } from "@loopback/authorization";
 
 /** Model Ctor type */
 export type Ctor<Model extends Entity> = typeof Entity & {
@@ -56,20 +53,32 @@ export interface ControllerScope<
     };
 }
 
-/**
- * CRUDMixin configs
- */
-export interface CRUDMixinConfig {
-    tokenService: Class<TokenService>;
-    authorizerProvider: Class<Provider<Authorizer>>;
+/** CRUD decorator metadata stored via Reflection API */
+export interface CRUDMetadata<
+    Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
+    Controller extends CRUDController
+> {
+    type: "create" | "read" | "update" | "delete";
+    rootCtor: Ctor<Model>;
+    rootScope: ControllerScope<Model, ModelID, ModelRelations, Controller>;
+    leafCtor: Ctor<Model>;
+    leafScope: ControllerScope<Model, ModelID, ModelRelations, Controller>;
+    relations: string[];
+    idsIndex: number[];
+    modelsIndex?: number;
+    filterIndex?: [number, number];
 }
 
-/**
- * CRUDApplication configs
- */
-export type CRUDRestServerConfig = RestServerConfig & { homePath?: string };
-export type CRUDGraphQLServerConfig = HttpServerOptions;
-export interface CRUDApplicationConfig extends ApplicationConfig {
-    rest?: CRUDRestServerConfig;
-    graphql?: CRUDGraphQLServerConfig;
+/** Controller base class type */
+export class CRUDController {
+    constructor(
+        @inject(RestBindings.Http.REQUEST)
+        public request: Request,
+        @inject(RestBindings.Http.RESPONSE)
+        public response: Response,
+        @inject(SecurityBindings.USER, { optional: true })
+        public session: UserProfile
+    ) {}
 }

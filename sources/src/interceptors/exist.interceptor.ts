@@ -1,7 +1,9 @@
 import {
+    globalInterceptor,
     Interceptor,
     InvocationContext,
     InvocationResult,
+    Provider,
     ValueOrPromise,
 } from "@loopback/context";
 import {
@@ -12,72 +14,76 @@ import {
 
 import { generateFilter, generateMetadata } from "./utils";
 
-import { Ctor, ControllerScope } from "../types";
+import { Ctor } from "../types";
+import { getCRUDMetadata } from "../decorators";
 
-import { CRUDController } from "../servers";
-
-export function exist<
-    Model extends Entity,
-    ModelID,
-    ModelRelations extends object,
-    Controller extends CRUDController
->(
-    ctor: Ctor<Model>,
-    relations: string[],
-    scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
-    argsBegin: number,
-    argsEnd: number
-): Interceptor {
-    return async (
-        invocationCtx: InvocationContext,
-        next: () => ValueOrPromise<InvocationResult>
-    ) => {
-        /** Get ids from arguments array */
-        const ids: string[] = invocationCtx.args.slice(argsBegin, argsEnd);
-
-        const condition = await existFn(
-            ctor,
-            relations,
-            scope.repositoryGetter(invocationCtx.target as any),
-            [...ids]
-        );
-
-        invocationCtx.args.push(condition);
-
-        if (!condition) {
-            throw new EntityNotFoundError(ctor, ids[ids.length - 1]);
-        }
-
-        return next();
-    };
-}
-
-async function existFn<
-    Model extends Entity,
-    ModelID,
-    ModelRelations extends object
->(
-    ctor: Ctor<Model>,
-    relations: string[],
-    repository: DefaultCrudRepository<Model, ModelID, ModelRelations>,
-    ids: string[]
-): Promise<Model | undefined> {
-    const filter = generateFilter(ctor, relations, ids);
-
-    if (!filter) {
-        return {} as any;
+@globalInterceptor("crud", { tags: { name: "exist" } })
+export class ExistInterceptor implements Provider<Interceptor> {
+    value() {
+        return this.intercept.bind(this);
     }
 
-    let lastModel = relations.reduce(
-        (model: any, relation) => model && model[relation],
-        await repository.findOne(filter)
-    );
+    async intercept(
+        invocationCtx: InvocationContext,
+        next: () => ValueOrPromise<InvocationResult>
+    ) {
+        try {
+            const metadata = getCRUDMetadata(
+                invocationCtx.target,
+                invocationCtx.methodName
+            );
 
-    const metadata = generateMetadata(ctor, relations);
+            if (metadata) {
+                /** Get ids from request arguments */
+                const ids: string[] = metadata.idsIndex.map(
+                    (idIndex) => invocationCtx.args[idIndex]
+                );
 
-    if (lastModel && lastModel[metadata.keyFrom]) {
-        return {
-            [metadata.keyTo]: lastModel[metadata.keyFrom],
-        } as any;
+                const condition = await this.exist(
+                    metadata.rootCtor,
+                    metadata.relations,
+                    metadata.rootScope.repositoryGetter(
+                        invocationCtx.target as any
+                    ),
+                    [...ids]
+                );
+
+                invocationCtx.args.push(condition);
+            }
+
+            const result = await next();
+
+            return result;
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    private async exist(
+        ctor: Ctor<Entity>,
+        relations: string[],
+        repository: DefaultCrudRepository<any, any, any>,
+        ids: string[]
+    ): Promise<Entity> {
+        const filter = generateFilter(ctor, relations, ids);
+
+        if (!filter) {
+            return {} as any;
+        }
+
+        let lastModel = relations.reduce(
+            (model: any, relation) => model && model[relation],
+            await repository.findOne(filter)
+        );
+
+        const relationMetadata = generateMetadata(ctor, relations);
+
+        if (lastModel && lastModel[relationMetadata.keyFrom]) {
+            return {
+                [relationMetadata.keyTo]: lastModel[relationMetadata.keyFrom],
+            } as any;
+        }
+
+        throw new EntityNotFoundError(ctor, ids);
     }
 }
