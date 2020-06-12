@@ -59,16 +59,12 @@ export class ExistInterceptor implements Provider<Interceptor> {
         }
     }
 
-    private async exist<
-        Model extends Entity,
-        ModelID,
-        ModelRelations extends object
-    >(
-        ctor: Ctor<Model>,
+    private async exist(
+        ctor: Ctor<Entity>,
         relations: string[],
-        repository: DefaultCrudRepository<Model, ModelID, ModelRelations>,
+        repository: DefaultCrudRepository<any, any, any>,
         ids: string[]
-    ): Promise<Model> {
+    ): Promise<Entity> {
         const filter = generateFilter(ctor, relations, ids);
 
         if (!filter) {

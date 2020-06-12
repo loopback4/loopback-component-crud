@@ -322,7 +322,7 @@ export function ReadControllerMixin<
                 { length: ids.length },
                 (_, index) => index + 1
             ),
-            filterIndex: 0,
+            filterIndex: [-1, 0],
         })
         @authorize(leafScope.read || {})
         @authenticate("crud")
@@ -386,8 +386,7 @@ export function ReadControllerMixin<
                 { length: ids.length },
                 (_, index) => index + 2
             ),
-            idIndex: 0,
-            filterIndex: 1,
+            filterIndex: [0, 1],
         })
         @authorize(leafScope.read || {})
         @authenticate("crud")
@@ -485,7 +484,7 @@ export function ReadControllerMixin<
                 { length: ids.length },
                 (_, index) => index + 1
             ),
-            filterIndex: 0,
+            filterIndex: [-1, 0],
         })
         @authorize(leafScope.read || {})
         @authenticate("crud")
@@ -574,7 +573,7 @@ export function ReadControllerMixin<
                 { length: ids.length },
                 (_, index) => index + 1
             ),
-            filterIndex: 0,
+            filterIndex: [-1, 0],
         })
         @authorize(leafScope.read || {})
         @authenticate("crud")
@@ -700,7 +699,7 @@ export function UpdateControllerMixin<
                 (_, index) => index + 2
             ),
             modelsIndex: 0,
-            filterIndex: 1,
+            filterIndex: [-1, 1],
         })
         @authorize(leafScope.update || {})
         @authenticate("crud")
@@ -763,8 +762,7 @@ export function UpdateControllerMixin<
                 (_, index) => index + 3
             ),
             modelsIndex: 0,
-            idIndex: 1,
-            filterIndex: 2,
+            filterIndex: [1, 2],
         })
         @authorize(leafScope.update || {})
         @authenticate("crud")
@@ -845,7 +843,7 @@ export function UpdateControllerMixin<
                 (_, index) => index + 2
             ),
             modelsIndex: 0,
-            filterIndex: 1,
+            filterIndex: [-1, 1],
         })
         @authorize(leafScope.update || {})
         @authenticate("crud")
@@ -917,7 +915,7 @@ export function UpdateControllerMixin<
                 (_, index) => index + 2
             ),
             modelsIndex: 0,
-            filterIndex: 1,
+            filterIndex: [-1, 1],
         })
         @authorize(leafScope.update || {})
         @authenticate("crud")
@@ -1024,7 +1022,7 @@ export function DeleteControllerMixin<
                 { length: ids.length },
                 (_, index) => index + 1
             ),
-            filterIndex: 0,
+            filterIndex: [-1, 0],
         })
         @authorize(leafScope.delete || {})
         @authenticate("crud")
@@ -1079,8 +1077,7 @@ export function DeleteControllerMixin<
                 { length: ids.length },
                 (_, index) => index + 2
             ),
-            idIndex: 0,
-            filterIndex: 1,
+            filterIndex: [0, 1],
         })
         @authorize(leafScope.delete || {})
         @authenticate("crud")
@@ -1148,7 +1145,7 @@ export function DeleteControllerMixin<
                 { length: ids.length },
                 (_, index) => index + 1
             ),
-            filterIndex: 0,
+            filterIndex: [-1, 0],
         })
         @authorize(leafScope.delete || {})
         @authenticate("crud")

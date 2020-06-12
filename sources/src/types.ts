@@ -71,8 +71,7 @@ export interface CRUDMetadata<
     relations: string[];
     idsIndex: number[];
     modelsIndex?: number;
-    idIndex?: number;
-    filterIndex?: number;
+    filterIndex?: [number, number];
 }
 
 /**

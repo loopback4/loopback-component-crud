@@ -13,7 +13,6 @@ import { getId } from "./utils";
 
 import { Ctor, ControllerScope } from "../types";
 import { getCRUDMetadata } from "../decorators";
-import { CRUDController } from "../servers";
 
 @globalInterceptor("crud", { tags: { name: "limit" } })
 export class LimitInterceptor implements Provider<Interceptor> {
@@ -32,56 +31,71 @@ export class LimitInterceptor implements Provider<Interceptor> {
             );
 
             if (metadata) {
-                /** Get models or model from request arguments */
-                const models: Entity[] | Entity =
-                    invocationCtx.args[metadata.modelIndex as number];
-
-                /** Get id from request arguments */
-                const id: string =
-                    invocationCtx.args[metadata.idIndex as number];
-
-                /** Get filter from request arguments */
-                const filter: Filter =
-                    invocationCtx.args[metadata.filterIndex as number];
-
                 /** Get model condition from arguments, pushed by exist interceptor */
                 const condition: Entity =
                     invocationCtx.args[invocationCtx.args.length - 1];
 
-                const limit = await this.limitFn(type, scope, {
-                    ...filter,
-                    where: {
-                        and: [
-                            id && { [getId(ctor)]: id },
-                            filter?.where,
+                /** Limit models in arguments */
+                if (metadata.modelsIndex !== undefined) {
+                    /** Get models or model from request arguments */
+                    const models: Entity[] | Entity =
+                        invocationCtx.args[metadata.modelsIndex];
+
+                    if (Array.isArray(models)) {
+                        const result = await this.limitModels(
+                            metadata.type,
+                            metadata.leafCtor,
+                            metadata.leafScope,
+                            models,
                             condition,
-                        ].filter(
-                            (condition) =>
-                                Boolean(condition) &&
-                                Object.keys(condition).length > 0
-                        ),
-                    },
-                });
+                            invocationCtx
+                        );
 
-                invocationCtx.args.push(limit);
+                        invocationCtx.args[metadata.modelsIndex] = result;
+                    } else {
+                        const result = await this.limitModel(
+                            metadata.type,
+                            metadata.leafCtor,
+                            metadata.leafScope,
+                            models,
+                            condition,
+                            invocationCtx
+                        );
 
-                const entities = await this.validateFn(
-                    type,
-                    ctor,
-                    scope,
-                    [].concat(models as any),
-                    condition,
-                    invocationCtx
-                );
+                        invocationCtx.args[metadata.modelsIndex] = result;
+                    }
+                }
 
-                invocationCtx.args[argIndex] = Array.isArray(models)
-                    ? entities
-                    : entities[0];
+                /** Limit id,filter in arguments */
+                if (metadata.filterIndex !== undefined) {
+                    /** Get id from request arguments */
+                    const id: string | undefined =
+                        invocationCtx.args[metadata.filterIndex[0]];
 
-                if (!invocationCtx.args[argIndex]) {
-                    throw new HttpErrors.UnprocessableEntity(
-                        "Entity is not valid"
+                    /** Get filter from request arguments */
+                    const filter: Filter | undefined =
+                        invocationCtx.args[metadata.filterIndex[1]];
+
+                    const result = this.limitFilter(
+                        metadata.type,
+                        metadata.leafScope,
+                        {
+                            ...filter,
+                            where: {
+                                and: [
+                                    id && { [getId(metadata.leafCtor)]: id },
+                                    filter?.where,
+                                    condition,
+                                ].filter(
+                                    (where) =>
+                                        typeof where === "object" &&
+                                        Object.keys(where).length > 0
+                                ),
+                            },
+                        }
                     );
+
+                    invocationCtx.args[metadata.filterIndex[1]] = result;
                 }
             }
 
@@ -93,61 +107,14 @@ export class LimitInterceptor implements Provider<Interceptor> {
         }
     }
 
-    private limitModel<Model extends Entity>(
-        model: Model,
-        condition: Model
-    ): Model {
-        return {} as any;
-    }
-
-    private limitFilter<Model extends Entity>(
-        filter: Filter,
-        condition: Model
-    ) {}
-
-    private limitFn<
-        Model extends Entity,
-        ModelID,
-        ModelRelations extends object,
-        Controller extends CRUDController
-    >(
+    private async limitModels(
         type: "create" | "read" | "update" | "delete",
-        scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
-        filter: Filter<Model>
-    ): Filter<Model> | undefined {
-        if (filter.include) {
-            filter.include = filter.include
-                .filter(
-                    (inclusion) =>
-                        inclusion.relation in scope.include &&
-                        type in scope.include[inclusion.relation]
-                )
-                .map((inclusion) => ({
-                    ...inclusion,
-                    scope: this.limitFn(
-                        type,
-                        scope.include[inclusion.relation],
-                        inclusion.scope || {}
-                    ),
-                }));
-        }
-
-        return filter;
-    }
-
-    async validateFn<
-        Model extends Entity,
-        ModelID,
-        ModelRelations extends object,
-        Controller extends CRUDController
-    >(
-        type: "create" | "read" | "update" | "delete",
-        ctor: Ctor<Model>,
-        scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
-        models: Model[],
-        condition: Model,
+        ctor: Ctor<Entity>,
+        scope: ControllerScope<any, any, any, any>,
+        models: Entity[],
+        condition: Entity,
         invocationCtx: InvocationContext
-    ): Promise<Model[]> {
+    ): Promise<Entity[]> {
         const entities = await scope.modelMapper(
             invocationCtx,
             models.map<any>((model) => {
@@ -181,12 +148,12 @@ export class LimitInterceptor implements Provider<Interceptor> {
                             RelationType.belongsTo
                 )
                 .map(async ([key, value]) => {
-                    const validatedValue = await this.validateFn(
+                    const validatedValue = await this.limitModels(
                         type,
                         ctor.definition.relations[key].target(),
                         scope.include[key],
                         [].concat(value),
-                        {},
+                        {} as any,
                         invocationCtx
                     );
 
@@ -211,5 +178,54 @@ export class LimitInterceptor implements Provider<Interceptor> {
         return (await Promise.all(entitiesIncludeRelations)).filter(
             (entity) => entity
         );
+    }
+
+    private async limitModel(
+        type: "create" | "read" | "update" | "delete",
+        ctor: Ctor<Entity>,
+        scope: ControllerScope<any, any, any, any>,
+        model: Entity,
+        condition: Entity,
+        invocationCtx: InvocationContext
+    ): Promise<Entity> {
+        const result = await this.limitModels(
+            type,
+            ctor,
+            scope,
+            [model],
+            condition,
+            invocationCtx
+        );
+
+        if (result[0]) {
+            return result[0];
+        }
+
+        throw new HttpErrors.UnprocessableEntity("Entity is not valid");
+    }
+
+    private limitFilter(
+        type: "create" | "read" | "update" | "delete",
+        scope: ControllerScope<any, any, any, any>,
+        filter: Filter
+    ): Filter | undefined {
+        if (filter.include) {
+            filter.include = filter.include
+                .filter(
+                    (inclusion) =>
+                        inclusion.relation in scope.include &&
+                        type in scope.include[inclusion.relation]
+                )
+                .map((inclusion) => ({
+                    ...inclusion,
+                    scope: this.limitFilter(
+                        type,
+                        scope.include[inclusion.relation],
+                        inclusion.scope || {}
+                    ),
+                }));
+        }
+
+        return filter;
     }
 }
