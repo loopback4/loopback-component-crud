@@ -8,8 +8,8 @@ Using this extension you can generate a configurable `CRUD` controller with thes
 
 1. **Authentication**
 2. **Authorization**
-3. **Filtering**
-4. **Validating**
+3. **Validation**
+4. **Limit**
 5. etc
 
 ## Installation
@@ -22,42 +22,28 @@ npm i --save loopback-component-crud
 
 Follow these steps to add `CRUD` extension to your loopback4 application
 
-1. Define your Relational and Cache `dataSources`
-2. Add `CRUDMixin` to your application
-3. Bind `CRUDRestServer`
+1. Add `CRUDComponent` to your application (binding global interceptors)
+2. Extends your controller from `CRUDControllerMixin`
 
 Now, let's try:
 
 ---
 
-### Step 1 (Application Mixin)
+### Step 1 (CRUD Component)
 
 Edit your `application.ts` file:
 
 ```ts
-import {
-    CRUDMixin,
-    CRUDRestServer,
-    CRUDGQLServer,
-} from "loopback-component-crud";
+import { CRUDComponent } from "loopback-component-crud";
 
-import { MyTokenService, MyAuthorizerProvider } from "./providers";
-
-export class TestApplication extends CRUDMixin(
-    BootMixin(ServiceMixin(RepositoryMixin(Application)))
+export class TestApplication extends BootMixin(
+    ServiceMixin(RepositoryMixin(RestApplication))
 ) {
     constructor(options: ApplicationConfig = {}) {
         super(options);
 
-        // Add configs to crud mixin
-        this.crudConfigs = {
-            tokenService: MyTokenService,
-            authorizerProvider: MyAuthorizerProvider,
-        };
-
-        // Bind servers
-        this.server(CRUDRestServer);
-        this.server(CRUDGQLServer);
+        // Add crud component
+        this.component(CRUDComponent);
     }
 }
 ```
