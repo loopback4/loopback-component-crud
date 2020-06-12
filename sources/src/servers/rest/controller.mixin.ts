@@ -347,7 +347,7 @@ export function ReadControllerMixin<
             @param.query.object("filter", getFilterSchemaFor(leafCtor), {
                 description: `Filter ${leafCtor.name}`,
             })
-            filter?: Filter<Model>
+            filter: Filter<Model>
         ): Promise<Model[]> {
             /**
              * (): Nested authorize checking
@@ -367,14 +367,12 @@ export function ReadControllerMixin<
             if (this.request.headers["x-total"] === "true") {
                 const count = await leafScope
                     .repositoryGetter(this as any)
-                    .count(arguments[arguments.length - 1].where);
+                    .count(filter.where);
 
                 this.response.setHeader("X-Total-Count", count.count);
             }
 
-            return await leafScope
-                .repositoryGetter(this as any)
-                .find(arguments[arguments.length - 1]);
+            return await leafScope.repositoryGetter(this as any).find(filter);
         }
 
         @crud({
@@ -412,7 +410,7 @@ export function ReadControllerMixin<
             @param.query.object("filter", getFilterSchemaFor(leafCtor), {
                 description: `Filter ${leafCtor.name}`,
             })
-            filter?: Filter<Model>
+            filter: Filter<Model>
         ): Promise<Model> {
             /**
              * (): Nested authorize checking
@@ -433,7 +431,7 @@ export function ReadControllerMixin<
             if (this.request.headers["x-total"] === "true") {
                 const count = await leafScope
                     .repositoryGetter(this as any)
-                    .count(arguments[arguments.length - 1].where, {
+                    .count(filter.where, {
                         history: true,
                     });
 
@@ -441,13 +439,13 @@ export function ReadControllerMixin<
 
                 return (await leafScope
                     .repositoryGetter(this as any)
-                    .find(arguments[arguments.length - 1], {
+                    .find(filter, {
                         history: true,
                     })) as any;
             } else {
                 const model = await leafScope
                     .repositoryGetter(this as any)
-                    .findOne(arguments[arguments.length - 1]);
+                    .findOne(filter);
 
                 if (model) {
                     return model;
@@ -509,7 +507,7 @@ export function ReadControllerMixin<
             @param.query.object("filter", getFilterSchemaFor(leafCtor), {
                 description: `Filter ${leafCtor.name}`,
             })
-            filter?: Filter<Model>
+            filter: Filter<Model>
         ): Promise<Model> {
             /**
              * (): Nested authorize checking
@@ -529,7 +527,7 @@ export function ReadControllerMixin<
             if (this.request.headers["x-total"] === "true") {
                 const count = await leafScope
                     .repositoryGetter(this as any)
-                    .count(arguments[arguments.length - 1].where, {
+                    .count(filter.where, {
                         history: true,
                     });
 
@@ -537,13 +535,13 @@ export function ReadControllerMixin<
 
                 return (await leafScope
                     .repositoryGetter(this as any)
-                    .find(arguments[arguments.length - 1], {
+                    .find(filter, {
                         history: true,
                     })) as any;
             } else {
                 const model = await leafScope
                     .repositoryGetter(this as any)
-                    .findOne(arguments[arguments.length - 1]);
+                    .findOne(filter);
 
                 if (model) {
                     return model;
@@ -598,7 +596,7 @@ export function ReadControllerMixin<
             @param.query.object("filter", getFilterSchemaFor(leafCtor), {
                 description: `Filter ${leafCtor.name}`,
             })
-            filter?: Filter<Model>
+            filter: Filter<Model>
         ): Promise<Model> {
             /**
              * (): Nested authorize checking
@@ -618,7 +616,7 @@ export function ReadControllerMixin<
             if (this.request.headers["x-total"] === "true") {
                 const count = await leafScope
                     .repositoryGetter(this as any)
-                    .count(arguments[arguments.length - 1].where, {
+                    .count(filter.where, {
                         history: true,
                     });
 
@@ -626,13 +624,13 @@ export function ReadControllerMixin<
 
                 return (await leafScope
                     .repositoryGetter(this as any)
-                    .find(arguments[arguments.length - 1], {
+                    .find(filter, {
                         history: true,
                     })) as any;
             } else {
                 const model = await leafScope
                     .repositoryGetter(this as any)
-                    .findOne(arguments[arguments.length - 1]);
+                    .findOne(filter);
 
                 if (model) {
                     return model;
@@ -728,7 +726,7 @@ export function UpdateControllerMixin<
             @param.query.object("filter", getFilterSchemaFor(leafCtor), {
                 description: `Filter ${leafCtor.name}`,
             })
-            filter?: Filter<Model>
+            filter: Filter<Model>
         ): Promise<void> {
             /**
              * (): Nested authorize checking
@@ -748,8 +746,8 @@ export function UpdateControllerMixin<
 
             await leafScope
                 .repositoryGetter(this as any)
-                .updateAll(model, arguments[arguments.length - 1].where, {
-                    filter: arguments[arguments.length - 1],
+                .updateAll(model, filter.where, {
+                    filter: filter,
                 });
         }
 
@@ -793,7 +791,7 @@ export function UpdateControllerMixin<
             @param.query.object("filter", getFilterSchemaFor(leafCtor), {
                 description: `Filter ${leafCtor.name}`,
             })
-            filter?: Filter<Model>
+            filter: Filter<Model>
         ): Promise<void> {
             /**
              * (): Nested authorize checking
@@ -814,8 +812,8 @@ export function UpdateControllerMixin<
 
             await leafScope
                 .repositoryGetter(this as any)
-                .updateAll(model, arguments[arguments.length - 1].where, {
-                    filter: arguments[arguments.length - 1],
+                .updateAll(model, filter.where, {
+                    filter: filter,
                 });
         }
     }
@@ -873,7 +871,7 @@ export function UpdateControllerMixin<
             @param.query.object("filter", getFilterSchemaFor(leafCtor), {
                 description: `Filter ${leafCtor.name}`,
             })
-            filter?: Filter<Model>
+            filter: Filter<Model>
         ): Promise<void> {
             /**
              * (): Nested authorize checking
@@ -893,8 +891,8 @@ export function UpdateControllerMixin<
 
             await leafScope
                 .repositoryGetter(this as any)
-                .updateAll(model, arguments[arguments.length - 1].where, {
-                    filter: arguments[arguments.length - 1],
+                .updateAll(model, filter.where, {
+                    filter: filter,
                 });
         }
     }
@@ -945,7 +943,7 @@ export function UpdateControllerMixin<
             @param.query.object("filter", getFilterSchemaFor(leafCtor), {
                 description: `Filter ${leafCtor.name}`,
             })
-            filter?: Filter<Model>
+            filter: Filter<Model>
         ): Promise<void> {
             /**
              * (): Nested authorize checking
@@ -965,8 +963,8 @@ export function UpdateControllerMixin<
 
             await leafScope
                 .repositoryGetter(this as any)
-                .updateAll(model, arguments[arguments.length - 1].where, {
-                    filter: arguments[arguments.length - 1],
+                .updateAll(model, filter.where, {
+                    filter: filter,
                 });
         }
     }
@@ -1046,7 +1044,7 @@ export function DeleteControllerMixin<
             @param.query.object("filter", getFilterSchemaFor(leafCtor), {
                 description: `Filter ${leafCtor.name}`,
             })
-            filter?: Filter<Model>
+            filter: Filter<Model>
         ): Promise<Count> {
             /**
              * (): Nested authorize checking
@@ -1065,8 +1063,8 @@ export function DeleteControllerMixin<
 
             return await leafScope
                 .repositoryGetter(this as any)
-                .deleteAll(arguments[arguments.length - 1].where, {
-                    filter: arguments[arguments.length - 1],
+                .deleteAll(filter.where, {
+                    filter: filter,
                 });
         }
 
@@ -1098,7 +1096,7 @@ export function DeleteControllerMixin<
             @param.query.object("filter", getFilterSchemaFor(leafCtor), {
                 description: `Filter ${leafCtor.name}`,
             })
-            filter?: Filter<Model>
+            filter: Filter<Model>
         ): Promise<void> {
             /**
              * (): Nested authorize checking
@@ -1118,8 +1116,8 @@ export function DeleteControllerMixin<
 
             await leafScope
                 .repositoryGetter(this as any)
-                .deleteAll(arguments[arguments.length - 1].where, {
-                    filter: arguments[arguments.length - 1],
+                .deleteAll(filter.where, {
+                    filter: filter,
                 });
         }
     }
@@ -1165,7 +1163,7 @@ export function DeleteControllerMixin<
             @param.query.object("filter", getFilterSchemaFor(leafCtor), {
                 description: `Filter ${leafCtor.name}`,
             })
-            filter?: Filter<Model>
+            filter: Filter<Model>
         ): Promise<void> {
             /**
              * (): Nested authorize checking
@@ -1184,8 +1182,8 @@ export function DeleteControllerMixin<
 
             await leafScope
                 .repositoryGetter(this as any)
-                .deleteAll(arguments[arguments.length - 1].where, {
-                    filter: arguments[arguments.length - 1],
+                .deleteAll(filter.where, {
+                    filter: filter,
                 });
         }
     }
