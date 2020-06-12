@@ -2,9 +2,7 @@ import { Entity, Filter, RelationType } from "@loopback/repository";
 
 import { AuthorizationMetadata } from "@loopback/authorization";
 
-import { Ctor, ControllerScope } from "../types";
-
-import { CRUDController } from "../servers";
+import { Ctor, ControllerScope, CRUDController } from "../types";
 
 export function getId<Model extends Entity>(ctor: Ctor<Model>) {
     if ("id" in ctor.definition.properties) {

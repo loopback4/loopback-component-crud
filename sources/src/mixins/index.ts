@@ -1,1 +1,1 @@
-export * from "./crud.mixin";
+export * from "./controller.mixin";

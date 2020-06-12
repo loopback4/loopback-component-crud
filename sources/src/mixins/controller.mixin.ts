@@ -21,15 +21,9 @@ import {
 import { authenticate } from "@loopback/authentication";
 import { authorize } from "@loopback/authorization";
 
-import { crud } from "../../decorators";
-import {
-    generateIds,
-    generatePath,
-    generateMetadata,
-} from "../../interceptors";
-import { Ctor, ControllerScope } from "../../types";
-
-import { CRUDController } from "../../servers";
+import { crud } from "../decorators";
+import { generateIds, generatePath, generateMetadata } from "../interceptors";
+import { Ctor, ControllerScope, CRUDController } from "../types";
 
 export function CreateControllerMixin<
     Model extends Entity,

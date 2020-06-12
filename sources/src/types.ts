@@ -1,13 +1,10 @@
-import { Entity, DefaultCrudRepository, Class } from "@loopback/repository";
-import { InvocationContext, Provider } from "@loopback/context";
+import { inject } from "@loopback/core";
+import { InvocationContext } from "@loopback/context";
+import { Entity, DefaultCrudRepository } from "@loopback/repository";
 
-import { ApplicationConfig } from "@loopback/core";
-import { RestServerConfig } from "@loopback/rest";
-import { HttpServerOptions } from "@loopback/http-server";
-import { TokenService } from "@loopback/authentication";
-import { Authorizer, AuthorizationMetadata } from "@loopback/authorization";
-
-import { CRUDController } from "./servers";
+import { RestBindings, Request, Response } from "@loopback/rest";
+import { SecurityBindings, UserProfile } from "@loopback/security";
+import { AuthorizationMetadata } from "@loopback/authorization";
 
 /** Model Ctor type */
 export type Ctor<Model extends Entity> = typeof Entity & {
@@ -74,20 +71,14 @@ export interface CRUDMetadata<
     filterIndex?: [number, number];
 }
 
-/**
- * CRUDMixin configs
- */
-export interface CRUDMixinConfig {
-    tokenService: Class<TokenService>;
-    authorizerProvider: Class<Provider<Authorizer>>;
-}
-
-/**
- * CRUDApplication configs
- */
-export type CRUDRestServerConfig = RestServerConfig & { homePath?: string };
-export type CRUDGraphQLServerConfig = HttpServerOptions;
-export interface CRUDApplicationConfig extends ApplicationConfig {
-    rest?: CRUDRestServerConfig;
-    graphql?: CRUDGraphQLServerConfig;
+/** Controller base class type */
+export class CRUDController {
+    constructor(
+        @inject(RestBindings.Http.REQUEST)
+        public request: Request,
+        @inject(RestBindings.Http.RESPONSE)
+        public response: Response,
+        @inject(SecurityBindings.USER, { optional: true })
+        public session: UserProfile
+    ) {}
 }

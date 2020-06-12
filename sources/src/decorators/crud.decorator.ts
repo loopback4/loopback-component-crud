@@ -2,8 +2,7 @@ import { MethodDecoratorFactory, MetadataInspector } from "@loopback/context";
 import { Entity } from "@loopback/repository";
 
 import { CRUD_METHOD_KEY } from "../keys";
-import { CRUDMetadata } from "../types";
-import { CRUDController } from "../servers";
+import { CRUDMetadata, CRUDController } from "../types";
 
 export function crud<
     Model extends Entity,
