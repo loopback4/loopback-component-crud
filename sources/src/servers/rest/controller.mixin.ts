@@ -19,12 +19,10 @@ import {
 } from "@loopback/rest";
 
 import { authenticate } from "@loopback/authentication";
-import { intercept } from "@loopback/core";
+import { authorize } from "@loopback/authorization";
+
+import { crud } from "../../decorators";
 import {
-    exist,
-    validate,
-    limit,
-    access,
     generateIds,
     generatePath,
     generateMetadata,
@@ -32,7 +30,6 @@ import {
 import { Ctor, ControllerScope } from "../../types";
 
 import { CRUDController } from "../../servers";
-import { authorize } from "@loopback/authorization";
 
 export function CreateControllerMixin<
     Model extends Entity,
@@ -59,16 +56,20 @@ export function CreateControllerMixin<
     const ids = generateIds(rootCtor, relations);
 
     class HasManyController extends parentClass {
-        /**
-         * Create all method
-         *
-         * 1. exist
-         * 2. validate
-         * 3. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
-        @intercept(validate("create", leafCtor, leafScope, 0))
-        @intercept(access("create", rootScope, leafScope, relations, 0))
+        @crud({
+            type: "create",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 1
+            ),
+            modelsIndex: 0,
+        })
+        @authorize(leafScope.create || {})
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -125,16 +126,20 @@ export function CreateControllerMixin<
                 .createAll(models);
         }
 
-        /**
-         * Create one method
-         *
-         * 1. exist
-         * 2. validate
-         * 3. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
-        @intercept(validate("create", leafCtor, leafScope, 0))
-        @intercept(access("create", rootScope, leafScope, relations, 0))
+        @crud({
+            type: "create",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 1
+            ),
+            modelsIndex: 0,
+        })
+        @authorize(leafScope.create || {})
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}/one`, {
             responses: {
@@ -198,16 +203,20 @@ export function CreateControllerMixin<
     });
 
     class HasOneController extends parentClass {
-        /**
-         * Create one method
-         *
-         * 1. exist
-         * 2. validate
-         * 3. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
-        @intercept(validate("create", leafCtor, leafScope, 0))
-        @intercept(access("create", rootScope, leafScope, relations, 0))
+        @crud({
+            type: "create",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 1
+            ),
+            modelsIndex: 0,
+        })
+        @authorize(leafScope.create || {})
         @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -302,19 +311,20 @@ export function ReadControllerMixin<
     const ids = generateIds(rootCtor, relations);
 
     class HasManyController extends parentClass {
-        /**
-         * Read all method
-         *
-         * 1. exist
-         * 2. limit
-         * 3. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
-        @intercept(limit("read", leafCtor, leafScope, undefined, 0))
-        @intercept(
-            access("read", rootScope, leafScope, relations, ids.length + 2)
-        )
-        @intercept("authorize")
+        @crud({
+            type: "read",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 1
+            ),
+            filterIndex: 0,
+        })
+        @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -342,7 +352,7 @@ export function ReadControllerMixin<
             /**
              * (): Nested authorize checking
              *
-             * args[0]: Filter
+             * args[0]: (Filter)
              *
              *
              * args[1]: id
@@ -352,7 +362,6 @@ export function ReadControllerMixin<
              *
              *
              * args[n+1]: Condition
-             * args[n+2]: (Limit)
              */
 
             if (this.request.headers["x-total"] === "true") {
@@ -368,19 +377,21 @@ export function ReadControllerMixin<
                 .find(arguments[arguments.length - 1]);
         }
 
-        /**
-         * Read one method
-         *
-         * 1. exist
-         * 2. limit
-         * 3. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 2, ids.length + 2))
-        @intercept(limit("read", leafCtor, leafScope, 0, 1))
-        @intercept(
-            access("read", rootScope, leafScope, relations, ids.length + 3)
-        )
-        @intercept("authorize")
+        @crud({
+            type: "read",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 2
+            ),
+            idIndex: 0,
+            filterIndex: 1,
+        })
+        @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
@@ -407,7 +418,7 @@ export function ReadControllerMixin<
              * (): Nested authorize checking
              *
              * args[0]: id_model
-             * args[1]: Filter
+             * args[1]: (Filter)
              *
              *
              * args[2]: id
@@ -417,7 +428,6 @@ export function ReadControllerMixin<
              *
              *
              * args[n+1]: Condition
-             * args[n+2]: (Limit)
              */
 
             if (this.request.headers["x-total"] === "true") {
@@ -466,18 +476,20 @@ export function ReadControllerMixin<
     });
 
     class HasOneController extends parentClass {
-        /**
-         * Read one method
-         *
-         * 1. exist
-         * 2. limit
-         * 3. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
-        @intercept(limit("read", leafCtor, leafScope, undefined, 0))
-        @intercept(
-            access("read", rootScope, leafScope, relations, ids.length + 2)
-        )
+        @crud({
+            type: "read",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 1
+            ),
+            filterIndex: 0,
+        })
+        @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -502,7 +514,7 @@ export function ReadControllerMixin<
             /**
              * (): Nested authorize checking
              *
-             * args[0]: Filter
+             * args[0]: (Filter)
              *
              *
              * args[1]: id
@@ -512,7 +524,6 @@ export function ReadControllerMixin<
              *
              *
              * args[n+1]: Condition
-             * args[n+2]: (Limit)
              */
 
             if (this.request.headers["x-total"] === "true") {
@@ -554,18 +565,20 @@ export function ReadControllerMixin<
     });
 
     class BelongsToController extends parentClass {
-        /**
-         * Read one method
-         *
-         * 1. exist
-         * 2. limit
-         * 3. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
-        @intercept(limit("read", leafCtor, leafScope, undefined, 0))
-        @intercept(
-            access("read", rootScope, leafScope, relations, ids.length + 2)
-        )
+        @crud({
+            type: "read",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 1
+            ),
+            filterIndex: 0,
+        })
+        @authorize(leafScope.read || {})
         @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -590,7 +603,7 @@ export function ReadControllerMixin<
             /**
              * (): Nested authorize checking
              *
-             * args[0]: Filter
+             * args[0]: (Filter)
              *
              *
              * args[1]: id
@@ -600,7 +613,6 @@ export function ReadControllerMixin<
              *
              *
              * args[n+1]: Condition
-             * args[n+2]: (Limit)
              */
 
             if (this.request.headers["x-total"] === "true") {
@@ -678,18 +690,21 @@ export function UpdateControllerMixin<
     const ids = generateIds(rootCtor, relations);
 
     class HasManyController extends parentClass {
-        /**
-         * Update all method
-         *
-         * 1. exist
-         * 2. validate
-         * 3. limit
-         * 4. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 2, ids.length + 2))
-        @intercept(validate("update", leafCtor, leafScope, 0))
-        @intercept(limit("update", leafCtor, leafScope, undefined, 1))
-        @intercept(access("update", rootScope, leafScope, relations, 0))
+        @crud({
+            type: "update",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 2
+            ),
+            modelsIndex: 0,
+            filterIndex: 1,
+        })
+        @authorize(leafScope.update || {})
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -729,7 +744,6 @@ export function UpdateControllerMixin<
              *
              *
              * args[n+1]: Condition
-             * args[n+2]: Limit
              */
 
             await leafScope
@@ -739,18 +753,22 @@ export function UpdateControllerMixin<
                 });
         }
 
-        /**
-         * Update one method
-         *
-         * 1. exist
-         * 2. validate
-         * 3. limit
-         * 4. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 3, ids.length + 3))
-        @intercept(validate("update", leafCtor, leafScope, 0))
-        @intercept(limit("update", leafCtor, leafScope, 1, 2))
-        @intercept(access("update", rootScope, leafScope, relations, 0))
+        @crud({
+            type: "update",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 3
+            ),
+            modelsIndex: 0,
+            idIndex: 1,
+            filterIndex: 2,
+        })
+        @authorize(leafScope.update || {})
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
@@ -792,7 +810,6 @@ export function UpdateControllerMixin<
              *
              *
              * args[n+1]: Condition
-             * args[n+2]: Limit
              */
 
             await leafScope
@@ -818,18 +835,21 @@ export function UpdateControllerMixin<
     });
 
     class HasOneController extends parentClass {
-        /**
-         * Update one method
-         *
-         * 1. exist
-         * 2. validate
-         * 3. limit
-         * 4. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 2, ids.length + 2))
-        @intercept(validate("update", leafCtor, leafScope, 0))
-        @intercept(limit("update", leafCtor, leafScope, undefined, 1))
-        @intercept(access("update", rootScope, leafScope, relations, 0))
+        @crud({
+            type: "update",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 2
+            ),
+            modelsIndex: 0,
+            filterIndex: 1,
+        })
+        @authorize(leafScope.update || {})
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -869,7 +889,6 @@ export function UpdateControllerMixin<
              *
              *
              * args[n+1]: Condition
-             * args[n+2]: Limit
              */
 
             await leafScope
@@ -888,18 +907,21 @@ export function UpdateControllerMixin<
     });
 
     class BelongsToController extends parentClass {
-        /**
-         * Update one method
-         *
-         * 1. exist
-         * 2. validate
-         * 3. limit
-         * 4. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 2, ids.length + 2))
-        @intercept(validate("update", leafCtor, leafScope, 0))
-        @intercept(limit("update", leafCtor, leafScope, undefined, 1))
-        @intercept(access("update", rootScope, leafScope, relations, 0))
+        @crud({
+            type: "update",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 2
+            ),
+            modelsIndex: 0,
+            filterIndex: 1,
+        })
+        @authorize(leafScope.update || {})
         @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -939,7 +961,6 @@ export function UpdateControllerMixin<
              *
              *
              * args[n+1]: Condition
-             * args[n+2]: Limit
              */
 
             await leafScope
@@ -994,18 +1015,20 @@ export function DeleteControllerMixin<
     const ids = generateIds(rootCtor, relations);
 
     class HasManyController extends parentClass {
-        /**
-         * Delete all method
-         *
-         * 1. exist
-         * 2. limit
-         * 3. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
-        @intercept(limit("delete", leafCtor, leafScope, undefined, 0))
-        @intercept(
-            access("delete", rootScope, leafScope, relations, ids.length + 2)
-        )
+        @crud({
+            type: "delete",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 1
+            ),
+            filterIndex: 0,
+        })
+        @authorize(leafScope.delete || {})
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -1028,7 +1051,7 @@ export function DeleteControllerMixin<
             /**
              * (): Nested authorize checking
              *
-             * args[0]: Filter
+             * args[0]: (Filter)
              *
              *
              * args[1]: id
@@ -1038,7 +1061,6 @@ export function DeleteControllerMixin<
              *
              *
              * args[n+1]: Condition
-             * args[n+2]: (Limit)
              */
 
             return await leafScope
@@ -1048,18 +1070,21 @@ export function DeleteControllerMixin<
                 });
         }
 
-        /**
-         * Delete one method
-         *
-         * 1. exist
-         * 2. limit
-         * 3. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 2, ids.length + 2))
-        @intercept(limit("delete", leafCtor, leafScope, 0, 1))
-        @intercept(
-            access("delete", rootScope, leafScope, relations, ids.length + 2)
-        )
+        @crud({
+            type: "delete",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 2
+            ),
+            idIndex: 0,
+            filterIndex: 1,
+        })
+        @authorize(leafScope.delete || {})
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
@@ -1079,7 +1104,7 @@ export function DeleteControllerMixin<
              * (): Nested authorize checking
              *
              * args[0]: id_model
-             * args[1]: Filter
+             * args[1]: (Filter)
              *
              *
              * args[2]: id
@@ -1089,7 +1114,6 @@ export function DeleteControllerMixin<
              *
              *
              * args[n+1]: Condition
-             * args[n+2]: (Limit)
              */
 
             await leafScope
@@ -1115,18 +1139,20 @@ export function DeleteControllerMixin<
     });
 
     class HasOneController extends parentClass {
-        /**
-         * Delete one method
-         *
-         * 1. exist
-         * 2. limit
-         * 3. access
-         */
-        @intercept(exist(rootCtor, rootScope, relations, 1, ids.length + 1))
-        @intercept(limit("delete", leafCtor, leafScope, undefined, 0))
-        @intercept(
-            access("delete", rootScope, leafScope, relations, ids.length + 2)
-        )
+        @crud({
+            type: "delete",
+            rootCtor: rootCtor,
+            rootScope: rootScope,
+            leafCtor: leafCtor,
+            leafScope: leafScope,
+            relations: relations,
+            idsIndex: Array.from(
+                { length: ids.length },
+                (_, index) => index + 1
+            ),
+            filterIndex: 0,
+        })
+        @authorize(leafScope.delete || {})
         @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
@@ -1144,7 +1170,7 @@ export function DeleteControllerMixin<
             /**
              * (): Nested authorize checking
              *
-             * args[0]: Filter
+             * args[0]: (Filter)
              *
              *
              * args[1]: id
@@ -1154,7 +1180,6 @@ export function DeleteControllerMixin<
              *
              *
              * args[n+1]: Condition
-             * args[n+2]: (Limit)
              */
 
             await leafScope

@@ -70,7 +70,7 @@ export interface CRUDMetadata<
     leafScope: ControllerScope<Model, ModelID, ModelRelations, Controller>;
     relations: string[];
     idsIndex: number[];
-    modelIndex?: number;
+    modelsIndex?: number;
     idIndex?: number;
     filterIndex?: number;
 }

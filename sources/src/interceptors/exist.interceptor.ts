@@ -34,7 +34,7 @@ export class ExistInterceptor implements Provider<Interceptor> {
             );
 
             if (metadata) {
-                /** Get ids from arguments array */
+                /** Get ids from request arguments */
                 const ids: string[] = metadata.idsIndex.map(
                     (idIndex) => invocationCtx.args[idIndex]
                 );
@@ -80,11 +80,11 @@ export class ExistInterceptor implements Provider<Interceptor> {
             await repository.findOne(filter)
         );
 
-        const metadata = generateMetadata(ctor, relations);
+        const relationMetadata = generateMetadata(ctor, relations);
 
-        if (lastModel && lastModel[metadata.keyFrom]) {
+        if (lastModel && lastModel[relationMetadata.keyFrom]) {
             return {
-                [metadata.keyTo]: lastModel[metadata.keyFrom],
+                [relationMetadata.keyTo]: lastModel[relationMetadata.keyFrom],
             } as any;
         }
 
