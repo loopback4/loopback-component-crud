@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.10.0
+
+-   **Refactor**: remove servers, providers, change project for signle goal reponsibility (CRUD controller)
+-   **Feat**: merge interceptors into `exist`, `limit` global interceptors
+-   **Feat**: add crud decorator for controller methods
+
 ## v0.9.0
 
 -   **Fix**: swagger component bind `app`
