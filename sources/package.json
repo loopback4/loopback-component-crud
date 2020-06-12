@@ -42,9 +42,6 @@
         "@loopback/rest": "^5.1.0",
         "@loopback/rest-explorer": "^2.2.3",
         "@loopback/security": "^0.2.11",
-        "apollo-server": "^2.14.1",
-        "graphql": "^15.0.0",
-        "openapi-to-graphql": "^2.1.0",
         "tslib": "^2.0.0"
     },
     "devDependencies": {
