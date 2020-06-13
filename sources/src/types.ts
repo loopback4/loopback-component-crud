@@ -4,6 +4,7 @@ import { Entity, DefaultCrudRepository } from "@loopback/repository";
 
 import { RestBindings, Request, Response } from "@loopback/rest";
 import { SecurityBindings, UserProfile } from "@loopback/security";
+import { AuthenticationMetadata } from "@loopback/authentication";
 import { AuthorizationMetadata } from "@loopback/authorization";
 
 /** Model Ctor type */
@@ -43,10 +44,22 @@ export interface ControllerScope<
         Controller
     >;
 
-    create?: AuthorizationMetadata;
-    read?: AuthorizationMetadata;
-    update?: AuthorizationMetadata;
-    delete?: AuthorizationMetadata;
+    create?: {
+        authentication: AuthenticationMetadata;
+        authorization: AuthorizationMetadata;
+    };
+    read?: {
+        authentication: AuthenticationMetadata;
+        authorization: AuthorizationMetadata;
+    };
+    update?: {
+        authentication: AuthenticationMetadata;
+        authorization: AuthorizationMetadata;
+    };
+    delete?: {
+        authentication: AuthenticationMetadata;
+        authorization: AuthorizationMetadata;
+    };
 
     include: {
         [relation: string]: ControllerScope<any, any, any, Controller>;
