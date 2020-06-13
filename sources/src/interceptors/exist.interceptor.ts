@@ -17,7 +17,7 @@ import { generateFilter, generateRelation } from "./utils";
 import { Ctor } from "../types";
 import { getCRUDMetadata } from "../decorators";
 
-@globalInterceptor("crud", { tags: { name: "exist" } })
+@globalInterceptor("exist")
 export class ExistInterceptor implements Provider<Interceptor> {
     value() {
         return this.intercept.bind(this);

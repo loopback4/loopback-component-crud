@@ -14,7 +14,7 @@ import { getId } from "./utils";
 import { Ctor, ControllerScope } from "../types";
 import { getCRUDMetadata } from "../decorators";
 
-@globalInterceptor("crud", { tags: { name: "limit" } })
+@globalInterceptor("limit")
 export class LimitInterceptor implements Provider<Interceptor> {
     value() {
         return this.intercept.bind(this);
