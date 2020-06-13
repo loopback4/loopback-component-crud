@@ -64,10 +64,22 @@ export class UserController extends CRUDControllerMixin(
         modelMapper: async (context, models) => models,
         repositoryGetter: (controller) => controller.usersController,
 
-        create: {},
-        read: {},
-        update: {},
-        delete: {},
+        create: {
+            authentication: { strategy: "jwt" },
+            authorization: {},
+        },
+        read: {
+            authentication: { strategy: "jwt" },
+            authorization: {},
+        },
+        update: {
+            authentication: { strategy: "jwt" },
+            authorization: {},
+        },
+        delete: {
+            authentication: { strategy: "jwt" },
+            authorization: {},
+        },
 
         include: {},
     },

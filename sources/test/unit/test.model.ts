@@ -76,10 +76,19 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
     modelMapper: async (context, models) => models,
     repositoryGetter: (controller) => undefined as any,
 
-    create: { scopes: ["CREATE_USER"], allowedRoles: ["X"] },
-    read: {},
-    update: { scopes: ["UPDATE_USER"] },
-    delete: { scopes: ["DELETE_USER"] },
+    create: {
+        authentication: { strategy: "jwt" },
+        authorization: { scopes: ["CREATE_USER"], allowedRoles: ["X"] },
+    },
+    read: { authentication: { strategy: "jwt" }, authorization: {} },
+    update: {
+        authentication: { strategy: "jwt" },
+        authorization: { scopes: ["UPDATE_USER"] },
+    },
+    delete: {
+        authentication: { strategy: "jwt" },
+        authorization: { scopes: ["DELETE_USER"] },
+    },
 
     include: {
         parent: {
@@ -87,13 +96,25 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
             repositoryGetter: (controller) => undefined as any,
 
             create: {
-                scopes: ["CREATE_PARENT"],
-                allowedRoles: ["Y"],
-                deniedRoles: ["YPrime"],
+                authentication: { strategy: "jwt" },
+                authorization: {
+                    scopes: ["CREATE_PARENT"],
+                    allowedRoles: ["Y"],
+                    deniedRoles: ["YPrime"],
+                },
             },
-            read: { scopes: ["READ_PARENT"] },
-            update: { scopes: ["UPDATE_PARENT"] },
-            delete: { scopes: ["DELETE_PARENT"] },
+            read: {
+                authentication: { strategy: "jwt" },
+                authorization: { scopes: ["READ_PARENT"] },
+            },
+            update: {
+                authentication: { strategy: "jwt" },
+                authorization: { scopes: ["UPDATE_PARENT"] },
+            },
+            delete: {
+                authentication: { strategy: "jwt" },
+                authorization: { scopes: ["DELETE_PARENT"] },
+            },
 
             include: {},
         },
@@ -101,10 +122,25 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
             modelMapper: async (context, models) => models,
             repositoryGetter: (controller) => undefined as any,
 
-            create: { scopes: ["CREATE_PROFILE"], allowedRoles: ["Z"] },
-            read: { scopes: ["READ_PROFILE"] },
-            update: { scopes: ["UPDATE_PROFILE"] },
-            delete: { scopes: ["DELETE_PROFILE"] },
+            create: {
+                authentication: { strategy: "jwt" },
+                authorization: {
+                    scopes: ["CREATE_PROFILE"],
+                    allowedRoles: ["Z"],
+                },
+            },
+            read: {
+                authentication: { strategy: "jwt" },
+                authorization: { scopes: ["READ_PROFILE"] },
+            },
+            update: {
+                authentication: { strategy: "jwt" },
+                authorization: { scopes: ["UPDATE_PROFILE"] },
+            },
+            delete: {
+                authentication: { strategy: "jwt" },
+                authorization: { scopes: ["DELETE_PROFILE"] },
+            },
 
             include: {},
         },
@@ -112,10 +148,22 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
             modelMapper: async (context, models) => models,
             repositoryGetter: (controller) => undefined as any,
 
-            create: {},
-            read: { scopes: ["READ_ROLES"] },
-            update: { scopes: ["UPDATE_ROLES"] },
-            delete: { scopes: ["DELETE_ROLES"] },
+            create: {
+                authentication: { strategy: "jwt" },
+                authorization: {},
+            },
+            read: {
+                authentication: { strategy: "jwt" },
+                authorization: { scopes: ["READ_ROLES"] },
+            },
+            update: {
+                authentication: { strategy: "jwt" },
+                authorization: { scopes: ["UPDATE_ROLES"] },
+            },
+            delete: {
+                authentication: { strategy: "jwt" },
+                authorization: { scopes: ["DELETE_ROLES"] },
+            },
 
             include: {
                 parent: {
@@ -123,12 +171,24 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
                     repositoryGetter: (controller) => undefined as any,
 
                     create: {
-                        scopes: ["CREATE_ROLE_PARENT"],
-                        allowedRoles: ["T"],
+                        authentication: { strategy: "jwt" },
+                        authorization: {
+                            scopes: ["CREATE_ROLE_PARENT"],
+                            allowedRoles: ["T"],
+                        },
                     },
-                    read: { scopes: ["READ_ROLE_PARENT"] },
-                    update: { scopes: ["UPDATE_ROLE_PARENT"] },
-                    delete: { scopes: ["DELETE_ROLE_PARENT"] },
+                    read: {
+                        authentication: { strategy: "jwt" },
+                        authorization: { scopes: ["READ_ROLE_PARENT"] },
+                    },
+                    update: {
+                        authentication: { strategy: "jwt" },
+                        authorization: { scopes: ["UPDATE_ROLE_PARENT"] },
+                    },
+                    delete: {
+                        authentication: { strategy: "jwt" },
+                        authorization: { scopes: ["DELETE_ROLE_PARENT"] },
+                    },
 
                     include: {},
                 },
@@ -137,12 +197,24 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
                     repositoryGetter: (controller) => undefined as any,
 
                     create: {
-                        scopes: ["CREATE_ROLE_PERMISSION"],
-                        deniedRoles: ["PPrime"],
+                        authentication: { strategy: "jwt" },
+                        authorization: {
+                            scopes: ["CREATE_ROLE_PERMISSION"],
+                            deniedRoles: ["PPrime"],
+                        },
                     },
-                    read: { scopes: ["READ_ROLE_PERMISSION"] },
-                    update: { scopes: ["UPDATE_ROLE_PERMISSION"] },
-                    delete: { scopes: ["DELETE_ROLE_PERMISSION"] },
+                    read: {
+                        authentication: { strategy: "jwt" },
+                        authorization: { scopes: ["READ_ROLE_PERMISSION"] },
+                    },
+                    update: {
+                        authentication: { strategy: "jwt" },
+                        authorization: { scopes: ["UPDATE_ROLE_PERMISSION"] },
+                    },
+                    delete: {
+                        authentication: { strategy: "jwt" },
+                        authorization: { scopes: ["DELETE_ROLE_PERMISSION"] },
+                    },
 
                     include: {},
                 },
