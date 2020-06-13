@@ -51,12 +51,12 @@ export function CreateControllerMixin<
 
     class HasManyController extends parentClass {
         @authorize(
-            (leafScope.create && leafScope.create.authorization) || {
+            leafScope.create?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.create && leafScope.create.authentication) || {
+            leafScope.create?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -130,12 +130,12 @@ export function CreateControllerMixin<
         }
 
         @authorize(
-            (leafScope.create && leafScope.create.authorization) || {
+            leafScope.create?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.create && leafScope.create.authentication) || {
+            leafScope.create?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -216,12 +216,12 @@ export function CreateControllerMixin<
 
     class HasOneController extends parentClass {
         @authorize(
-            (leafScope.create && leafScope.create.authorization) || {
+            leafScope.create?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.create && leafScope.create.authentication) || {
+            leafScope.create?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -333,12 +333,12 @@ export function ReadControllerMixin<
 
     class HasManyController extends parentClass {
         @authorize(
-            (leafScope.read && leafScope.read.authorization) || {
+            leafScope.read?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.read && leafScope.read.authentication) || {
+            leafScope.read?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -406,12 +406,12 @@ export function ReadControllerMixin<
         }
 
         @authorize(
-            (leafScope.read && leafScope.read.authorization) || {
+            leafScope.read?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.read && leafScope.read.authentication) || {
+            leafScope.read?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -513,12 +513,12 @@ export function ReadControllerMixin<
 
     class HasOneController extends parentClass {
         @authorize(
-            (leafScope.read && leafScope.read.authorization) || {
+            leafScope.read?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.read && leafScope.read.authentication) || {
+            leafScope.read?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -611,12 +611,12 @@ export function ReadControllerMixin<
 
     class BelongsToController extends parentClass {
         @authorize(
-            (leafScope.read && leafScope.read.authorization) || {
+            leafScope.read?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.read && leafScope.read.authentication) || {
+            leafScope.read?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -745,12 +745,12 @@ export function UpdateControllerMixin<
 
     class HasManyController extends parentClass {
         @authorize(
-            (leafScope.update && leafScope.update.authorization) || {
+            leafScope.update?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.update && leafScope.update.authentication) || {
+            leafScope.update?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -817,12 +817,12 @@ export function UpdateControllerMixin<
         }
 
         @authorize(
-            (leafScope.update && leafScope.update.authorization) || {
+            leafScope.update?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.update && leafScope.update.authentication) || {
+            leafScope.update?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -907,12 +907,12 @@ export function UpdateControllerMixin<
 
     class HasOneController extends parentClass {
         @authorize(
-            (leafScope.update && leafScope.update.authorization) || {
+            leafScope.update?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.update && leafScope.update.authentication) || {
+            leafScope.update?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -988,12 +988,12 @@ export function UpdateControllerMixin<
 
     class BelongsToController extends parentClass {
         @authorize(
-            (leafScope.update && leafScope.update.authorization) || {
+            leafScope.update?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.update && leafScope.update.authentication) || {
+            leafScope.update?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -1105,12 +1105,12 @@ export function DeleteControllerMixin<
 
     class HasManyController extends parentClass {
         @authorize(
-            (leafScope.delete && leafScope.delete.authorization) || {
+            leafScope.delete?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.delete && leafScope.delete.authentication) || {
+            leafScope.delete?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -1169,12 +1169,12 @@ export function DeleteControllerMixin<
         }
 
         @authorize(
-            (leafScope.delete && leafScope.delete.authorization) || {
+            leafScope.delete?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.delete && leafScope.delete.authentication) || {
+            leafScope.delete?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
@@ -1246,12 +1246,12 @@ export function DeleteControllerMixin<
 
     class HasOneController extends parentClass {
         @authorize(
-            (leafScope.delete && leafScope.delete.authorization) || {
+            leafScope.delete?.authorization || {
                 skip: true,
             }
         )
         @authenticate(
-            (leafScope.delete && leafScope.delete.authentication) || {
+            leafScope.delete?.authentication || {
                 strategy: "crud",
                 skip: true,
             }
