@@ -22,7 +22,7 @@ import { authenticate } from "@loopback/authentication";
 import { authorize } from "@loopback/authorization";
 
 import { crud } from "../decorators";
-import { generateIds, generatePath, generateMetadata } from "../interceptors";
+import { generateIds, generatePath, generateRelation } from "../interceptors";
 import { Ctor, ControllerScope, CRUDController } from "../types";
 
 export function CreateControllerMixin<
@@ -268,7 +268,7 @@ export function CreateControllerMixin<
 
     class BelongsToController extends parentClass {}
 
-    switch (generateMetadata(rootCtor, relations).type) {
+    switch (generateRelation(rootCtor, relations).type) {
         case RelationType.hasMany:
             return HasManyController as any;
         case RelationType.hasOne:
@@ -644,7 +644,7 @@ export function ReadControllerMixin<
         );
     });
 
-    switch (generateMetadata(rootCtor, relations).type) {
+    switch (generateRelation(rootCtor, relations).type) {
         case RelationType.hasMany:
             return HasManyController as any;
         case RelationType.hasOne:
@@ -968,7 +968,7 @@ export function UpdateControllerMixin<
         );
     });
 
-    switch (generateMetadata(rootCtor, relations).type) {
+    switch (generateRelation(rootCtor, relations).type) {
         case RelationType.hasMany:
             return HasManyController as any;
         case RelationType.hasOne:
@@ -1188,7 +1188,7 @@ export function DeleteControllerMixin<
 
     class BelongsToController extends parentClass {}
 
-    switch (generateMetadata(rootCtor, relations).type) {
+    switch (generateRelation(rootCtor, relations).type) {
         case RelationType.hasMany:
             return HasManyController as any;
         case RelationType.hasOne:
