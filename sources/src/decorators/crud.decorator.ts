@@ -1,8 +1,16 @@
-import { MethodDecoratorFactory, MetadataInspector } from "@loopback/context";
+import {
+    MetadataAccessor,
+    MethodDecoratorFactory,
+    MetadataInspector,
+} from "@loopback/context";
 import { Entity } from "@loopback/repository";
 
-import { CRUD_METHOD_KEY } from "../keys";
 import { CRUDMetadata, CRUDController } from "../types";
+
+export const CRUD_METHOD_KEY = MetadataAccessor.create<
+    CRUDMetadata<any, any, any, any>,
+    MethodDecorator
+>("crud:method");
 
 export function crud<
     Model extends Entity,
