@@ -1,6 +1,6 @@
 {
     "name": "loopback-component-crud",
-    "version": "0.10.0",
+    "version": "0.11.0",
     "description": "Loopback component Rest CRUD controller mixin",
     "keywords": [
         "loopback-extension",
@@ -33,23 +33,22 @@
         "dist"
     ],
     "dependencies": {
-        "@loopback/authentication": "^4.2.6",
-        "@loopback/authorization": "^0.5.11",
-        "@loopback/boot": "^2.3.2",
-        "@loopback/context": "^3.8.2",
-        "@loopback/core": "^2.7.1",
-        "@loopback/repository": "^2.6.0",
-        "@loopback/rest": "^5.1.0",
-        "@loopback/rest-explorer": "^2.2.3",
-        "@loopback/security": "^0.2.11",
+        "@loopback/authentication": "^4.2.7",
+        "@loopback/authorization": "^0.6.0",
+        "@loopback/boot": "^2.3.3",
+        "@loopback/context": "^3.9.0",
+        "@loopback/core": "^2.8.0",
+        "@loopback/repository": "^2.7.0",
+        "@loopback/rest": "^5.1.1",
+        "@loopback/security": "^0.2.12",
         "tslib": "^2.0.0"
     },
     "devDependencies": {
-        "@loopback/build": "^5.4.2",
-        "@loopback/testlab": "^3.1.6",
-        "@types/node": "^10.17.24",
+        "@loopback/build": "^5.4.3",
+        "@loopback/testlab": "^3.1.7",
+        "@types/node": "^10.17.26",
         "nodemon": "^2.0.4",
         "ts-node": "^8.10.2",
-        "typescript": "~3.9.3"
+        "typescript": "~3.9.5"
     }
 }

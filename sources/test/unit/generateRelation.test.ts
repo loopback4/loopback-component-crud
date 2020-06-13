@@ -2,12 +2,12 @@ import { expect } from "@loopback/testlab";
 
 import { User } from "./test.model";
 
-import { generateMetadata } from "../../src";
+import { generateRelation } from "../../src";
 
 describe("Generate Metadata", () => {
-    it("generateMetadata Test", () => {
+    it("generateRelation Test", () => {
         expect({
-            ...generateMetadata(User, []),
+            ...generateRelation(User, []),
             source: undefined,
             target: undefined,
         }).deepEqual({
@@ -19,7 +19,7 @@ describe("Generate Metadata", () => {
         });
 
         expect({
-            ...generateMetadata(User, ["parent"]),
+            ...generateRelation(User, ["parent"]),
             source: undefined,
             target: undefined,
         }).deepEqual({
@@ -32,7 +32,7 @@ describe("Generate Metadata", () => {
         });
 
         expect({
-            ...generateMetadata(User, ["roles"]),
+            ...generateRelation(User, ["roles"]),
             source: undefined,
             target: undefined,
         }).deepEqual({
@@ -44,7 +44,7 @@ describe("Generate Metadata", () => {
         });
 
         expect({
-            ...generateMetadata(User, ["roles", "profile"]),
+            ...generateRelation(User, ["roles", "profile"]),
             source: undefined,
             target: undefined,
         }).deepEqual({
@@ -56,7 +56,7 @@ describe("Generate Metadata", () => {
         });
 
         expect({
-            ...generateMetadata(User, ["roles", "profile", "parent"]),
+            ...generateRelation(User, ["roles", "profile", "parent"]),
             source: undefined,
             target: undefined,
         }).deepEqual({
@@ -69,7 +69,7 @@ describe("Generate Metadata", () => {
         });
 
         expect({
-            ...generateMetadata(User, [
+            ...generateRelation(User, [
                 "parent",
                 "roles",
                 "parent",
@@ -88,7 +88,7 @@ describe("Generate Metadata", () => {
         });
 
         expect({
-            ...generateMetadata(User, [
+            ...generateRelation(User, [
                 "roles",
                 "profile",
                 "parent",

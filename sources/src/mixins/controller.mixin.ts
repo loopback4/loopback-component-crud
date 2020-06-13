@@ -22,7 +22,7 @@ import { authenticate } from "@loopback/authentication";
 import { authorize } from "@loopback/authorization";
 
 import { crud } from "../decorators";
-import { generateIds, generatePath, generateMetadata } from "../interceptors";
+import { generateIds, generatePath, generateRelation } from "../interceptors";
 import { Ctor, ControllerScope, CRUDController } from "../types";
 
 export function CreateControllerMixin<
@@ -50,6 +50,17 @@ export function CreateControllerMixin<
     const ids = generateIds(rootCtor, relations);
 
     class HasManyController extends parentClass {
+        @authorize(
+            leafScope.create?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.create?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "create",
             rootCtor: rootCtor,
@@ -63,8 +74,6 @@ export function CreateControllerMixin<
             ),
             modelsIndex: 0,
         })
-        @authorize(leafScope.create || {})
-        @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "200": {
@@ -120,6 +129,17 @@ export function CreateControllerMixin<
                 .createAll(models);
         }
 
+        @authorize(
+            leafScope.create?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.create?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "create",
             rootCtor: rootCtor,
@@ -133,8 +153,6 @@ export function CreateControllerMixin<
             ),
             modelsIndex: 0,
         })
-        @authorize(leafScope.create || {})
-        @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}/one`, {
             responses: {
                 "200": {
@@ -197,6 +215,17 @@ export function CreateControllerMixin<
     });
 
     class HasOneController extends parentClass {
+        @authorize(
+            leafScope.create?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.create?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "create",
             rootCtor: rootCtor,
@@ -210,8 +239,6 @@ export function CreateControllerMixin<
             ),
             modelsIndex: 0,
         })
-        @authorize(leafScope.create || {})
-        @authenticate("crud")
         @post(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "200": {
@@ -268,7 +295,7 @@ export function CreateControllerMixin<
 
     class BelongsToController extends parentClass {}
 
-    switch (generateMetadata(rootCtor, relations).type) {
+    switch (generateRelation(rootCtor, relations).type) {
         case RelationType.hasMany:
             return HasManyController as any;
         case RelationType.hasOne:
@@ -305,6 +332,17 @@ export function ReadControllerMixin<
     const ids = generateIds(rootCtor, relations);
 
     class HasManyController extends parentClass {
+        @authorize(
+            leafScope.read?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.read?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "read",
             rootCtor: rootCtor,
@@ -318,8 +356,6 @@ export function ReadControllerMixin<
             ),
             filterIndex: [-1, 0],
         })
-        @authorize(leafScope.read || {})
-        @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "200": {
@@ -369,6 +405,17 @@ export function ReadControllerMixin<
             return await leafScope.repositoryGetter(this as any).find(filter);
         }
 
+        @authorize(
+            leafScope.read?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.read?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "read",
             rootCtor: rootCtor,
@@ -382,8 +429,6 @@ export function ReadControllerMixin<
             ),
             filterIndex: [0, 1],
         })
-        @authorize(leafScope.read || {})
-        @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
                 "200": {
@@ -467,6 +512,17 @@ export function ReadControllerMixin<
     });
 
     class HasOneController extends parentClass {
+        @authorize(
+            leafScope.read?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.read?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "read",
             rootCtor: rootCtor,
@@ -480,8 +536,6 @@ export function ReadControllerMixin<
             ),
             filterIndex: [-1, 0],
         })
-        @authorize(leafScope.read || {})
-        @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "200": {
@@ -556,6 +610,17 @@ export function ReadControllerMixin<
     });
 
     class BelongsToController extends parentClass {
+        @authorize(
+            leafScope.read?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.read?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "read",
             rootCtor: rootCtor,
@@ -569,8 +634,6 @@ export function ReadControllerMixin<
             ),
             filterIndex: [-1, 0],
         })
-        @authorize(leafScope.read || {})
-        @authenticate("crud")
         @get(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "200": {
@@ -644,7 +707,7 @@ export function ReadControllerMixin<
         );
     });
 
-    switch (generateMetadata(rootCtor, relations).type) {
+    switch (generateRelation(rootCtor, relations).type) {
         case RelationType.hasMany:
             return HasManyController as any;
         case RelationType.hasOne:
@@ -681,6 +744,17 @@ export function UpdateControllerMixin<
     const ids = generateIds(rootCtor, relations);
 
     class HasManyController extends parentClass {
+        @authorize(
+            leafScope.update?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.update?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "update",
             rootCtor: rootCtor,
@@ -695,8 +769,6 @@ export function UpdateControllerMixin<
             modelsIndex: 0,
             filterIndex: [-1, 1],
         })
-        @authorize(leafScope.update || {})
-        @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "204": {
@@ -744,6 +816,17 @@ export function UpdateControllerMixin<
                 });
         }
 
+        @authorize(
+            leafScope.update?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.update?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "update",
             rootCtor: rootCtor,
@@ -758,8 +841,6 @@ export function UpdateControllerMixin<
             modelsIndex: 0,
             filterIndex: [1, 2],
         })
-        @authorize(leafScope.update || {})
-        @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
                 "204": {
@@ -825,6 +906,17 @@ export function UpdateControllerMixin<
     });
 
     class HasOneController extends parentClass {
+        @authorize(
+            leafScope.update?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.update?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "update",
             rootCtor: rootCtor,
@@ -839,8 +931,6 @@ export function UpdateControllerMixin<
             modelsIndex: 0,
             filterIndex: [-1, 1],
         })
-        @authorize(leafScope.update || {})
-        @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "204": {
@@ -897,6 +987,17 @@ export function UpdateControllerMixin<
     });
 
     class BelongsToController extends parentClass {
+        @authorize(
+            leafScope.update?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.update?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "update",
             rootCtor: rootCtor,
@@ -911,8 +1012,6 @@ export function UpdateControllerMixin<
             modelsIndex: 0,
             filterIndex: [-1, 1],
         })
-        @authorize(leafScope.update || {})
-        @authenticate("crud")
         @put(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "204": {
@@ -968,7 +1067,7 @@ export function UpdateControllerMixin<
         );
     });
 
-    switch (generateMetadata(rootCtor, relations).type) {
+    switch (generateRelation(rootCtor, relations).type) {
         case RelationType.hasMany:
             return HasManyController as any;
         case RelationType.hasOne:
@@ -1005,6 +1104,17 @@ export function DeleteControllerMixin<
     const ids = generateIds(rootCtor, relations);
 
     class HasManyController extends parentClass {
+        @authorize(
+            leafScope.delete?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.delete?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "delete",
             rootCtor: rootCtor,
@@ -1018,8 +1128,6 @@ export function DeleteControllerMixin<
             ),
             filterIndex: [-1, 0],
         })
-        @authorize(leafScope.delete || {})
-        @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "200": {
@@ -1060,6 +1168,17 @@ export function DeleteControllerMixin<
                 });
         }
 
+        @authorize(
+            leafScope.delete?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.delete?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "delete",
             rootCtor: rootCtor,
@@ -1073,8 +1192,6 @@ export function DeleteControllerMixin<
             ),
             filterIndex: [0, 1],
         })
-        @authorize(leafScope.delete || {})
-        @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
             responses: {
                 "204": {
@@ -1128,6 +1245,17 @@ export function DeleteControllerMixin<
     });
 
     class HasOneController extends parentClass {
+        @authorize(
+            leafScope.delete?.authorization || {
+                skip: true,
+            }
+        )
+        @authenticate(
+            leafScope.delete?.authentication || {
+                strategy: "crud",
+                skip: true,
+            }
+        )
         @crud({
             type: "delete",
             rootCtor: rootCtor,
@@ -1141,8 +1269,6 @@ export function DeleteControllerMixin<
             ),
             filterIndex: [-1, 0],
         })
-        @authorize(leafScope.delete || {})
-        @authenticate("crud")
         @del(`${generatePath(rootCtor, relations, basePath)}`, {
             responses: {
                 "204": {
@@ -1188,7 +1314,7 @@ export function DeleteControllerMixin<
 
     class BelongsToController extends parentClass {}
 
-    switch (generateMetadata(rootCtor, relations).type) {
+    switch (generateRelation(rootCtor, relations).type) {
         case RelationType.hasMany:
             return HasManyController as any;
         case RelationType.hasOne:

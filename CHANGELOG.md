@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.11.0
+
+-   **Feat**: add `getAccess` method for getting nested authorization metadata
+-   **Feat**: add `INTERCEPTOR_ORDERED_GROUPS` binding
+-   **Feat**: add authentication `metadata`
+
 ## v0.10.0
 
 -   **Refactor**: remove servers, providers, change project for signle goal reponsibility (CRUD controller)

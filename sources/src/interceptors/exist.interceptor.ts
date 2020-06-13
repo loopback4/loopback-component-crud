@@ -12,12 +12,12 @@ import {
     DefaultCrudRepository,
 } from "@loopback/repository";
 
-import { generateFilter, generateMetadata } from "./utils";
+import { generateFilter, generateRelation } from "./utils";
 
 import { Ctor } from "../types";
 import { getCRUDMetadata } from "../decorators";
 
-@globalInterceptor("crud", { tags: { name: "exist" } })
+@globalInterceptor("exist")
 export class ExistInterceptor implements Provider<Interceptor> {
     value() {
         return this.intercept.bind(this);
@@ -76,11 +76,11 @@ export class ExistInterceptor implements Provider<Interceptor> {
             await repository.findOne(filter)
         );
 
-        const relationMetadata = generateMetadata(ctor, relations);
+        const relation = generateRelation(ctor, relations);
 
-        if (lastModel && lastModel[relationMetadata.keyFrom]) {
+        if (lastModel && lastModel[relation.keyFrom]) {
             return {
-                [relationMetadata.keyTo]: lastModel[relationMetadata.keyFrom],
+                [relation.keyTo]: lastModel[relation.keyFrom],
             } as any;
         }
 

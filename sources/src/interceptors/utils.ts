@@ -1,8 +1,10 @@
+import { InvocationContext } from "@loopback/context";
 import { Entity, Filter, RelationType } from "@loopback/repository";
 
 import { AuthorizationMetadata } from "@loopback/authorization";
 
 import { Ctor, ControllerScope, CRUDController } from "../types";
+import { getCRUDMetadata } from "../decorators";
 
 export function getId<Model extends Entity>(ctor: Ctor<Model>) {
     if ("id" in ctor.definition.properties) {
@@ -326,7 +328,7 @@ export function generateFilter<Model extends Entity>(
  *      }
  *
  */
-export function generateMetadata<Model extends Entity>(
+export function generateRelation<Model extends Entity>(
     ctor: Ctor<Model>,
     relations: string[]
 ) {
@@ -408,7 +410,7 @@ export function mergeAccess(
  *          metadata.push(Scope[type]);
  *
  *          Scope = Scope.include[relation];
- *      }, {voters: [], scopes: []});
+ *      }, {});
  *
  *  Tip: ignore leaf node metadata (will add by generateLeafAccess)
  *
@@ -417,6 +419,8 @@ export function mergeAccess(
  *  Result:
  *
  *      {
+ *          allowedRoles: [...],
+ *          deniedRoles: [...],
  *          voters: [...],
  *          scopes: [...]
  *      }
@@ -436,7 +440,7 @@ export function generateRootAccess<
         (authorizationMetadata, relation) => {
             const result = mergeAccess(
                 authorizationMetadata,
-                scope[type] || {}
+                scope[type]?.authorization || {}
             );
 
             scope = scope.include[relation];
@@ -460,21 +464,21 @@ export function generateRootAccess<
  *
  *          metadata.push(getMetadata(type, scope, model)[type]);
  *
- *      }, {voters: [], scopes: [], ...Scope[type]});
+ *      }, Scope[type]);
  *
  *      Scope;
  *      Object.keys(Models).filter(([_, value]) => typeof value === "object").reduce((metadata, [key, value]) => {
  *
  *          metadata.push(getMetadata(type, scope.include[key], value)[type]);
  *
- *      }, {voters: [], scopes: [], ...Scope[type]});
+ *      }, Scope[type]);
  *
  *      Scope;
  *      (Filter.include || []).reduce((metadata, inclusion) => {
  *
  *          metadata.push(getMetadata(type, scope.include[inclusion.relation], inclusion.scope)[type]);
  *
- *      }, {voters: [], scopes: [], ...Scope[type]});
+ *      }, Scope[type]);
  *
  *
  *  Tip: ignore leaf node metadata (will add by generateLeafAccess)
@@ -484,6 +488,8 @@ export function generateRootAccess<
  *  Result:
  *
  *      {
+ *          allowedRoles: [...],
+ *          deniedRoles: [...],
  *          voters: [...],
  *          scopes: [...]
  *      }
@@ -507,7 +513,7 @@ export function generateLeafAccess<
                     authorizationMetadata,
                     generateLeafAccess(type, scope, model)
                 ),
-            scope[type] || {}
+            scope[type]?.authorization || {}
         );
     } else if (type === "create" || type === "update") {
         // Model
@@ -519,7 +525,7 @@ export function generateLeafAccess<
                         authorizationMetadata,
                         generateLeafAccess(type, scope.include[key], value)
                     ),
-                scope[type] || {}
+                scope[type]?.authorization || {}
             );
     } else {
         // Filter
@@ -533,7 +539,40 @@ export function generateLeafAccess<
                         inclusion.scope
                     )
                 ),
-            scope[type] || {}
+            scope[type]?.authorization || {}
+        );
+    }
+}
+
+/**
+ *  Result:
+ *
+ *      merge(rootAccess, leafAccess)
+ *
+ */
+export function getAccess<
+    Model extends Entity,
+    ModelID,
+    ModelRelations extends object,
+    Controller extends CRUDController
+>(context: InvocationContext): AuthorizationMetadata | undefined {
+    const metadata = getCRUDMetadata(context.target, context.methodName);
+
+    const models = context.args[metadata?.modelsIndex || -1];
+    const filter = context.args[metadata?.filterIndex?.[1] || -1];
+
+    if (metadata && (models || filter)) {
+        return mergeAccess(
+            generateLeafAccess(
+                metadata.type,
+                metadata.leafScope,
+                models || filter
+            ),
+            generateRootAccess(
+                metadata.type,
+                metadata.rootScope,
+                metadata.relations
+            )
         );
     }
 }
