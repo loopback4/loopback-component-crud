@@ -86,11 +86,7 @@ export class LimitInterceptor implements Provider<Interceptor> {
                                     id && { [getId(metadata.leafCtor)]: id },
                                     filter?.where,
                                     condition,
-                                ].filter(
-                                    (where) =>
-                                        typeof where === "object" &&
-                                        Object.keys(where).length > 0
-                                ),
+                                ].filter((where) => typeof where === "object"),
                             },
                         }
                     );
