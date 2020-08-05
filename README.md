@@ -1,6 +1,7 @@
 # loopback-component-crud
 
 [![Build Status](https://travis-ci.com/loopback4/loopback-component-crud.svg?branch=master)](https://travis-ci.com/loopback4/loopback-component-crud)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-crud.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-crud?ref=badge_shield)
 
 Creating `CRUD` controllers in any application is a repetitive and futile task.
 
@@ -97,3 +98,6 @@ export class UserController extends CRUDControllerMixin(
 
 This project is licensed under the [MIT license](LICENSE).  
 Copyright (c) KoLiBer (koliberr136a1@gmail.com)
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-crud.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-crud?ref=badge_large)
