@@ -1,6 +1,9 @@
 # loopback-component-crud
 
-[![Build Status](https://travis-ci.com/loopback4/loopback-component-crud.svg?branch=master)](https://travis-ci.com/loopback4/loopback-component-crud)
+![Travis (.org) branch](https://img.shields.io/travis/loopback4/loopback-component-crud/master)
+![npm](https://img.shields.io/npm/v/loopback-component-crud)
+![npm bundle size](https://img.shields.io/bundlephobia/min/loopback-component-crud)
+![GitHub](https://img.shields.io/github/license/loopback4/loopback-component-crud)
 
 Creating `CRUD` controllers in any application is a repetitive and futile task.
 
@@ -95,5 +98,5 @@ export class UserController extends CRUDControllerMixin(
 
 ## License
 
-This project is licensed under the [MIT license](LICENSE).  
+This project is licensed under the [MIT license](LICENSE.md).  
 Copyright (c) KoLiBer (koliberr136a1@gmail.com)
