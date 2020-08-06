@@ -9,8 +9,6 @@ import {
 import { Entity, Filter, RelationType } from "@loopback/repository";
 import { HttpErrors } from "@loopback/rest";
 
-import { getId } from "./utils";
-
 import { Ctor, ControllerScope } from "../types";
 import { getCRUDMetadata } from "../decorators";
 
@@ -83,7 +81,7 @@ export class LimitInterceptor implements Provider<Interceptor> {
                             ...filter,
                             where: {
                                 and: [
-                                    id && { [getId(metadata.leafCtor)]: id },
+                                    id && metadata.leafCtor.buildWhereForId(id),
                                     filter?.where,
                                     condition,
                                 ].filter((where) => typeof where === "object"),
