@@ -101,7 +101,6 @@ class Permission extends Entity {
 }
 
 export const UsersScope: ControllerScope<any, any, any, any> = {
-    modelMapper: async (context, models) => models,
     repositoryGetter: (controller) => undefined as any,
 
     create: {
@@ -120,7 +119,6 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
 
     include: {
         parent: {
-            modelMapper: async (context, models) => models,
             repositoryGetter: (controller) => undefined as any,
 
             create: {
@@ -147,7 +145,6 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
             include: {},
         },
         profile: {
-            modelMapper: async (context, models) => models,
             repositoryGetter: (controller) => undefined as any,
 
             create: {
@@ -173,7 +170,6 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
             include: {},
         },
         roles: {
-            modelMapper: async (context, models) => models,
             repositoryGetter: (controller) => undefined as any,
 
             create: {
@@ -195,7 +191,6 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
 
             include: {
                 parent: {
-                    modelMapper: async (context, models) => models,
                     repositoryGetter: (controller) => undefined as any,
 
                     create: {
@@ -221,7 +216,6 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
                     include: {},
                 },
                 permissions: {
-                    modelMapper: async (context, models) => models,
                     repositoryGetter: (controller) => undefined as any,
 
                     create: {

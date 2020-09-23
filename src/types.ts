@@ -32,12 +32,6 @@ export type RepositoryGetter<
     controller: Controller
 ) => DefaultCrudRepository<Model, ModelID, ModelRelations>;
 
-/** Map Model, check model params validity or map them into new models with valid properties */
-export type ModelMapper<Model extends Entity> = (
-    context: InvocationContext,
-    models: Model[]
-) => Promise<(Model | undefined)[]>;
-
 /** Controller Scope used for API's business scope definition */
 export interface ControllerScope<
     Model extends Entity,

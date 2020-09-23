@@ -121,7 +121,7 @@ export class LimitInterceptor implements Provider<Interceptor> {
         });
 
         const entitiesIncludeRelations = entities.map(async (entity, index) => {
-            /** Check entity is not filtered by modelMapper */
+            /** Check entity is not filtered */
             if (!entity) {
                 return undefined;
             }
