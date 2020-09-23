@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.1
+
+-   **Fix**: remove sources folder from ci file
+
 ## v1.0.0
 
 -   **Deps**: update packages
