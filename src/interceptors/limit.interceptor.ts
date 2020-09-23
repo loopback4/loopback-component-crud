@@ -109,19 +109,16 @@ export class LimitInterceptor implements Provider<Interceptor> {
         condition: Entity,
         invocationCtx: InvocationContext
     ): Promise<Entity[]> {
-        const entities = await scope.modelMapper(
-            invocationCtx,
-            models.map<any>((model) => {
-                const modelProps = Object.entries(model).filter(
-                    ([_, value]) => typeof value !== "object"
-                );
+        const entities = models.map<any>((model) => {
+            const modelProps = Object.entries(model).filter(
+                ([_, value]) => typeof value !== "object"
+            );
 
-                return {
-                    ...Object.fromEntries(modelProps),
-                    ...condition,
-                };
-            })
-        );
+            return {
+                ...Object.fromEntries(modelProps),
+                ...condition,
+            };
+        });
 
         const entitiesIncludeRelations = entities.map(async (entity, index) => {
             /** Check entity is not filtered by modelMapper */

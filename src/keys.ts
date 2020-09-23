@@ -1,4 +1,12 @@
+import { BindingKey, CoreBindings } from "@loopback/core";
+
+import { CRUDComponent } from "./component";
+
 /**
- * Public bindings used in application scope
+ * Binding keys used by this component.
  */
-export namespace CRUDBindings {}
+export namespace CRUDBindings {
+    export const COMPONENT = BindingKey.create<CRUDComponent>(
+        `${CoreBindings.COMPONENTS}.CRUDComponent`
+    );
+}
