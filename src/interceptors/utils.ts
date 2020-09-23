@@ -6,14 +6,6 @@ import { AuthorizationMetadata } from "@loopback/authorization";
 import { Ctor, ControllerScope, CRUDController } from "../types";
 import { getCRUDMetadata } from "../decorators";
 
-export function getId<Model extends Entity>(ctor: Ctor<Model>) {
-    if ("id" in ctor.definition.properties) {
-        return "id";
-    }
-
-    return ctor.getIdProperties()[0];
-}
-
 /**
  *
  *  Ctor:       X
@@ -266,11 +258,9 @@ export function generateFilter<Model extends Entity>(
                 {
                     relation: relation,
                     scope: {
-                        where: {
-                            [getId(
-                                rootCtor.definition.relations[relation].target()
-                            )]: ids.shift(),
-                        },
+                        where: rootCtor.definition.relations[relation]
+                            .target()
+                            .buildWhereForId(ids.shift()),
                     },
                 },
             ];

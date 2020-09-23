@@ -11,13 +11,21 @@ import { ControllerScope } from "../../src";
 
 @model()
 export class User extends Entity {
-    @property()
+    @property({
+        type: "string",
+        defaultFn: "uuidv4",
+        id: true,
+    })
     id: string;
 
-    @property()
+    @property({
+        type: "string",
+    })
     username: string;
 
-    @property()
+    @property({
+        type: "string",
+    })
     password: string;
 
     @hasOne(() => Profile)
@@ -32,13 +40,21 @@ export class User extends Entity {
 
 @model()
 class Profile extends Entity {
-    @property()
+    @property({
+        type: "string",
+        defaultFn: "uuidv4",
+        id: true,
+    })
     id: string;
 
-    @property()
+    @property({
+        type: "string",
+    })
     name: string;
 
-    @property()
+    @property({
+        type: "date",
+    })
     date: Date;
 
     @belongsTo(() => Profile)
@@ -47,10 +63,16 @@ class Profile extends Entity {
 
 @model()
 class Role extends Entity {
-    @property()
+    @property({
+        type: "string",
+        defaultFn: "uuidv4",
+        id: true,
+    })
     id: string;
 
-    @property()
+    @property({
+        type: "string",
+    })
     name: string;
 
     @hasOne(() => Profile)
@@ -65,15 +87,20 @@ class Role extends Entity {
 
 @model()
 class Permission extends Entity {
-    @property()
+    @property({
+        type: "string",
+        defaultFn: "uuidv4",
+        id: true,
+    })
     id: string;
 
-    @property()
+    @property({
+        type: "string",
+    })
     key: string;
 }
 
 export const UsersScope: ControllerScope<any, any, any, any> = {
-    modelMapper: async (context, models) => models,
     repositoryGetter: (controller) => undefined as any,
 
     create: {
@@ -92,7 +119,6 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
 
     include: {
         parent: {
-            modelMapper: async (context, models) => models,
             repositoryGetter: (controller) => undefined as any,
 
             create: {
@@ -119,7 +145,6 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
             include: {},
         },
         profile: {
-            modelMapper: async (context, models) => models,
             repositoryGetter: (controller) => undefined as any,
 
             create: {
@@ -145,7 +170,6 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
             include: {},
         },
         roles: {
-            modelMapper: async (context, models) => models,
             repositoryGetter: (controller) => undefined as any,
 
             create: {
@@ -167,7 +191,6 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
 
             include: {
                 parent: {
-                    modelMapper: async (context, models) => models,
                     repositoryGetter: (controller) => undefined as any,
 
                     create: {
@@ -193,7 +216,6 @@ export const UsersScope: ControllerScope<any, any, any, any> = {
                     include: {},
                 },
                 permissions: {
-                    modelMapper: async (context, models) => models,
                     repositoryGetter: (controller) => undefined as any,
 
                     create: {

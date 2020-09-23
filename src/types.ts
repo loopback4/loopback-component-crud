@@ -7,6 +7,16 @@ import { SecurityBindings, UserProfile } from "@loopback/security";
 import { AuthenticationMetadata } from "@loopback/authentication";
 import { AuthorizationMetadata } from "@loopback/authorization";
 
+/**
+ * Interface defining the component's options object
+ */
+export interface CRUDComponentOptions {}
+
+/**
+ * Default options for the component
+ */
+export const DEFAULT_CRUD_OPTIONS: CRUDComponentOptions = {};
+
 /** Model Ctor type */
 export type Ctor<Model extends Entity> = typeof Entity & {
     prototype: Model;
@@ -22,12 +32,6 @@ export type RepositoryGetter<
     controller: Controller
 ) => DefaultCrudRepository<Model, ModelID, ModelRelations>;
 
-/** Map Model, check model params validity or map them into new models with valid properties */
-export type ModelMapper<Model extends Entity> = (
-    context: InvocationContext,
-    models: Model[]
-) => Promise<(Model | undefined)[]>;
-
 /** Controller Scope used for API's business scope definition */
 export interface ControllerScope<
     Model extends Entity,
@@ -35,8 +39,6 @@ export interface ControllerScope<
     ModelRelations extends object,
     Controller extends CRUDController
 > {
-    modelMapper: ModelMapper<Model>;
-
     repositoryGetter: RepositoryGetter<
         Model,
         ModelID,

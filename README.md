@@ -1,6 +1,9 @@
 # loopback-component-crud
 
-[![Build Status](https://travis-ci.com/loopback4/loopback-component-crud.svg?branch=master)](https://travis-ci.com/loopback4/loopback-component-crud)
+![Travis (.org) branch](https://img.shields.io/travis/loopback4/loopback-component-crud/master)
+![npm](https://img.shields.io/npm/v/loopback-component-crud)
+![npm bundle size](https://img.shields.io/bundlephobia/min/loopback-component-crud)
+![GitHub](https://img.shields.io/github/license/loopback4/loopback-component-crud)
 
 Creating `CRUD` controllers in any application is a repetitive and futile task.
 
@@ -61,7 +64,6 @@ export class UserController extends CRUDControllerMixin(
     User,
     CRUDController,
     {
-        modelMapper: async (context, models) => models,
         repositoryGetter: (controller) => controller.usersController,
 
         create: {
@@ -89,11 +91,11 @@ export class UserController extends CRUDControllerMixin(
 
 ---
 
-## Contributions
+## Contributors
 
 -   [KoLiBer](https://www.linkedin.com/in/mohammad-hosein-nemati-665b1813b/)
 
 ## License
 
-This project is licensed under the [MIT license](LICENSE).  
+This project is licensed under the [MIT license](LICENSE.md).  
 Copyright (c) KoLiBer (koliberr136a1@gmail.com)

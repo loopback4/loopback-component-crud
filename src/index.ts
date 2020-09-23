@@ -3,4 +3,4 @@ export * from "./types";
 export * from "./component";
 export * from "./decorators";
 export * from "./interceptors";
-export * from "./mixins";
+export * from "./controllers";
