@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.0.0
+
+-   **Deps**: update packages
+-   **Clean**: remove `sources` folder
+-   **Clean**: remove `model-mapper` method
+-   **Feat**: use `buildWhereForId` in utils and limit interceptor
+-   **Fix**: disable filter for empty object (`mongo` error: `and` with empty array)
+-   **Docs**: add shields to `README`
+
 ## v0.11.0
 
 -   **Feat**: add `getAccess` method for getting nested authorization metadata
