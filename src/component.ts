@@ -4,14 +4,13 @@ import {
     Component,
     config,
     ContextTags,
-    ContextBindings,
     CoreBindings,
     inject,
 } from "@loopback/core";
 
 import { CRUDBindings } from "./keys";
 import { DEFAULT_CRUD_OPTIONS, CRUDComponentOptions } from "./types";
-import { ExistInterceptor, LimitInterceptor } from "./interceptors";
+import { CRUDApiBuilder } from "./api";
 
 @injectable({
     tags: {
@@ -25,10 +24,8 @@ export class CRUDComponent implements Component {
         @config()
         private options: CRUDComponentOptions = DEFAULT_CRUD_OPTIONS
     ) {
-        this.application.interceptor(ExistInterceptor);
-        this.application.interceptor(LimitInterceptor);
         this.application
-            .bind(ContextBindings.GLOBAL_INTERCEPTOR_ORDERED_GROUPS)
-            .to(["exist", "limit", "authorization"]);
+            .bind(CRUDBindings.CRUD_API_BUILDER)
+            .toClass(CRUDApiBuilder);
     }
 }
