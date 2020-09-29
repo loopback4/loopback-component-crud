@@ -27,7 +27,7 @@ export class CRUDApiBuilder implements ModelApiBuilder {
     ): Promise<void> {
         class Controller implements CRUDController<any, any> {
             constructor(
-                @repository(modelClass.name, config.dataSource)
+                @repository(config.repository || `${modelClass.name}Repository`)
                 public repository: EntityCrudRepository<any, any>,
                 @inject(RestBindings.Http.REQUEST)
                 public request: Request,
@@ -39,7 +39,7 @@ export class CRUDApiBuilder implements ModelApiBuilder {
         }
 
         application.controller(
-            CRUDControllerMixin(config)(config.baseController || Controller)
+            CRUDControllerMixin(config)(config.controller || Controller)
         );
     }
 }

@@ -21,7 +21,8 @@ export const DEFAULT_CRUD_OPTIONS: CRUDComponentOptions = {};
  */
 export interface CRUDApiConfig extends ModelApiConfig {
     basePath: string;
-    baseController?: MixinTarget<CRUDController<any, any>>;
+    repository?: string;
+    controller?: MixinTarget<CRUDController<any, any>>;
     create?: {
         authentication?: AuthenticationMetadata;
         authorization?: AuthorizationMetadata;

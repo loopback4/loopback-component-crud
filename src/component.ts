@@ -6,6 +6,7 @@ import {
     ContextTags,
     CoreBindings,
     inject,
+    createBindingFromClass,
 } from "@loopback/core";
 
 import { CRUDBindings } from "./keys";
@@ -24,8 +25,6 @@ export class CRUDComponent implements Component {
         @config()
         private options: CRUDComponentOptions = DEFAULT_CRUD_OPTIONS
     ) {
-        this.application
-            .bind(CRUDBindings.CRUD_API_BUILDER)
-            .toClass(CRUDApiBuilder);
+        this.application.add(createBindingFromClass(CRUDApiBuilder));
     }
 }

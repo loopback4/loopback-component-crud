@@ -64,8 +64,8 @@ export function CreateControllerMixin<T extends Entity, ID>(
                                     title: `New${config.model.name}`,
                                     exclude: [
                                         ...config.model.definition.idProperties(),
-                                        ...config.model.definition.settings
-                                            .excludeProperties,
+                                        ...config.model.definition?.settings
+                                            ?.excludeProperties,
                                     ],
                                 }),
                             },
@@ -100,8 +100,8 @@ export function CreateControllerMixin<T extends Entity, ID>(
                                 title: `New${config.model.name}`,
                                 exclude: [
                                     ...config.model.definition.idProperties(),
-                                    ...config.model.definition.settings
-                                        .excludeProperties,
+                                    ...config.model.definition?.settings
+                                        ?.excludeProperties,
                                 ],
                             }),
                         },
@@ -360,6 +360,11 @@ export function CRUDControllerMixin<T extends Entity, ID>(
             )(superClass);
         }
 
-        return superClass;
+        const controllerName = `${config.model.name}Controller`;
+        const defineNamedController = new Function(
+            "superClass",
+            `return class ${controllerName} extends superClass {}`
+        );
+        return defineNamedController(superClass);
     };
 }
