@@ -1,12 +1,17 @@
-import { injectable } from "@loopback/core";
+import { injectable, inject } from "@loopback/core";
 import {
     asModelApiBuilder,
     ModelApiBuilder,
 } from "@loopback/model-api-builder";
-import { ApplicationWithRepositories } from "@loopback/repository";
-import { Model } from "@loopback/rest";
+import {
+    ApplicationWithRepositories,
+    repository,
+    EntityCrudRepository,
+} from "@loopback/repository";
+import { Model, RestBindings, Request, Response } from "@loopback/rest";
+import { SecurityBindings, UserProfile } from "@loopback/security";
 
-import { CRUDApiConfig } from "../types";
+import { CRUDApiConfig, CRUDController } from "../types";
 import { CRUDControllerMixin } from "../controllers";
 
 @injectable(asModelApiBuilder)
@@ -20,9 +25,21 @@ export class CRUDApiBuilder implements ModelApiBuilder {
         },
         config: CRUDApiConfig
     ): Promise<void> {
-        let repoBindingName = `repositories.${modelClass.name}Repository`;
+        class Controller implements CRUDController<any, any> {
+            constructor(
+                @repository(modelClass.name, config.dataSource)
+                public repository: EntityCrudRepository<any, any>,
+                @inject(RestBindings.Http.REQUEST)
+                public request: Request,
+                @inject(RestBindings.Http.RESPONSE)
+                public response: Response,
+                @inject(SecurityBindings.USER, { optional: true })
+                public session: UserProfile
+            ) {}
+        }
 
-        CRUDControllerMixin(config);
-        application.controller();
+        application.controller(
+            CRUDControllerMixin(config)(config.baseController || Controller)
+        );
     }
 }

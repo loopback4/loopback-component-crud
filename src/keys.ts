@@ -12,6 +12,6 @@ export namespace CRUDBindings {
     );
 
     export const CRUD_API_BUILDER = BindingKey.create<CRUDApiBuilder>(
-        `CRUDApiBuilder`
+        `${CoreBindings.COMPONENTS}.CRUDComponent.CRUDApiBuilder`
     );
 }
