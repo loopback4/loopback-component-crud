@@ -1,11 +1,13 @@
 import { MixinTarget } from "@loopback/core";
 import {
+    EntityCrudRepository,
     Entity,
     Count,
     CountSchema,
     Where,
     Filter,
-    FilterExcludingWhere,
+    DataObject,
+    RelationType,
 } from "@loopback/repository";
 import {
     api,
@@ -33,6 +35,189 @@ export function CreateControllerMixin<T extends Entity, ID>(
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
         superClass: R
     ) {
+        /**
+         * remove navigational properties from entity
+         */
+        const cascadeClear = (entity: DataObject<T>) => {
+            return Object.fromEntries(
+                Object.entries(entity).filter(
+                    ([_, value]) => typeof value !== "object"
+                )
+            ) as DataObject<T>;
+        };
+
+        /**
+         * find matched entity for createdEntity by properties equality
+         * add matched entity relations to createdEntity
+         */
+        const cascadeFind = (createdEntity: T, entities: DataObject<T>[]) => {
+            // Check two models have same properties
+            const equalProperty = (
+                property: string,
+                metadata: any,
+                entity: DataObject<T>
+            ) => {
+                // Check entity before save has property, then return equality
+                if (property in entity) {
+                    return (
+                        (createdEntity as any)[property] ===
+                        (entity as any)[property]
+                    );
+                }
+
+                // Check entity before save hasn't property and has default value
+                // So it were filled automatically, properties are equal
+                if ("default" in metadata || "defaultFn" in metadata) {
+                    return true;
+                }
+
+                // Entity before save hasn't property and has not default value
+                // But saved model has value
+                return false;
+            };
+
+            // Find one matched entity for createdEntity
+            const entity = entities
+                .filter((entity) =>
+                    // Check createdEntity and entity have equal by properties
+                    Object.entries(config.model.definition.properties).reduce<
+                        boolean
+                    >(
+                        (accumulate, [property, metadata]) =>
+                            accumulate &&
+                            equalProperty(property, metadata, entity),
+                        true
+                    )
+                )
+                .pop();
+
+            // Get entity relations
+            const entityRelations = Object.fromEntries(
+                Object.entries(entity || {}).filter(
+                    ([_, value]) => typeof value === "object"
+                )
+            );
+
+            // Add entity relations to raw model
+            return {
+                ...createdEntity,
+                ...entityRelations,
+            } as T;
+        };
+
+        /**
+         * result = Create parents
+         * result = map(find related entity)
+         * for each entity relations
+         *      children = map(result[relation])
+         *      children = flat(1)
+         *      children = map({...entity, [keyFrom]: keyTo})
+         *      result = target.createAll(children, options)
+         *      result = result.add(children)
+         * return result
+         */
+        const cascadeCreate = async (
+            repository: EntityCrudRepository<T, ID>,
+            options: any,
+            models: T[]
+        ) => {
+            const belongsToRelations = Object.entries(
+                repository.entityClass.definition.relations
+            ).filter(
+                ([_, metadata]) => metadata.type === RelationType.belongsTo
+            );
+
+            // Create belongsTo relations
+            for (const [relation, metadata] of Object.entries(
+                repository.entityClass.definition.relations
+            ).filter(([_, value]) => value.type === RelationType.belongsTo)) {
+            }
+
+            // Create self
+            const rawModels = models.map(
+                (model) =>
+                    Object.fromEntries(
+                        Object.entries(model).filter(
+                            ([_, value]) => typeof value !== "object"
+                        )
+                    ) as T
+            );
+            const createdRawModels = await repository.createAll(rawModels);
+
+            // Create hasOne, hasMany
+            models.map(
+                (model) =>
+                    Object.fromEntries(
+                        Object.entries(model).filter(
+                            ([_, value]) => typeof value === "object"
+                        )
+                    ) as T
+            );
+
+            // Create entities without navigational properties
+            let result = await repository.createAll(
+                models.map((model) => cascadeClear(model)),
+                options
+            );
+
+            // Find and add navigational properties for each created entity
+            result = result.map((createdModel) =>
+                cascadeFind(createdModel, models)
+            );
+
+            const cascadeCreateRelations = Object.entries(
+                config.model.definition.relations
+            );
+
+            for (let [relation, metadata] of cascadeCreateRelations) {
+                const keyFrom = (metadata as any).keyFrom;
+                const keyTo = (metadata as any).keyTo;
+
+                const target = (await (repository as any)
+                    [relation]()
+                    .getTargetRepository()) as EntityCrudRepository<any, any>;
+                if (!target) {
+                    continue;
+                }
+
+                let children = result
+                    .map((model: any) =>
+                        [model[relation]].flat(1).map((child) => ({
+                            ...child,
+                            [keyTo]: model[keyFrom],
+                        }))
+                    )
+                    .flat(1)
+                    .filter((entity) => entity);
+                if (children.length <= 0) {
+                    continue;
+                }
+
+                // Create children models
+                const childrenResult = await target.createAll(
+                    children,
+                    options
+                );
+
+                // Add created children to parents in result
+                result = result.map((entity: any) => {
+                    if (metadata.targetsMany) {
+                        entity[relation] = childrenResult.filter(
+                            (child: any) => child[keyTo] === entity[keyFrom]
+                        );
+                    } else {
+                        entity[relation] = childrenResult.filter(
+                            (child: any) => child[keyTo] === entity[keyFrom]
+                        )[0];
+                    }
+
+                    return entity;
+                });
+            }
+
+            return result;
+        };
+
         @api({ basePath: config.basePath })
         class MixedController extends superClass {
             @authorize(
