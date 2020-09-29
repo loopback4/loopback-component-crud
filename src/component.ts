@@ -1,11 +1,11 @@
 import {
-    Application,
     injectable,
+    Application,
     Component,
-    config,
     ContextTags,
     CoreBindings,
     inject,
+    config,
     createBindingFromClass,
 } from "@loopback/core";
 

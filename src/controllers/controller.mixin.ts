@@ -120,11 +120,7 @@ export function CreateControllerMixin<T extends Entity, ID>(
 /**
  * Read controller mixin, add Read rest operations
  */
-export function ReadControllerMixin<
-    T extends Entity,
-    ID,
-    Relations extends object = {}
->(
+export function ReadControllerMixin<T extends Entity, ID>(
     config: CRUDApiConfig,
     authentication?: AuthenticationMetadata,
     authorization?: AuthorizationMetadata
