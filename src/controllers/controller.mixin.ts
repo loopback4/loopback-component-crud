@@ -17,7 +17,6 @@ import {
     requestBody,
     getModelSchemaRef,
 } from "@loopback/rest";
-
 import { AuthenticationMetadata, authenticate } from "@loopback/authentication";
 import { AuthorizationMetadata, authorize } from "@loopback/authorization";
 
@@ -34,8 +33,19 @@ export function CreateControllerMixin<T extends Entity, ID>(
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
         superClass: R
     ) {
-        @api({ basePath: config.basePath, paths: {} })
+        @api({ basePath: config.basePath })
         class MixedController extends superClass {
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
             @post("/", {
                 responses: {
                     "200": {
@@ -74,9 +84,22 @@ export function CreateControllerMixin<T extends Entity, ID>(
                 })
                 models: T[]
             ): Promise<T[]> {
-                return await this.repository.createAll(models);
+                return await this.repository.createAll(models, {
+                    context: this,
+                });
             }
 
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
             @post("/one", {
                 responses: {
                     "200": {
@@ -109,7 +132,9 @@ export function CreateControllerMixin<T extends Entity, ID>(
                 })
                 model: T
             ): Promise<T> {
-                return await this.repository.create(model);
+                return await this.repository.create(model, {
+                    context: this,
+                });
             }
         }
 
@@ -128,8 +153,19 @@ export function ReadControllerMixin<T extends Entity, ID>(
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
         superClass: R
     ) {
-        @api({ basePath: config.basePath, paths: {} })
+        @api({ basePath: config.basePath })
         class MixedController extends superClass {
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
             @get("/", {
                 responses: {
                     "200": {
@@ -151,14 +187,29 @@ export function ReadControllerMixin<T extends Entity, ID>(
                 @param.filter(config.model) filter?: Filter<T>
             ): Promise<T[]> {
                 if (this.request.headers["x-total"] === "true") {
-                    const count = await this.repository.count(filter?.where);
+                    const count = await this.repository.count(filter?.where, {
+                        context: this,
+                    });
 
                     this.response.setHeader("X-Total-Count", count.count);
                 }
 
-                return await this.repository.find(filter);
+                return await this.repository.find(filter, {
+                    context: this,
+                });
             }
 
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
             @get("/{id}", {
                 responses: {
                     "200": {
@@ -175,26 +226,23 @@ export function ReadControllerMixin<T extends Entity, ID>(
             })
             async readOne(
                 @param.path.string("id") id: ID,
-                @param.filter(config.model, { exclude: "where" })
-                filter?: FilterExcludingWhere<T>
+                @param.filter(config.model) filter?: Filter<T>
             ): Promise<T> {
                 if (this.request.headers["x-total"] === "true") {
-                    const count = await this.repository.count(
-                        (config.model as typeof Entity & {
-                            prototype: Entity;
-                        }).buildWhereForId(id),
-                        {
-                            history: true,
-                        }
-                    );
+                    const count = await this.repository.count(filter?.where, {
+                        context: this,
+                    });
 
                     this.response.setHeader("X-Total-Count", count.count);
 
                     return (await this.repository.find(filter, {
-                        history: true,
+                        context: this,
+                        all: true,
                     })) as any;
                 } else {
-                    return await this.repository.findById(id, filter);
+                    return await this.repository.findById(id, filter, {
+                        context: this,
+                    });
                 }
             }
         }
@@ -214,8 +262,19 @@ export function UpdateControllerMixin<T extends Entity, ID>(
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
         superClass: R
     ) {
-        @api({ basePath: config.basePath, paths: {} })
+        @api({ basePath: config.basePath })
         class MixedController extends superClass {
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
             @put("/", {
                 responses: {
                     "200": {
@@ -239,9 +298,22 @@ export function UpdateControllerMixin<T extends Entity, ID>(
                 data: T,
                 @param.where(config.model) where?: Where<T>
             ): Promise<Count> {
-                return await this.repository.updateAll(data, where);
+                return await this.repository.updateAll(data, where, {
+                    context: this,
+                });
             }
 
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
             @put("/{id}", {
                 responses: {
                     "204": {
@@ -262,7 +334,9 @@ export function UpdateControllerMixin<T extends Entity, ID>(
                 })
                 data: T
             ): Promise<void> {
-                return await this.repository.updateById(id, data);
+                return await this.repository.updateById(id, data, {
+                    context: this,
+                });
             }
         }
 
@@ -281,8 +355,19 @@ export function DeleteControllerMixin<T extends Entity, ID>(
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
         superClass: R
     ) {
-        @api({ basePath: config.basePath, paths: {} })
+        @api({ basePath: config.basePath })
         class MixedController extends superClass {
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
             @del("/", {
                 responses: {
                     "200": {
@@ -296,9 +381,22 @@ export function DeleteControllerMixin<T extends Entity, ID>(
             async deleteAll(
                 @param.where(config.model) where?: Where<T>
             ): Promise<Count> {
-                return await this.repository.deleteAll(where);
+                return await this.repository.deleteAll(where, {
+                    context: this,
+                });
             }
 
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
             @del("/{id}", {
                 responses: {
                     "204": {
@@ -307,7 +405,9 @@ export function DeleteControllerMixin<T extends Entity, ID>(
                 },
             })
             async deleteOne(@param.path.string("id") id: ID): Promise<void> {
-                return await this.repository.deleteById(id);
+                return await this.repository.deleteById(id, {
+                    context: this,
+                });
             }
         }
 
@@ -356,10 +456,9 @@ export function CRUDControllerMixin<T extends Entity, ID>(
             )(superClass);
         }
 
-        const controllerName = `${config.model.name}Controller`;
         const defineNamedController = new Function(
             "superClass",
-            `return class ${controllerName} extends superClass {}`
+            `return class ${config.model.name}Controller extends superClass {}`
         );
         return defineNamedController(superClass);
     };
