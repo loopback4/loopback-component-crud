@@ -27,6 +27,48 @@ describe("Create Model", () => {
         /**
          * Test createAll
          */
+        console.log(
+            JSON.stringify(
+                await userController.createAll([
+                    {
+                        username: "user1",
+                    },
+                    {
+                        username: "user2",
+                        parent: {
+                            username: "parentUser2-1",
+                        },
+                    },
+                    {
+                        username: "user3",
+                        children: [
+                            {
+                                username: "childUser3-1",
+                            },
+                            {
+                                username: "childUser3-2",
+                            },
+                        ],
+                    },
+                    {
+                        username: "user4",
+                        parent: {
+                            username: "parentUser4-1",
+                        },
+                        children: [
+                            {
+                                username: "childUser4-1",
+                            },
+                            {
+                                username: "childUser4-2",
+                            },
+                        ],
+                    },
+                ]),
+                undefined,
+                4
+            )
+        );
         expect(
             await userController.createAll([
                 {
@@ -34,6 +76,34 @@ describe("Create Model", () => {
                 },
                 {
                     username: "user2",
+                    parent: {
+                        username: "parentUser2-1",
+                    },
+                },
+                {
+                    username: "user3",
+                    children: [
+                        {
+                            username: "childUser3-1",
+                        },
+                        {
+                            username: "childUser3-2",
+                        },
+                    ],
+                },
+                {
+                    username: "user4",
+                    parent: {
+                        username: "parentUser4-1",
+                    },
+                    children: [
+                        {
+                            username: "childUser4-1",
+                        },
+                        {
+                            username: "childUser4-2",
+                        },
+                    ],
                 },
             ])
         ).containDeep([
@@ -42,6 +112,34 @@ describe("Create Model", () => {
             },
             {
                 username: "user2",
+                parent: {
+                    username: "parentUser2-1",
+                },
+            },
+            {
+                username: "user3",
+                children: [
+                    {
+                        username: "childUser3-1",
+                    },
+                    {
+                        username: "childUser3-2",
+                    },
+                ],
+            },
+            {
+                username: "user4",
+                parent: {
+                    username: "parentUser4-1",
+                },
+                children: [
+                    {
+                        username: "childUser4-1",
+                    },
+                    {
+                        username: "childUser4-2",
+                    },
+                ],
             },
         ]);
     });
@@ -54,10 +152,32 @@ describe("Create Model", () => {
          */
         expect(
             await userController.createOne({
-                username: "user1",
+                username: "user4",
+                parent: {
+                    username: "parentUser4-1",
+                },
+                children: [
+                    {
+                        username: "childUser4-1",
+                    },
+                    {
+                        username: "childUser4-2",
+                    },
+                ],
             })
         ).containDeep({
-            username: "user1",
+            username: "user4",
+            parent: {
+                username: "parentUser4-1",
+            },
+            children: [
+                {
+                    username: "childUser4-1",
+                },
+                {
+                    username: "childUser4-2",
+                },
+            ],
         });
     });
 });

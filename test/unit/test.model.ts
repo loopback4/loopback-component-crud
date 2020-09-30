@@ -1,4 +1,10 @@
-import { Entity, model, property, belongsTo } from "@loopback/repository";
+import {
+    Entity,
+    model,
+    property,
+    belongsTo,
+    hasMany,
+} from "@loopback/repository";
 
 @model()
 export class User extends Entity {
@@ -20,8 +26,11 @@ export class User extends Entity {
     })
     password: string;
 
-    @belongsTo(() => User)
+    @belongsTo(() => User, { keyFrom: "parentId", keyTo: "id" })
     parentId: string;
+
+    @hasMany(() => User, { keyFrom: "id", keyTo: "parentId" })
+    children: User[];
 
     constructor(data?: Partial<User>) {
         super(data);

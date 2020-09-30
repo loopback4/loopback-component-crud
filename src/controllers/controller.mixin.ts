@@ -36,104 +36,125 @@ export function CreateControllerMixin<T extends Entity, ID>(
         superClass: R
     ) {
         /**
-         * remove navigational properties from entity
-         */
-        const nestedClear = (entity: DataObject<T>) => {
-            return Object.fromEntries(
-                Object.entries(entity).filter(
-                    ([_, value]) => typeof value !== "object"
-                )
-            ) as DataObject<T>;
-        };
-
-        /**
-         * find matched entity for createdEntity by properties equality
-         * add matched entity relations to createdEntity
-         */
-        const cascadeFind = (createdEntity: T, entities: DataObject<T>[]) => {
-            // Check two models have same properties
-            const equalProperty = (
-                property: string,
-                metadata: any,
-                entity: DataObject<T>
-            ) => {
-                // Check entity before save has property, then return equality
-                if (property in entity) {
-                    return (
-                        (createdEntity as any)[property] ===
-                        (entity as any)[property]
-                    );
-                }
-
-                // Check entity before save hasn't property and has default value
-                // So it were filled automatically, properties are equal
-                if ("default" in metadata || "defaultFn" in metadata) {
-                    return true;
-                }
-
-                // Entity before save hasn't property and has not default value
-                // But saved model has value
-                return false;
-            };
-
-            // Find one matched entity for createdEntity
-            const entity = entities
-                .filter((entity) =>
-                    // Check createdEntity and entity have equal by properties
-                    Object.entries(config.model.definition.properties).reduce<
-                        boolean
-                    >(
-                        (accumulate, [property, metadata]) =>
-                            accumulate &&
-                            equalProperty(property, metadata, entity),
-                        true
-                    )
-                )
-                .pop();
-
-            // Get entity relations
-            const entityRelations = Object.fromEntries(
-                Object.entries(entity || {}).filter(
-                    ([_, value]) => typeof value === "object"
-                )
-            );
-
-            // Add entity relations to raw model
-            return {
-                ...createdEntity,
-                ...entityRelations,
-            } as T;
-        };
-
-        /**
-         * result = Create parents
-         * result = map(find related entity)
-         * for each entity relations
-         *      children = map(result[relation])
-         *      children = flat(1)
-         *      children = map({...entity, [keyFrom]: keyTo})
-         *      result = target.createAll(children, options)
-         *      result = result.add(children)
-         * return result
+         * create belongsTo relations
+         * create models
+         * create hasOne relations
+         * create hasMany relations
          */
         const nestedCreate = async (
             repository: EntityCrudRepository<T, ID>,
             context: CRUDController<T, ID>,
             models: T[]
         ): Promise<T[]> => {
-            const rawModels = models.map(
-                (model) =>
-                    Object.fromEntries(
+            for (const [relation, metadata] of Object.entries(
+                repository.entityClass.definition.relations
+            ).filter(
+                ([_, metadata]) => metadata.type === RelationType.belongsTo
+            )) {
+                const keyFrom = (metadata as any).keyFrom;
+                const keyTo = (metadata as any).keyTo;
+
+                // const targetRepository = await (repository as any)
+                //     [relation]()
+                //     .getTargetRepository();
+
+                // models = await Promise.all(
+                //     models.map(async (model: any) => {
+                //         model[relation] = (
+                //             await nestedCreate(targetRepository, context, [
+                //                 model[relation],
+                //             ])
+                //         )[0];
+                //         model[keyFrom] = model[relation][keyTo];
+
+                //         return model as T;
+                //     })
+                // );
+            }
+
+            models = await Promise.all(
+                models.map(async (model: any) => {
+                    const rawModel: any = Object.fromEntries(
                         Object.entries(model).filter(
                             ([_, value]) => typeof value !== "object"
                         )
-                    ) as T
-            );
-            const result = await repository.createAll(rawModels, {
-                context: context,
-            });
+                    );
 
-            return result;
+                    const createdModel = await repository.create(rawModel, {
+                        context: context,
+                    });
+
+                    return {
+                        ...model,
+                        ...createdModel,
+                    };
+                })
+            );
+
+            for (const [relation, metadata] of Object.entries(
+                repository.entityClass.definition.relations
+            ).filter(
+                ([_, metadata]) => metadata.type === RelationType.hasOne
+            )) {
+                const keyFrom = (metadata as any).keyFrom;
+                const keyTo = (metadata as any).keyTo;
+                const targetRepository = await (repository as any)
+                    [relation]()
+                    .getTargetRepository();
+
+                models = await Promise.all(
+                    models.map(async (model: any) => {
+                        if (!model[relation]) {
+                            return model as T;
+                        }
+
+                        model[relation][keyTo] = model[keyFrom];
+                        model[relation] = (
+                            await nestedCreate(targetRepository, context, [
+                                model[relation],
+                            ])
+                        )[0];
+
+                        return model as T;
+                    })
+                );
+            }
+
+            for (const [relation, metadata] of Object.entries(
+                repository.entityClass.definition.relations
+            ).filter(
+                ([_, metadata]) => metadata.type === RelationType.hasMany
+            )) {
+                const keyFrom = (metadata as any).keyFrom;
+                const keyTo = (metadata as any).keyTo;
+                const targetRepository = await (repository as any)
+                    [relation]()
+                    .getTargetRepository();
+
+                models = await Promise.all(
+                    models.map(async (model: any) => {
+                        if (!model[relation]) {
+                            return model as T;
+                        }
+
+                        model[relation] = model[relation].map(
+                            (relatedModel: any) => {
+                                relatedModel[keyTo] = model[keyFrom];
+                                return relatedModel;
+                            }
+                        );
+                        model[relation] = await nestedCreate(
+                            targetRepository,
+                            context,
+                            model[relation]
+                        );
+
+                        return model as T;
+                    })
+                );
+            }
+
+            return models;
         };
 
         @api({ basePath: config.basePath })
