@@ -38,7 +38,7 @@ export function CreateControllerMixin<T extends Entity, ID>(
         /**
          * remove navigational properties from entity
          */
-        const cascadeClear = (entity: DataObject<T>) => {
+        const nestedClear = (entity: DataObject<T>) => {
             return Object.fromEntries(
                 Object.entries(entity).filter(
                     ([_, value]) => typeof value !== "object"
@@ -116,24 +116,11 @@ export function CreateControllerMixin<T extends Entity, ID>(
          *      result = result.add(children)
          * return result
          */
-        const cascadeCreate = async (
+        const nestedCreate = async (
             repository: EntityCrudRepository<T, ID>,
-            options: any,
+            context: CRUDController<T, ID>,
             models: T[]
-        ) => {
-            const belongsToRelations = Object.entries(
-                repository.entityClass.definition.relations
-            ).filter(
-                ([_, metadata]) => metadata.type === RelationType.belongsTo
-            );
-
-            // Create belongsTo relations
-            for (const [relation, metadata] of Object.entries(
-                repository.entityClass.definition.relations
-            ).filter(([_, value]) => value.type === RelationType.belongsTo)) {
-            }
-
-            // Create self
+        ): Promise<T[]> => {
             const rawModels = models.map(
                 (model) =>
                     Object.fromEntries(
@@ -142,78 +129,9 @@ export function CreateControllerMixin<T extends Entity, ID>(
                         )
                     ) as T
             );
-            const createdRawModels = await repository.createAll(rawModels);
-
-            // Create hasOne, hasMany
-            models.map(
-                (model) =>
-                    Object.fromEntries(
-                        Object.entries(model).filter(
-                            ([_, value]) => typeof value === "object"
-                        )
-                    ) as T
-            );
-
-            // Create entities without navigational properties
-            let result = await repository.createAll(
-                models.map((model) => cascadeClear(model)),
-                options
-            );
-
-            // Find and add navigational properties for each created entity
-            result = result.map((createdModel) =>
-                cascadeFind(createdModel, models)
-            );
-
-            const cascadeCreateRelations = Object.entries(
-                config.model.definition.relations
-            );
-
-            for (let [relation, metadata] of cascadeCreateRelations) {
-                const keyFrom = (metadata as any).keyFrom;
-                const keyTo = (metadata as any).keyTo;
-
-                const target = (await (repository as any)
-                    [relation]()
-                    .getTargetRepository()) as EntityCrudRepository<any, any>;
-                if (!target) {
-                    continue;
-                }
-
-                let children = result
-                    .map((model: any) =>
-                        [model[relation]].flat(1).map((child) => ({
-                            ...child,
-                            [keyTo]: model[keyFrom],
-                        }))
-                    )
-                    .flat(1)
-                    .filter((entity) => entity);
-                if (children.length <= 0) {
-                    continue;
-                }
-
-                // Create children models
-                const childrenResult = await target.createAll(
-                    children,
-                    options
-                );
-
-                // Add created children to parents in result
-                result = result.map((entity: any) => {
-                    if (metadata.targetsMany) {
-                        entity[relation] = childrenResult.filter(
-                            (child: any) => child[keyTo] === entity[keyFrom]
-                        );
-                    } else {
-                        entity[relation] = childrenResult.filter(
-                            (child: any) => child[keyTo] === entity[keyFrom]
-                        )[0];
-                    }
-
-                    return entity;
-                });
-            }
+            const result = await repository.createAll(rawModels, {
+                context: context,
+            });
 
             return result;
         };
@@ -269,9 +187,7 @@ export function CreateControllerMixin<T extends Entity, ID>(
                 })
                 models: T[]
             ): Promise<T[]> {
-                return await this.repository.createAll(models, {
-                    context: this,
-                });
+                return await nestedCreate(this.repository, this, models);
             }
 
             @authorize(
@@ -317,9 +233,11 @@ export function CreateControllerMixin<T extends Entity, ID>(
                 })
                 model: T
             ): Promise<T> {
-                return await this.repository.create(model, {
-                    context: this,
-                });
+                const result = await nestedCreate(this.repository, this, [
+                    model,
+                ]);
+
+                return result[0];
             }
         }
 
@@ -645,6 +563,6 @@ export function CRUDControllerMixin<T extends Entity, ID>(
             "superClass",
             `return class ${config.model.name}Controller extends superClass {}`
         );
-        return defineNamedController(superClass);
+        return defineNamedController(superClass) as R;
     };
 }
