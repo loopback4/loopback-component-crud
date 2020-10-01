@@ -389,6 +389,94 @@ export function UpdateControllerMixin<T extends Entity, ID>(
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
         superClass: R
     ) {
+        /**
+         * upsert belongsTo relations
+         * update models
+         * upsert hasOne relations
+         * add/remove/update hasMany relations
+         */
+        const nestedUpdate = async (
+            repository: EntityCrudRepository<T, ID>,
+            context: CRUDController<T, ID>,
+            where: Where<T>,
+            data: any
+        ): Promise<number> => {
+            let result = 0;
+
+            for (const [relation, metadata] of Object.entries(
+                repository.entityClass.definition.relations
+            ).filter(
+                ([_, metadata]) => metadata.type === RelationType.belongsTo
+            )) {
+                const keyTo = (metadata as any).keyTo;
+                const keyFrom = (metadata as any).keyFrom;
+                const targetRepository = await (repository as any)[
+                    relation
+                ].getter();
+
+                if (data[relation]) {
+                    // result += (
+                    //     await nestedUpdate(
+                    //         targetRepository,
+                    //         context,
+                    //         {},
+                    //         data[relation]
+                    //     )
+                    // ).count;
+                }
+            }
+
+            result += (
+                await repository.updateAll(data, where, {
+                    context: context,
+                })
+            ).count;
+
+            for (const [relation, metadata] of Object.entries(
+                repository.entityClass.definition.relations
+            ).filter(
+                ([_, metadata]) => metadata.type === RelationType.hasOne
+            )) {
+                const keyTo = (metadata as any).keyTo;
+                const keyFrom = (metadata as any).keyFrom;
+                const targetRepository = await (repository as any)[
+                    relation
+                ].getter();
+
+                if (data[relation]) {
+                    // result += await nestedUpdate(
+                    //     targetRepository,
+                    //     context,
+                    //     {},
+                    //     data[relation]
+                    // );
+                }
+            }
+
+            for (const [relation, metadata] of Object.entries(
+                repository.entityClass.definition.relations
+            ).filter(
+                ([_, metadata]) => metadata.type === RelationType.hasMany
+            )) {
+                const keyTo = (metadata as any).keyTo;
+                const keyFrom = (metadata as any).keyFrom;
+                const targetRepository = await (repository as any)[
+                    relation
+                ].getter();
+
+                if (data[relation]) {
+                    // result += await nestedUpdate(
+                    //     targetRepository,
+                    //     context,
+                    //     {},
+                    //     data[relation]
+                    // );
+                }
+            }
+
+            return result;
+        };
+
         @api({ basePath: config.basePath })
         class MixedController extends superClass {
             @authorize(
@@ -425,9 +513,16 @@ export function UpdateControllerMixin<T extends Entity, ID>(
                 data: T,
                 @param.where(config.model) where?: Where<T>
             ): Promise<Count> {
-                return await this.repository.updateAll(data, where, {
-                    context: this,
-                });
+                const result = await nestedUpdate(
+                    this.repository,
+                    this,
+                    where || {},
+                    data
+                );
+
+                return {
+                    count: result,
+                };
             }
 
             @authorize(
@@ -461,9 +556,12 @@ export function UpdateControllerMixin<T extends Entity, ID>(
                 })
                 data: T
             ): Promise<void> {
-                return await this.repository.updateById(id, data, {
-                    context: this,
-                });
+                await nestedUpdate(
+                    this.repository,
+                    this,
+                    this.repository.entityClass.buildWhereForId(id),
+                    data
+                );
             }
         }
 

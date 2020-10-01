@@ -23,40 +23,94 @@ describe("Read Model", () => {
 
     it("readAll() Test", async () => {
         await userController.deleteAll();
+        await userController.createAll([
+            {
+                username: "user1",
+            },
+            {
+                username: "user2",
+                parent: {
+                    username: "parentUser2-1",
+                },
+            },
+            {
+                username: "user3",
+                children: [
+                    {
+                        username: "childUser3-1",
+                    },
+                    {
+                        username: "childUser3-2",
+                    },
+                ],
+            },
+            {
+                username: "user4",
+                parent: {
+                    username: "parentUser4-1",
+                },
+                children: [
+                    {
+                        username: "childUser4-1",
+                    },
+                    {
+                        username: "childUser4-2",
+                    },
+                ],
+            },
+        ]);
 
         /**
          * Test readAll
          */
-        expect(
-            await userController.createAll([
-                {
-                    username: "user1",
-                },
-                {
-                    username: "user2",
-                },
-            ])
-        ).containDeep([
+        expect(await userController.readAll({})).containDeep([
             {
                 username: "user1",
             },
             {
                 username: "user2",
             },
+            {
+                username: "user3",
+            },
+            {
+                username: "user4",
+            },
+            {
+                username: "parentUser2-1",
+            },
+            {
+                username: "parentUser4-1",
+            },
+            {
+                username: "childUser3-1",
+            },
+            {
+                username: "childUser3-2",
+            },
+            {
+                username: "childUser4-1",
+            },
+            {
+                username: "childUser4-2",
+            },
         ]);
     });
 
     it("readOne() Test", async () => {
         await userController.deleteAll();
+        await userController.createAll([
+            {
+                id: "1",
+                username: "user1",
+            },
+        ]);
 
         /**
          * Test readOne
          */
-        expect(
-            await userController.createOne({
-                username: "user1",
-            })
-        ).containDeep({
+        expect(await userController.readOne("1")).containDeep({
+            id: "1",
             username: "user1",
         });
     });
