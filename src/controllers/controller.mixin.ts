@@ -51,25 +51,28 @@ export function CreateControllerMixin<T extends Entity, ID>(
             ).filter(
                 ([_, metadata]) => metadata.type === RelationType.belongsTo
             )) {
-                const keyFrom = (metadata as any).keyFrom;
                 const keyTo = (metadata as any).keyTo;
+                const keyFrom = (metadata as any).keyFrom;
+                const targetRepository = await (repository as any)[
+                    relation
+                ].getter();
 
-                // const targetRepository = await (repository as any)
-                //     [relation]()
-                //     .getTargetRepository();
+                models = await Promise.all(
+                    models.map(async (model: any) => {
+                        if (!model[relation]) {
+                            return model as T;
+                        }
 
-                // models = await Promise.all(
-                //     models.map(async (model: any) => {
-                //         model[relation] = (
-                //             await nestedCreate(targetRepository, context, [
-                //                 model[relation],
-                //             ])
-                //         )[0];
-                //         model[keyFrom] = model[relation][keyTo];
+                        model[relation] = (
+                            await nestedCreate(targetRepository, context, [
+                                model[relation],
+                            ])
+                        )[0];
+                        model[keyFrom] = model[relation][keyTo];
 
-                //         return model as T;
-                //     })
-                // );
+                        return model as T;
+                    })
+                );
             }
 
             models = await Promise.all(
@@ -96,11 +99,11 @@ export function CreateControllerMixin<T extends Entity, ID>(
             ).filter(
                 ([_, metadata]) => metadata.type === RelationType.hasOne
             )) {
-                const keyFrom = (metadata as any).keyFrom;
                 const keyTo = (metadata as any).keyTo;
-                const targetRepository = await (repository as any)
-                    [relation]()
-                    .getTargetRepository();
+                const keyFrom = (metadata as any).keyFrom;
+                const targetRepository = await (repository as any)[
+                    relation
+                ].getter();
 
                 models = await Promise.all(
                     models.map(async (model: any) => {
@@ -125,11 +128,11 @@ export function CreateControllerMixin<T extends Entity, ID>(
             ).filter(
                 ([_, metadata]) => metadata.type === RelationType.hasMany
             )) {
-                const keyFrom = (metadata as any).keyFrom;
                 const keyTo = (metadata as any).keyTo;
-                const targetRepository = await (repository as any)
-                    [relation]()
-                    .getTargetRepository();
+                const keyFrom = (metadata as any).keyFrom;
+                const targetRepository = await (repository as any)[
+                    relation
+                ].getter();
 
                 models = await Promise.all(
                     models.map(async (model: any) => {

@@ -28,12 +28,14 @@ export class UserRepository extends DefaultCrudRepository<User, string, {}> {
             "parent",
             Getter.fromValue(this)
         );
+        (this.parent as any).getter = Getter.fromValue(this);
         this.registerInclusionResolver("parent", this.parent.inclusionResolver);
 
         this.children = this.createHasManyRepositoryFactoryFor(
             "children",
             Getter.fromValue(this)
         );
+        (this.children as any).getter = Getter.fromValue(this);
         this.registerInclusionResolver(
             "children",
             this.children.inclusionResolver
