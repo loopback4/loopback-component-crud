@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.1.0
+
+-   **Feat**: add CRUD `model-api-builder`
+-   **Clean**: remove `relations` in controllers
+-   **Feat**: add `create nested`
+-   **Feat**: add `update nested`
+
 ## v1.0.1
 
 -   **Fix**: remove sources folder from ci file
