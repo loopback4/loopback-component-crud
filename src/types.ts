@@ -1,11 +1,10 @@
-import { inject } from "@loopback/core";
-import { InvocationContext } from "@loopback/context";
-import { Entity, DefaultCrudRepository } from "@loopback/repository";
-
-import { RestBindings, Request, Response } from "@loopback/rest";
-import { SecurityBindings, UserProfile } from "@loopback/security";
+import { MixinTarget } from "@loopback/core";
+import { ModelApiConfig } from "@loopback/model-api-builder";
+import { Entity, EntityCrudRepository } from "@loopback/repository";
 import { AuthenticationMetadata } from "@loopback/authentication";
 import { AuthorizationMetadata } from "@loopback/authorization";
+import { Request, Response } from "@loopback/rest";
+import { UserProfile } from "@loopback/security";
 
 /**
  * Interface defining the component's options object
@@ -17,83 +16,34 @@ export interface CRUDComponentOptions {}
  */
 export const DEFAULT_CRUD_OPTIONS: CRUDComponentOptions = {};
 
-/** Model Ctor type */
-export type Ctor<Model extends Entity> = typeof Entity & {
-    prototype: Model;
-};
-
-/** Get Repository From Controller */
-export type RepositoryGetter<
-    Model extends Entity,
-    ModelID,
-    ModelRelations extends object,
-    Controller extends CRUDController
-> = (
-    controller: Controller
-) => DefaultCrudRepository<Model, ModelID, ModelRelations>;
-
-/** Controller Scope used for API's business scope definition */
-export interface ControllerScope<
-    Model extends Entity,
-    ModelID,
-    ModelRelations extends object,
-    Controller extends CRUDController
-> {
-    repositoryGetter: RepositoryGetter<
-        Model,
-        ModelID,
-        ModelRelations,
-        Controller
-    >;
-
+/**
+ * Interface defining the CRUD api builder component's options object
+ */
+export interface CRUDApiConfig extends ModelApiConfig {
+    basePath: string;
+    repository?: string;
+    controller?: MixinTarget<CRUDController<any, any>>;
     create?: {
-        authentication: AuthenticationMetadata;
-        authorization: AuthorizationMetadata;
+        authentication?: AuthenticationMetadata;
+        authorization?: AuthorizationMetadata;
     };
     read?: {
-        authentication: AuthenticationMetadata;
-        authorization: AuthorizationMetadata;
+        authentication?: AuthenticationMetadata;
+        authorization?: AuthorizationMetadata;
     };
     update?: {
-        authentication: AuthenticationMetadata;
-        authorization: AuthorizationMetadata;
+        authentication?: AuthenticationMetadata;
+        authorization?: AuthorizationMetadata;
     };
     delete?: {
-        authentication: AuthenticationMetadata;
-        authorization: AuthorizationMetadata;
-    };
-
-    include: {
-        [relation: string]: ControllerScope<any, any, any, Controller>;
+        authentication?: AuthenticationMetadata;
+        authorization?: AuthorizationMetadata;
     };
 }
 
-/** CRUD decorator metadata stored via Reflection API */
-export interface CRUDMetadata<
-    Model extends Entity,
-    ModelID,
-    ModelRelations extends object,
-    Controller extends CRUDController
-> {
-    type: "create" | "read" | "update" | "delete";
-    rootCtor: Ctor<Model>;
-    rootScope: ControllerScope<Model, ModelID, ModelRelations, Controller>;
-    leafCtor: Ctor<Model>;
-    leafScope: ControllerScope<Model, ModelID, ModelRelations, Controller>;
-    relations: string[];
-    idsIndex: number[];
-    modelsIndex?: number;
-    filterIndex?: [number, number];
-}
-
-/** Controller base class type */
-export class CRUDController {
-    constructor(
-        @inject(RestBindings.Http.REQUEST)
-        public request: Request,
-        @inject(RestBindings.Http.RESPONSE)
-        public response: Response,
-        @inject(SecurityBindings.USER, { optional: true })
-        public session: UserProfile
-    ) {}
+export interface CRUDController<T extends Entity, ID> {
+    readonly repository: EntityCrudRepository<T, ID>;
+    readonly request: Request;
+    readonly response: Response;
+    readonly session: UserProfile;
 }

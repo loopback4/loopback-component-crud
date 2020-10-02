@@ -1,13 +1,15 @@
+import { MixinTarget } from "@loopback/core";
 import {
+    EntityCrudRepository,
     Entity,
     Count,
     CountSchema,
-    Class,
+    Where,
     Filter,
-    EntityNotFoundError,
     RelationType,
 } from "@loopback/repository";
 import {
+    api,
     get,
     post,
     put,
@@ -15,1436 +17,643 @@ import {
     param,
     requestBody,
     getModelSchemaRef,
-    getFilterSchemaFor,
 } from "@loopback/rest";
+import { AuthenticationMetadata, authenticate } from "@loopback/authentication";
+import { AuthorizationMetadata, authorize } from "@loopback/authorization";
 
-import { authenticate } from "@loopback/authentication";
-import { authorize } from "@loopback/authorization";
+import { CRUDApiConfig, CRUDController } from "../types";
 
-import { crud } from "../decorators";
-import { generateIds, generatePath, generateRelation } from "../interceptors";
-import { Ctor, ControllerScope, CRUDController } from "../types";
+/**
+ * create belongsTo relations
+ * create models
+ * create hasOne relations
+ * create hasMany relations
+ */
+const nestedCreate = async <T extends Entity, ID>(
+    repository: EntityCrudRepository<T, ID>,
+    context: CRUDController<T, ID>,
+    models: T[]
+): Promise<T[]> => {
+    for (const [relation, metadata] of Object.entries(
+        repository.entityClass.definition.relations
+    ).filter(([_, metadata]) => metadata.type === RelationType.belongsTo)) {
+        const keyTo = (metadata as any).keyTo;
+        const keyFrom = (metadata as any).keyFrom;
+        const targetRepository = await (repository as any)[relation].getter();
 
-export function CreateControllerMixin<
-    Model extends Entity,
-    ModelID,
-    ModelRelations extends object,
-    Controller extends CRUDController
->(
-    controllerClass: Class<Controller>,
-    rootCtor: Ctor<Model>,
-    rootScope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
-    leafCtor: Ctor<Model>,
-    leafScope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
-    relations: string[],
-    basePath: string
-): Class<Controller> {
-    const parentClass: Class<CRUDController> = controllerClass;
-
-    const method = (name: string) =>
-        relations.reduce(
-            (accumulate, relation) => accumulate.concat(relation),
-            name
-        );
-
-    const ids = generateIds(rootCtor, relations);
-
-    class HasManyController extends parentClass {
-        @authorize(
-            leafScope.create?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.create?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "create",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 1
-            ),
-            modelsIndex: 0,
-        })
-        @post(`${generatePath(rootCtor, relations, basePath)}`, {
-            responses: {
-                "200": {
-                    description: `Create multiple hasMany ${leafCtor.name}`,
-                    content: {
-                        "application/json": {
-                            schema: {
-                                type: "array",
-                                items: getModelSchemaRef(leafCtor, {
-                                    includeRelations: true,
-                                }),
-                            },
-                        },
-                    },
-                },
-            },
-        })
-        async [method("createAll")](
-            @requestBody({
-                content: {
-                    "application/json": {
-                        schema: {
-                            type: "array",
-                            items: getModelSchemaRef(leafCtor, {
-                                includeRelations: true,
-                                exclude:
-                                    leafCtor.definition?.settings
-                                        .excludeProperties,
-                            }),
-                        },
-                    },
-                },
-            })
-            models: Model[]
-        ): Promise<Model[]> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: (Model[])
-             *
-             *
-             * args[1]: id
-             * args[2]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
-
-            return await leafScope
-                .repositoryGetter(this as any)
-                .createAll(models);
-        }
-
-        @authorize(
-            leafScope.create?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.create?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "create",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 1
-            ),
-            modelsIndex: 0,
-        })
-        @post(`${generatePath(rootCtor, relations, basePath)}/one`, {
-            responses: {
-                "200": {
-                    description: `Create single hasMany ${leafCtor.name}`,
-                    content: {
-                        "application/json": {
-                            schema: getModelSchemaRef(leafCtor, {
-                                includeRelations: true,
-                            }),
-                        },
-                    },
-                },
-            },
-        })
-        async [method("createOne")](
-            @requestBody({
-                content: {
-                    "application/json": {
-                        schema: getModelSchemaRef(leafCtor, {
-                            includeRelations: true,
-                            exclude:
-                                leafCtor.definition?.settings.excludeProperties,
-                        }),
-                    },
-                },
-            })
-            model: Model
-        ): Promise<Model> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: (Model)
-             *
-             *
-             * args[1]: id
-             * args[2]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
-
-            return await leafScope.repositoryGetter(this as any).create(model);
-        }
-    }
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            HasManyController.prototype,
-            method("createAll"),
-            index + 1
-        );
-    });
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            HasManyController.prototype,
-            method("createOne"),
-            index + 1
-        );
-    });
-
-    class HasOneController extends parentClass {
-        @authorize(
-            leafScope.create?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.create?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "create",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 1
-            ),
-            modelsIndex: 0,
-        })
-        @post(`${generatePath(rootCtor, relations, basePath)}`, {
-            responses: {
-                "200": {
-                    description: `Create single hasOne ${leafCtor.name}`,
-                    content: {
-                        "application/json": {
-                            schema: getModelSchemaRef(leafCtor, {
-                                includeRelations: true,
-                            }),
-                        },
-                    },
-                },
-            },
-        })
-        async [method("createOne")](
-            @requestBody({
-                content: {
-                    "application/json": {
-                        schema: getModelSchemaRef(leafCtor, {
-                            includeRelations: true,
-                            exclude:
-                                leafCtor.definition?.settings.excludeProperties,
-                        }),
-                    },
-                },
-            })
-            model: Model
-        ): Promise<Model> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: (Model)
-             *
-             *
-             * args[1]: id
-             * args[2]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
-
-            return await leafScope.repositoryGetter(this as any).create(model);
-        }
-    }
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            HasOneController.prototype,
-            method("createOne"),
-            index + 1
-        );
-    });
-
-    class BelongsToController extends parentClass {}
-
-    switch (generateRelation(rootCtor, relations).type) {
-        case RelationType.hasMany:
-            return HasManyController as any;
-        case RelationType.hasOne:
-            return HasOneController as any;
-        case RelationType.belongsTo:
-            return BelongsToController as any;
-        default:
-            return parentClass as any;
-    }
-}
-
-export function ReadControllerMixin<
-    Model extends Entity,
-    ModelID,
-    ModelRelations extends object,
-    Controller extends CRUDController
->(
-    controllerClass: Class<Controller>,
-    rootCtor: Ctor<Model>,
-    rootScope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
-    leafCtor: Ctor<Model>,
-    leafScope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
-    relations: string[],
-    basePath: string
-): Class<Controller> {
-    const parentClass: Class<CRUDController> = controllerClass;
-
-    const method = (name: string) =>
-        relations.reduce(
-            (accumulate, relation) => accumulate.concat(relation),
-            name
-        );
-
-    const ids = generateIds(rootCtor, relations);
-
-    class HasManyController extends parentClass {
-        @authorize(
-            leafScope.read?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.read?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "read",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 1
-            ),
-            filterIndex: [-1, 0],
-        })
-        @get(`${generatePath(rootCtor, relations, basePath)}`, {
-            responses: {
-                "200": {
-                    description: `Read multiple hasMany ${leafCtor.name}, by filter`,
-                    content: {
-                        "application/json": {
-                            schema: {
-                                type: "array",
-                                items: getModelSchemaRef(leafCtor, {
-                                    includeRelations: true,
-                                }),
-                            },
-                        },
-                    },
-                },
-            },
-        })
-        async [method("readAll")](
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
-            })
-            filter: Filter<Model>
-        ): Promise<Model[]> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: (Filter)
-             *
-             *
-             * args[1]: id
-             * args[2]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
-
-            if (this.request.headers["x-total"] === "true") {
-                const count = await leafScope
-                    .repositoryGetter(this as any)
-                    .count(filter.where);
-
-                this.response.setHeader("X-Total-Count", count.count);
-            }
-
-            return await leafScope.repositoryGetter(this as any).find(filter);
-        }
-
-        @authorize(
-            leafScope.read?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.read?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "read",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 2
-            ),
-            filterIndex: [0, 1],
-        })
-        @get(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
-            responses: {
-                "200": {
-                    description: `Read single hasMany ${leafCtor.name}, by id`,
-                    content: {
-                        "application/json": {
-                            schema: getModelSchemaRef(leafCtor, {
-                                includeRelations: true,
-                            }),
-                        },
-                    },
-                },
-            },
-        })
-        async [method("readOne")](
-            @param.path.string("id") id: string,
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
-            })
-            filter: Filter<Model>
-        ): Promise<Model> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: id_model
-             * args[1]: (Filter)
-             *
-             *
-             * args[2]: id
-             * args[3]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
-
-            if (this.request.headers["x-total"] === "true") {
-                const count = await leafScope
-                    .repositoryGetter(this as any)
-                    .count(filter.where, {
-                        history: true,
-                    });
-
-                this.response.setHeader("X-Total-Count", count.count);
-
-                return (await leafScope
-                    .repositoryGetter(this as any)
-                    .find(filter, {
-                        history: true,
-                    })) as any;
-            } else {
-                const model = await leafScope
-                    .repositoryGetter(this as any)
-                    .findOne(filter);
-
-                if (model) {
-                    return model;
-                } else {
-                    throw new EntityNotFoundError(
-                        leafCtor,
-                        JSON.stringify(arguments[arguments.length - 1])
-                    );
+        models = await Promise.all(
+            models.map(async (model: any) => {
+                if (!model[relation]) {
+                    return model as T;
                 }
-            }
-        }
-    }
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            HasManyController.prototype,
-            method("readAll"),
-            index + 1
-        );
-    });
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            HasManyController.prototype,
-            method("readOne"),
-            index + 2
-        );
-    });
 
-    class HasOneController extends parentClass {
-        @authorize(
-            leafScope.read?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.read?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "read",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 1
-            ),
-            filterIndex: [-1, 0],
-        })
-        @get(`${generatePath(rootCtor, relations, basePath)}`, {
-            responses: {
-                "200": {
-                    description: `Read single hasOne ${leafCtor.name}`,
-                    content: {
-                        "application/json": {
-                            schema: getModelSchemaRef(leafCtor, {
-                                includeRelations: true,
-                            }),
-                        },
-                    },
-                },
-            },
-        })
-        async [method("readOne")](
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
+                model[relation] = (
+                    await nestedCreate(targetRepository, context, [
+                        model[relation],
+                    ])
+                )[0];
+                model[keyFrom] = model[relation][keyTo];
+
+                return model as T;
             })
-            filter: Filter<Model>
-        ): Promise<Model> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: (Filter)
-             *
-             *
-             * args[1]: id
-             * args[2]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
+        );
+    }
 
-            if (this.request.headers["x-total"] === "true") {
-                const count = await leafScope
-                    .repositoryGetter(this as any)
-                    .count(filter.where, {
-                        history: true,
-                    });
+    models = await Promise.all(
+        models.map(async (model: any) => {
+            const rawModel: any = Object.fromEntries(
+                Object.entries(model).filter(
+                    ([_, value]) => typeof value !== "object"
+                )
+            );
 
-                this.response.setHeader("X-Total-Count", count.count);
+            const createdModel = await repository.create(rawModel, {
+                context: context,
+            });
 
-                return (await leafScope
-                    .repositoryGetter(this as any)
-                    .find(filter, {
-                        history: true,
-                    })) as any;
-            } else {
-                const model = await leafScope
-                    .repositoryGetter(this as any)
-                    .findOne(filter);
+            return {
+                ...model,
+                ...createdModel,
+            };
+        })
+    );
 
-                if (model) {
-                    return model;
-                } else {
-                    throw new EntityNotFoundError(
-                        leafCtor,
-                        JSON.stringify(arguments[arguments.length - 1])
-                    );
+    for (const [relation, metadata] of Object.entries(
+        repository.entityClass.definition.relations
+    ).filter(([_, metadata]) => metadata.type === RelationType.hasOne)) {
+        const keyTo = (metadata as any).keyTo;
+        const keyFrom = (metadata as any).keyFrom;
+        const targetRepository = await (repository as any)[relation].getter();
+
+        models = await Promise.all(
+            models.map(async (model: any) => {
+                if (!model[relation]) {
+                    return model as T;
                 }
-            }
-        }
-    }
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            HasOneController.prototype,
-            method("readOne"),
-            index + 1
-        );
-    });
 
-    class BelongsToController extends parentClass {
-        @authorize(
-            leafScope.read?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.read?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "read",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 1
-            ),
-            filterIndex: [-1, 0],
-        })
-        @get(`${generatePath(rootCtor, relations, basePath)}`, {
-            responses: {
-                "200": {
-                    description: `Read single belongsTo ${leafCtor.name}`,
-                    content: {
-                        "application/json": {
-                            schema: getModelSchemaRef(leafCtor, {
-                                includeRelations: true,
-                            }),
-                        },
-                    },
-                },
-            },
-        })
-        async [method("readOne")](
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
+                model[relation][keyTo] = model[keyFrom];
+                model[relation] = (
+                    await nestedCreate(targetRepository, context, [
+                        model[relation],
+                    ])
+                )[0];
+
+                return model as T;
             })
-            filter: Filter<Model>
-        ): Promise<Model> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: (Filter)
-             *
-             *
-             * args[1]: id
-             * args[2]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
+        );
+    }
 
-            if (this.request.headers["x-total"] === "true") {
-                const count = await leafScope
-                    .repositoryGetter(this as any)
-                    .count(filter.where, {
-                        history: true,
-                    });
+    for (const [relation, metadata] of Object.entries(
+        repository.entityClass.definition.relations
+    ).filter(([_, metadata]) => metadata.type === RelationType.hasMany)) {
+        const keyTo = (metadata as any).keyTo;
+        const keyFrom = (metadata as any).keyFrom;
+        const targetRepository = await (repository as any)[relation].getter();
 
-                this.response.setHeader("X-Total-Count", count.count);
-
-                return (await leafScope
-                    .repositoryGetter(this as any)
-                    .find(filter, {
-                        history: true,
-                    })) as any;
-            } else {
-                const model = await leafScope
-                    .repositoryGetter(this as any)
-                    .findOne(filter);
-
-                if (model) {
-                    return model;
-                } else {
-                    throw new EntityNotFoundError(
-                        leafCtor,
-                        JSON.stringify(arguments[arguments.length - 1])
-                    );
+        models = await Promise.all(
+            models.map(async (model: any) => {
+                if (!model[relation]) {
+                    return model as T;
                 }
-            }
-        }
-    }
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            BelongsToController.prototype,
-            method("readOne"),
-            index + 1
+
+                model[relation] = model[relation].map((relatedModel: any) => {
+                    relatedModel[keyTo] = model[keyFrom];
+                    return relatedModel;
+                });
+                model[relation] = await nestedCreate(
+                    targetRepository,
+                    context,
+                    model[relation]
+                );
+
+                return model as T;
+            })
         );
-    });
-
-    switch (generateRelation(rootCtor, relations).type) {
-        case RelationType.hasMany:
-            return HasManyController as any;
-        case RelationType.hasOne:
-            return HasOneController as any;
-        case RelationType.belongsTo:
-            return BelongsToController as any;
-        default:
-            return parentClass as any;
     }
-}
 
-export function UpdateControllerMixin<
-    Model extends Entity,
-    ModelID,
-    ModelRelations extends object,
-    Controller extends CRUDController
->(
-    controllerClass: Class<Controller>,
-    rootCtor: Ctor<Model>,
-    rootScope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
-    leafCtor: Ctor<Model>,
-    leafScope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
-    relations: string[],
-    basePath: string
-): Class<Controller> {
-    const parentClass: Class<CRUDController> = controllerClass;
+    return models;
+};
 
-    const method = (name: string) =>
-        relations.reduce(
-            (accumulate, relation) => accumulate.concat(relation),
-            name
-        );
+/**
+ * upsert belongsTo relations
+ * update models
+ * upsert hasOne relations
+ * add/remove/update hasMany relations
+ */
+const nestedUpdate = async <T extends Entity, ID>(
+    repository: EntityCrudRepository<T, ID>,
+    context: CRUDController<T, ID>,
+    where: Where<T>,
+    data: any
+): Promise<number> => {
+    let result = 0;
 
-    const ids = generateIds(rootCtor, relations);
+    for (const [relation, metadata] of Object.entries(
+        repository.entityClass.definition.relations
+    ).filter(([_, metadata]) => metadata.type === RelationType.belongsTo)) {
+        const keyTo = (metadata as any).keyTo;
+        const keyFrom = (metadata as any).keyFrom;
+        const targetRepository = await (repository as any)[relation].getter();
 
-    class HasManyController extends parentClass {
-        @authorize(
-            leafScope.update?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.update?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "update",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 2
-            ),
-            modelsIndex: 0,
-            filterIndex: [-1, 1],
-        })
-        @put(`${generatePath(rootCtor, relations, basePath)}`, {
-            responses: {
-                "204": {
-                    description: `Update multiple hasMany ${leafCtor.name}, by filter`,
-                },
-            },
-        })
-        async [method("updateAll")](
-            @requestBody({
-                content: {
-                    "application/json": {
-                        schema: getModelSchemaRef(leafCtor, {
-                            includeRelations: true,
-                            partial: true,
-                        }),
+        if (data[relation]) {
+            const models = await repository.find({ where: where });
+
+            result += await nestedUpdate(
+                targetRepository,
+                context,
+                {
+                    [keyTo]: {
+                        inq: models.map((model: any) => model[keyFrom]),
                     },
                 },
-            })
-            model: Model,
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
-            })
-            filter: Filter<Model>
-        ): Promise<void> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: (Model)
-             * args[1]: Filter
-             *
-             *
-             * args[2]: id
-             * args[3]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
-
-            await leafScope
-                .repositoryGetter(this as any)
-                .updateAll(model, filter.where, {
-                    filter: filter,
-                });
-        }
-
-        @authorize(
-            leafScope.update?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.update?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "update",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 3
-            ),
-            modelsIndex: 0,
-            filterIndex: [1, 2],
-        })
-        @put(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
-            responses: {
-                "204": {
-                    description: `Update single hasMany ${leafCtor.name}, by id`,
-                },
-            },
-        })
-        async [method("updateOne")](
-            @requestBody({
-                content: {
-                    "application/json": {
-                        schema: getModelSchemaRef(leafCtor, {
-                            includeRelations: true,
-                            partial: true,
-                        }),
-                    },
-                },
-            })
-            model: Model,
-            @param.path.string("id") id: string,
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
-            })
-            filter: Filter<Model>
-        ): Promise<void> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: (Model)
-             * args[1]: id_model
-             * args[2]: Filter
-             *
-             *
-             * args[3]: id
-             * args[4]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
-
-            await leafScope
-                .repositoryGetter(this as any)
-                .updateAll(model, filter.where, {
-                    filter: filter,
-                });
-        }
-    }
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            HasManyController.prototype,
-            method("updateAll"),
-            index + 2
-        );
-    });
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            HasManyController.prototype,
-            method("updateOne"),
-            index + 3
-        );
-    });
-
-    class HasOneController extends parentClass {
-        @authorize(
-            leafScope.update?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.update?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "update",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 2
-            ),
-            modelsIndex: 0,
-            filterIndex: [-1, 1],
-        })
-        @put(`${generatePath(rootCtor, relations, basePath)}`, {
-            responses: {
-                "204": {
-                    description: `Update single hasOne ${leafCtor.name}`,
-                },
-            },
-        })
-        async [method("updateOne")](
-            @requestBody({
-                content: {
-                    "application/json": {
-                        schema: getModelSchemaRef(leafCtor, {
-                            includeRelations: true,
-                            partial: true,
-                        }),
-                    },
-                },
-            })
-            model: Model,
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
-            })
-            filter: Filter<Model>
-        ): Promise<void> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: (Model)
-             * args[1]: Filter
-             *
-             *
-             * args[2]: id
-             * args[3]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
-
-            await leafScope
-                .repositoryGetter(this as any)
-                .updateAll(model, filter.where, {
-                    filter: filter,
-                });
-        }
-    }
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            HasOneController.prototype,
-            method("updateOne"),
-            index + 2
-        );
-    });
-
-    class BelongsToController extends parentClass {
-        @authorize(
-            leafScope.update?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.update?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "update",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 2
-            ),
-            modelsIndex: 0,
-            filterIndex: [-1, 1],
-        })
-        @put(`${generatePath(rootCtor, relations, basePath)}`, {
-            responses: {
-                "204": {
-                    description: `Update single belongsTo ${leafCtor.name}`,
-                },
-            },
-        })
-        async [method("updateOne")](
-            @requestBody({
-                content: {
-                    "application/json": {
-                        schema: getModelSchemaRef(leafCtor, {
-                            includeRelations: true,
-                            partial: true,
-                        }),
-                    },
-                },
-            })
-            model: Model,
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
-            })
-            filter: Filter<Model>
-        ): Promise<void> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: (Model)
-             * args[1]: Filter
-             *
-             *
-             * args[2]: id
-             * args[3]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
-
-            await leafScope
-                .repositoryGetter(this as any)
-                .updateAll(model, filter.where, {
-                    filter: filter,
-                });
-        }
-    }
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            BelongsToController.prototype,
-            method("updateOne"),
-            index + 2
-        );
-    });
-
-    switch (generateRelation(rootCtor, relations).type) {
-        case RelationType.hasMany:
-            return HasManyController as any;
-        case RelationType.hasOne:
-            return HasOneController as any;
-        case RelationType.belongsTo:
-            return BelongsToController as any;
-        default:
-            return parentClass as any;
-    }
-}
-
-export function DeleteControllerMixin<
-    Model extends Entity,
-    ModelID,
-    ModelRelations extends object,
-    Controller extends CRUDController
->(
-    controllerClass: Class<Controller>,
-    rootCtor: Ctor<Model>,
-    rootScope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
-    leafCtor: Ctor<Model>,
-    leafScope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
-    relations: string[],
-    basePath: string
-): Class<Controller> {
-    const parentClass: Class<CRUDController> = controllerClass;
-
-    const method = (name: string) =>
-        relations.reduce(
-            (accumulate, relation) => accumulate.concat(relation),
-            name
-        );
-
-    const ids = generateIds(rootCtor, relations);
-
-    class HasManyController extends parentClass {
-        @authorize(
-            leafScope.delete?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.delete?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "delete",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 1
-            ),
-            filterIndex: [-1, 0],
-        })
-        @del(`${generatePath(rootCtor, relations, basePath)}`, {
-            responses: {
-                "200": {
-                    description: `Delete multiple hasMany ${leafCtor.name}, by filter`,
-                    content: {
-                        "application/json": {
-                            schema: CountSchema,
-                        },
-                    },
-                },
-            },
-        })
-        async [method("deleteAll")](
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
-            })
-            filter: Filter<Model>
-        ): Promise<Count> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: (Filter)
-             *
-             *
-             * args[1]: id
-             * args[2]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
-
-            return await leafScope
-                .repositoryGetter(this as any)
-                .deleteAll(filter.where, {
-                    filter: filter,
-                });
-        }
-
-        @authorize(
-            leafScope.delete?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.delete?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "delete",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 2
-            ),
-            filterIndex: [0, 1],
-        })
-        @del(`${generatePath(rootCtor, relations, basePath)}/{id}`, {
-            responses: {
-                "204": {
-                    description: `Delete single hasMany ${leafCtor.name}, by id`,
-                },
-            },
-        })
-        async [method("deleteOne")](
-            @param.path.string("id") id: string,
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
-            })
-            filter: Filter<Model>
-        ): Promise<void> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: id_model
-             * args[1]: (Filter)
-             *
-             *
-             * args[2]: id
-             * args[3]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
-
-            await leafScope
-                .repositoryGetter(this as any)
-                .deleteAll(filter.where, {
-                    filter: filter,
-                });
-        }
-    }
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            HasManyController.prototype,
-            method("deleteAll"),
-            index + 1
-        );
-    });
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            HasManyController.prototype,
-            method("deleteOne"),
-            index + 2
-        );
-    });
-
-    class HasOneController extends parentClass {
-        @authorize(
-            leafScope.delete?.authorization || {
-                skip: true,
-            }
-        )
-        @authenticate(
-            leafScope.delete?.authentication || {
-                strategy: "crud",
-                skip: true,
-            }
-        )
-        @crud({
-            type: "delete",
-            rootCtor: rootCtor,
-            rootScope: rootScope,
-            leafCtor: leafCtor,
-            leafScope: leafScope,
-            relations: relations,
-            idsIndex: Array.from(
-                { length: ids.length },
-                (_, index) => index + 1
-            ),
-            filterIndex: [-1, 0],
-        })
-        @del(`${generatePath(rootCtor, relations, basePath)}`, {
-            responses: {
-                "204": {
-                    description: `Delete single hasOne ${leafCtor.name}`,
-                },
-            },
-        })
-        async [method("deleteOne")](
-            @param.query.object("filter", getFilterSchemaFor(leafCtor), {
-                description: `Filter ${leafCtor.name}`,
-            })
-            filter: Filter<Model>
-        ): Promise<void> {
-            /**
-             * (): Nested authorize checking
-             *
-             * args[0]: (Filter)
-             *
-             *
-             * args[1]: id
-             * args[2]: id
-             * ...
-             * args[n]: id
-             *
-             *
-             * args[n+1]: Condition
-             */
-
-            await leafScope
-                .repositoryGetter(this as any)
-                .deleteAll(filter.where, {
-                    filter: filter,
-                });
-        }
-    }
-    ids.forEach((id, index) => {
-        param.path.string(id)(
-            HasOneController.prototype,
-            method("deleteOne"),
-            index + 1
-        );
-    });
-
-    class BelongsToController extends parentClass {}
-
-    switch (generateRelation(rootCtor, relations).type) {
-        case RelationType.hasMany:
-            return HasManyController as any;
-        case RelationType.hasOne:
-            return HasOneController as any;
-        case RelationType.belongsTo:
-            return BelongsToController as any;
-        default:
-            return parentClass as any;
-    }
-}
-
-export function ControllerMixin<
-    Model extends Entity,
-    ModelID,
-    ModelRelations extends object,
-    Controller extends CRUDController
->(
-    controllerClass: Class<Controller>,
-    ctors: Ctor<Model>[],
-    scopes: ControllerScope<Model, ModelID, ModelRelations, Controller>[],
-    relations: string[],
-    basePath: string
-): Class<Controller> {
-    const rootCtor = ctors[0];
-    const rootScope = scopes[0];
-    const leafCtor = ctors[ctors.length - 1];
-    const leafScope = scopes[scopes.length - 1];
-
-    if ("create" in leafScope) {
-        controllerClass = CreateControllerMixin<
-            Model,
-            ModelID,
-            ModelRelations,
-            Controller
-        >(
-            controllerClass,
-            rootCtor,
-            rootScope,
-            leafCtor,
-            leafScope,
-            relations,
-            basePath
-        );
-    }
-
-    if ("read" in leafScope) {
-        controllerClass = ReadControllerMixin<
-            Model,
-            ModelID,
-            ModelRelations,
-            Controller
-        >(
-            controllerClass,
-            rootCtor,
-            rootScope,
-            leafCtor,
-            leafScope,
-            relations,
-            basePath
-        );
-    }
-
-    if ("update" in leafScope) {
-        controllerClass = UpdateControllerMixin<
-            Model,
-            ModelID,
-            ModelRelations,
-            Controller
-        >(
-            controllerClass,
-            rootCtor,
-            rootScope,
-            leafCtor,
-            leafScope,
-            relations,
-            basePath
-        );
-    }
-
-    if ("delete" in leafScope) {
-        controllerClass = DeleteControllerMixin<
-            Model,
-            ModelID,
-            ModelRelations,
-            Controller
-        >(
-            controllerClass,
-            rootCtor,
-            rootScope,
-            leafCtor,
-            leafScope,
-            relations,
-            basePath
-        );
-    }
-
-    Object.entries(leafScope.include).forEach(([relation, scope]) => {
-        /** Check model has relation */
-        if (relation in leafCtor.definition.relations) {
-            const modelRelation = leafCtor.definition.relations[relation];
-
-            controllerClass = ControllerMixin<any, any, any, Controller>(
-                controllerClass,
-                [...ctors, modelRelation.target()],
-                [...scopes, scope],
-                [...relations, relation],
-                basePath
+                data[relation]
             );
         }
-    });
+    }
 
-    return controllerClass;
+    const rawData: any = Object.fromEntries(
+        Object.entries(data).filter(([_, value]) => typeof value !== "object")
+    );
+    result += (
+        await repository.updateAll(rawData, where, {
+            context: context,
+        })
+    ).count;
+
+    for (const [relation, metadata] of Object.entries(
+        repository.entityClass.definition.relations
+    ).filter(([_, metadata]) => metadata.type === RelationType.hasOne)) {
+        const keyTo = (metadata as any).keyTo;
+        const keyFrom = (metadata as any).keyFrom;
+        const targetRepository = await (repository as any)[relation].getter();
+
+        if (data[relation]) {
+            const models = await repository.find({ where: where });
+
+            result += await nestedUpdate(
+                targetRepository,
+                context,
+                {
+                    [keyTo]: {
+                        inq: models.map((model: any) => model[keyFrom]),
+                    },
+                },
+                data[relation]
+            );
+        }
+    }
+
+    return result;
+};
+
+/**
+ * Create controller mixin, add Create rest operations
+ */
+export function CreateControllerMixin<T extends Entity, ID>(
+    config: CRUDApiConfig,
+    authentication?: AuthenticationMetadata,
+    authorization?: AuthorizationMetadata
+) {
+    return function <R extends MixinTarget<CRUDController<T, ID>>>(
+        superClass: R
+    ) {
+        @api({ basePath: config.basePath })
+        class MixedController extends superClass {
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
+            @post("/", {
+                responses: {
+                    "200": {
+                        description: `Array of ${config.model.name} model instances`,
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "array",
+                                    items: getModelSchemaRef(config.model, {
+                                        includeRelations: true,
+                                    }),
+                                },
+                            },
+                        },
+                    },
+                },
+            })
+            async createAll(
+                @requestBody({
+                    content: {
+                        "application/json": {
+                            schema: {
+                                type: "array",
+                                items: getModelSchemaRef(config.model, {
+                                    includeRelations: true,
+                                    title: `New${config.model.name}`,
+                                    exclude: [
+                                        ...config.model.definition.idProperties(),
+                                        ...(config.model.definition.settings
+                                            .excludeProperties || []),
+                                    ],
+                                }),
+                            },
+                        },
+                    },
+                })
+                models: T[]
+            ): Promise<T[]> {
+                return await nestedCreate(this.repository, this, models);
+            }
+
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
+            @post("/one", {
+                responses: {
+                    "200": {
+                        description: `${config.model.name} model instance`,
+                        content: {
+                            "application/json": {
+                                schema: getModelSchemaRef(config.model, {
+                                    includeRelations: true,
+                                }),
+                            },
+                        },
+                    },
+                },
+            })
+            async createOne(
+                @requestBody({
+                    content: {
+                        "application/json": {
+                            schema: getModelSchemaRef(config.model, {
+                                includeRelations: true,
+                                title: `New${config.model.name}`,
+                                exclude: [
+                                    ...config.model.definition.idProperties(),
+                                    ...(config.model.definition.settings
+                                        .excludeProperties || []),
+                                ],
+                            }),
+                        },
+                    },
+                })
+                model: T
+            ): Promise<T> {
+                const result = await nestedCreate(this.repository, this, [
+                    model,
+                ]);
+
+                return result[0];
+            }
+        }
+
+        return MixedController;
+    };
 }
 
-export function CRUDControllerMixin<
-    Model extends Entity,
-    ModelID,
-    ModelRelations extends object,
-    Controller extends CRUDController
->(
-    ctor: Ctor<Model>,
-    controllerClass: Class<Controller>,
-    scope: ControllerScope<Model, ModelID, ModelRelations, Controller>,
-    basePath: string
-): Class<Controller> {
-    return ControllerMixin<Model, ModelID, ModelRelations, Controller>(
-        controllerClass,
-        [ctor],
-        [scope],
-        [],
-        basePath
-    );
+/**
+ * Read controller mixin, add Read rest operations
+ */
+export function ReadControllerMixin<T extends Entity, ID>(
+    config: CRUDApiConfig,
+    authentication?: AuthenticationMetadata,
+    authorization?: AuthorizationMetadata
+) {
+    return function <R extends MixinTarget<CRUDController<T, ID>>>(
+        superClass: R
+    ) {
+        @api({ basePath: config.basePath })
+        class MixedController extends superClass {
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
+            @get("/", {
+                responses: {
+                    "200": {
+                        description: `Array of ${config.model.name} model instances`,
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "array",
+                                    items: getModelSchemaRef(config.model, {
+                                        includeRelations: true,
+                                    }),
+                                },
+                            },
+                        },
+                    },
+                },
+            })
+            async readAll(
+                @param.filter(config.model) filter?: Filter<T>
+            ): Promise<T[]> {
+                if (this.request.headers["x-total"] === "true") {
+                    const count = await this.repository.count(filter?.where, {
+                        context: this,
+                    });
+
+                    this.response.setHeader("X-Total-Count", count.count);
+                }
+
+                return await this.repository.find(filter, {
+                    context: this,
+                });
+            }
+
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
+            @get("/{id}", {
+                responses: {
+                    "200": {
+                        description: `${config.model.name} model instance`,
+                        content: {
+                            "application/json": {
+                                schema: getModelSchemaRef(config.model, {
+                                    includeRelations: true,
+                                }),
+                            },
+                        },
+                    },
+                },
+            })
+            async readOne(
+                @param.path.string("id") id: ID,
+                @param.filter(config.model) filter?: Filter<T>
+            ): Promise<T> {
+                if (this.request.headers["x-total"] === "true") {
+                    const count = await this.repository.count(filter?.where, {
+                        context: this,
+                    });
+
+                    this.response.setHeader("X-Total-Count", count.count);
+
+                    return (await this.repository.find(filter, {
+                        context: this,
+                        all: true,
+                    })) as any;
+                } else {
+                    return await this.repository.findById(id, filter, {
+                        context: this,
+                    });
+                }
+            }
+        }
+
+        return MixedController;
+    };
+}
+
+/**
+ * Update controller mixin, add Update rest operations
+ */
+export function UpdateControllerMixin<T extends Entity, ID>(
+    config: CRUDApiConfig,
+    authentication?: AuthenticationMetadata,
+    authorization?: AuthorizationMetadata
+) {
+    return function <R extends MixinTarget<CRUDController<T, ID>>>(
+        superClass: R
+    ) {
+        @api({ basePath: config.basePath })
+        class MixedController extends superClass {
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
+            @put("/", {
+                responses: {
+                    "200": {
+                        description: `${config.model.name} PUT success count`,
+                        content: {
+                            "application/json": { schema: CountSchema },
+                        },
+                    },
+                },
+            })
+            async updateAll(
+                @requestBody({
+                    content: {
+                        "application/json": {
+                            schema: getModelSchemaRef(config.model, {
+                                partial: true,
+                            }),
+                        },
+                    },
+                })
+                data: T,
+                @param.where(config.model) where?: Where<T>
+            ): Promise<Count> {
+                const result = await nestedUpdate(
+                    this.repository,
+                    this,
+                    where || {},
+                    data
+                );
+
+                return {
+                    count: result,
+                };
+            }
+
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
+            @put("/{id}", {
+                responses: {
+                    "204": {
+                        description: `${config.model.name} PUT success`,
+                    },
+                },
+            })
+            async updateOne(
+                @param.path.string("id") id: ID,
+                @requestBody({
+                    content: {
+                        "application/json": {
+                            schema: getModelSchemaRef(config.model, {
+                                partial: true,
+                            }),
+                        },
+                    },
+                })
+                data: T
+            ): Promise<void> {
+                await nestedUpdate(
+                    this.repository,
+                    this,
+                    this.repository.entityClass.buildWhereForId(id),
+                    data
+                );
+            }
+        }
+
+        return MixedController;
+    };
+}
+
+/**
+ * Delete controller mixin, add Delete rest operations
+ */
+export function DeleteControllerMixin<T extends Entity, ID>(
+    config: CRUDApiConfig,
+    authentication?: AuthenticationMetadata,
+    authorization?: AuthorizationMetadata
+) {
+    return function <R extends MixinTarget<CRUDController<T, ID>>>(
+        superClass: R
+    ) {
+        @api({ basePath: config.basePath })
+        class MixedController extends superClass {
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
+            @del("/", {
+                responses: {
+                    "200": {
+                        description: `${config.model.name} DELETE success count`,
+                        content: {
+                            "application/json": { schema: CountSchema },
+                        },
+                    },
+                },
+            })
+            async deleteAll(
+                @param.where(config.model) where?: Where<T>
+            ): Promise<Count> {
+                return await this.repository.deleteAll(where, {
+                    context: this,
+                });
+            }
+
+            @authorize(
+                authorization || {
+                    skip: true,
+                }
+            )
+            @authenticate(
+                authentication || {
+                    strategy: "crud",
+                    skip: true,
+                }
+            )
+            @del("/{id}", {
+                responses: {
+                    "204": {
+                        description: `${config.model.name} DELETE success`,
+                    },
+                },
+            })
+            async deleteOne(@param.path.string("id") id: ID): Promise<void> {
+                return await this.repository.deleteById(id, {
+                    context: this,
+                });
+            }
+        }
+
+        return MixedController;
+    };
+}
+
+/**
+ * CRUD controller mixin, add CRUD rest operations
+ */
+export function CRUDControllerMixin<T extends Entity, ID>(
+    config: CRUDApiConfig
+) {
+    return function <R extends MixinTarget<CRUDController<T, ID>>>(
+        superClass: R
+    ) {
+        if (config.create) {
+            superClass = CreateControllerMixin<T, ID>(
+                config,
+                config.create.authentication,
+                config.create.authorization
+            )(superClass);
+        }
+
+        if (config.read) {
+            superClass = ReadControllerMixin<T, ID>(
+                config,
+                config.read.authentication,
+                config.read.authorization
+            )(superClass);
+        }
+
+        if (config.update) {
+            superClass = UpdateControllerMixin<T, ID>(
+                config,
+                config.update.authentication,
+                config.update.authorization
+            )(superClass);
+        }
+
+        if (config.delete) {
+            superClass = DeleteControllerMixin<T, ID>(
+                config,
+                config.delete.authentication,
+                config.delete.authorization
+            )(superClass);
+        }
+
+        const defineNamedController = new Function(
+            "superClass",
+            `return class ${config.model.name}Controller extends superClass {}`
+        );
+        return defineNamedController(superClass) as R;
+    };
 }
