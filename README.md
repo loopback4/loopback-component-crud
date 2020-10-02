@@ -5,15 +5,13 @@
 ![npm bundle size](https://img.shields.io/bundlephobia/min/loopback-component-crud)
 ![GitHub](https://img.shields.io/github/license/loopback4/loopback-component-crud)
 
-Creating `CRUD` controllers in any application is a repetitive and futile task.
+Creating `CRUD` endpoints in any application is a repetitive and futile task.
 
-Using this extension you can generate a configurable `CRUD` controller with these features:
+Using this extension you can generate a configurable `CRUD` endpoints with these features:
 
 1. **Authentication**
 2. **Authorization**
 3. **Validation**
-4. **Limit**
-5. etc
 
 ## Installation
 
@@ -25,8 +23,8 @@ npm i --save loopback-component-crud
 
 Follow these steps to add `CRUD` extension to your loopback4 application
 
-1. Add `CRUDComponent` to your application (binding global interceptors)
-2. Extends your controller from `CRUDControllerMixin`
+1. Add `CRUDComponent` to your application (bind `model-api-builder`)
+2. Add CRUD config files to `src/model-endpoints`
 
 Now, let's try:
 
@@ -53,40 +51,24 @@ export class TestApplication extends BootMixin(
 
 ---
 
-### Step 2 (Controller Mixin)
+### Step 2 (Model Endpoint)
 
-Now, you can generate your `CRUD` controller using `CRUDControllerMixin`:
+Now, you can generate your `CRUD` endpoints by creating `src/model-endpoints/mymodel.rest-config.ts`:
 
 ```ts
-import { CRUDControllerMixin, CRUDController } from "loopback-component-crud";
+import { CRUDApiConfig } from "loopback-component-crud";
+import { MyModel } from "../models";
 
-export class UserController extends CRUDControllerMixin(
-    User,
-    CRUDController,
-    {
-        repositoryGetter: (controller) => controller.usersController,
-
-        create: {
-            authentication: { strategy: "jwt" },
-            authorization: {},
-        },
-        read: {
-            authentication: { strategy: "jwt" },
-            authorization: {},
-        },
-        update: {
-            authentication: { strategy: "jwt" },
-            authorization: {},
-        },
-        delete: {
-            authentication: { strategy: "jwt" },
-            authorization: {},
-        },
-
-        include: {},
-    },
-    ""
-) {}
+module.exports = {
+    model: MyModel,
+    pattern: "CRUD",
+    dataSource: "MyDataSource",
+    basePath: "/mymodel",
+    create: {},
+    read: {},
+    update: {},
+    delete: {},
+} as CRUDApiConfig;
 ```
 
 ---
