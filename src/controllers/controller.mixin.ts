@@ -156,7 +156,10 @@ const nestedUpdate = async <T extends Entity, ID>(
         const targetRepository = await (repository as any)[relation].getter();
 
         if (data[relation]) {
-            const models = await repository.find({ where: where });
+            const models = await repository.find(
+                { where: where },
+                { context: context }
+            );
 
             result += await nestedUpdate(
                 targetRepository,
@@ -188,7 +191,10 @@ const nestedUpdate = async <T extends Entity, ID>(
         const targetRepository = await (repository as any)[relation].getter();
 
         if (data[relation]) {
-            const models = await repository.find({ where: where });
+            const models = await repository.find(
+                { where: where },
+                { context: context }
+            );
 
             result += await nestedUpdate(
                 targetRepository,
