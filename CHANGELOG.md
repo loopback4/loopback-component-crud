@@ -3,9 +3,10 @@
 ## v1.1.0
 
 -   **Feat**: add CRUD `model-api-builder`
--   **Clean**: remove `relations` in controllers
 -   **Feat**: add `create nested`
 -   **Feat**: add `update nested`
+-   **Clean**: remove `relations` in controllers
+-   **Deps**: update packages
 
 ## v1.0.1
 
