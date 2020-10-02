@@ -25,21 +25,11 @@ describe("Update Model", () => {
         await userController.deleteAll();
         await userController.createAll([
             {
-                id: "user4",
-                username: "user4",
+                id: "user1",
+                username: "user1",
                 parent: {
-                    username: "parentUser4-1",
+                    username: "parentUser1-1",
                 },
-                children: [
-                    {
-                        id: "childUser4-1",
-                        username: "childUser4-1",
-                    },
-                    {
-                        id: "childUser4-2",
-                        username: "childUser4-2",
-                    },
-                ],
             },
         ]);
         await userController.updateAll(
@@ -48,97 +38,61 @@ describe("Update Model", () => {
                 parent: {
                     password: "123",
                 },
-                children: [
-                    { id: "childUser4-1" },
-                    { id: "childUser4-2", password: "123" },
-                    { username: "childUser4-3" },
-                ],
             },
             {
-                id: "user4",
+                id: "user1",
             }
         );
 
         /**
          * Test updateAll
          */
-        expect(await userController.readAll()).containDeep([
-            {
-                id: "user4",
-                username: "user4",
-                parent: {
-                    username: "parentUser4-1",
-                    password: "123",
-                },
-                children: [
-                    {
-                        id: "childUser4-2",
-                        username: "childUser4-2",
-                        password: "123",
-                    },
-                    {
-                        username: "childUser4-3",
-                    },
-                ],
+        expect(
+            await userController.readOne("user1", {
+                include: [{ relation: "parent" }],
+            })
+        ).containDeep({
+            id: "user1",
+            username: "user1",
+            parent: {
+                username: "parentUser1-1",
+                password: "123",
             },
-        ]);
+        });
     });
 
     it("updateOne() Test", async () => {
         await userController.deleteAll();
         await userController.createAll([
             {
-                id: "user4",
-                username: "user4",
+                id: "user1",
+                username: "user1",
                 parent: {
-                    username: "parentUser4-1",
+                    username: "parentUser1-1",
                 },
-                children: [
-                    {
-                        id: "childUser4-1",
-                        username: "childUser4-1",
-                    },
-                    {
-                        id: "childUser4-2",
-                        username: "childUser4-2",
-                    },
-                ],
             },
         ]);
-        await userController.updateOne("user4", {
+        await userController.updateOne("user1", {
             password: "123",
             parent: {
                 password: "123",
             },
-            children: [
-                { id: "childUser4-1" },
-                { id: "childUser4-2", password: "123" },
-                { username: "childUser4-3" },
-            ],
         });
 
         /**
          * Test updateOne
          */
-        expect(await userController.readAll()).containDeep([
-            {
-                id: "user4",
-                username: "user4",
-                parent: {
-                    username: "parentUser4-1",
-                    password: "123",
-                },
-                children: [
-                    {
-                        id: "childUser4-2",
-                        username: "childUser4-2",
-                        password: "123",
-                    },
-                    {
-                        username: "childUser4-3",
-                    },
-                ],
+        expect(
+            await userController.readOne("user1", {
+                include: [{ relation: "parent" }],
+            })
+        ).containDeep({
+            id: "user1",
+            username: "user1",
+            parent: {
+                username: "parentUser1-1",
+                password: "123",
             },
-        ]);
+        });
     });
 });
