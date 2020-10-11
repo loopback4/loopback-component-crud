@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.2.0
+
+-   **Fix**: add `context` to nestedUpdate method
+-   **Fix**: check `target` repository is not undefined
+-   **Fix**: add `includeRelations` to update apis
+-   **Deps**: update `packages`
+
 ## v1.1.0
 
 -   **Feat**: add CRUD `model-api-builder`

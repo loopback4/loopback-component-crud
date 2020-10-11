@@ -40,7 +40,7 @@ const nestedCreate = async <T extends Entity, ID>(
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
         const targetGetter = (repository as any)[relation].getter;
-        if (targetGetter) {
+        if (!targetGetter) {
             continue;
         }
         const targetRepository = await targetGetter();
@@ -87,11 +87,11 @@ const nestedCreate = async <T extends Entity, ID>(
     ).filter(([_, metadata]) => metadata.type === RelationType.hasOne)) {
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
-        const targetGetter = (repository as any)[relation].getter;
-        if (targetGetter) {
+        const targetGetter = (repository as any)[relation];
+        if (!targetGetter) {
             continue;
         }
-        const targetRepository = await targetGetter();
+        const targetRepository = await targetGetter().getTargetRepository();
 
         models = await Promise.all(
             models.map(async (model: any) => {
@@ -116,11 +116,11 @@ const nestedCreate = async <T extends Entity, ID>(
     ).filter(([_, metadata]) => metadata.type === RelationType.hasMany)) {
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
-        const targetGetter = (repository as any)[relation].getter;
-        if (targetGetter) {
+        const targetGetter = (repository as any)[relation];
+        if (!targetGetter) {
             continue;
         }
-        const targetRepository = await targetGetter();
+        const targetRepository = await targetGetter().getTargetRepository();
 
         models = await Promise.all(
             models.map(async (model: any) => {
@@ -165,7 +165,11 @@ const nestedUpdate = async <T extends Entity, ID>(
     ).filter(([_, metadata]) => metadata.type === RelationType.belongsTo)) {
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
-        const targetRepository = await (repository as any)[relation].getter();
+        const targetGetter = (repository as any)[relation].getter;
+        if (!targetGetter) {
+            continue;
+        }
+        const targetRepository = await targetGetter();
 
         if (data[relation]) {
             const models = await repository.find(
@@ -200,7 +204,11 @@ const nestedUpdate = async <T extends Entity, ID>(
     ).filter(([_, metadata]) => metadata.type === RelationType.hasOne)) {
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
-        const targetRepository = await (repository as any)[relation].getter();
+        const targetGetter = (repository as any)[relation];
+        if (!targetGetter) {
+            continue;
+        }
+        const targetRepository = await targetGetter().getTargetRepository();
 
         if (data[relation]) {
             const models = await repository.find(
