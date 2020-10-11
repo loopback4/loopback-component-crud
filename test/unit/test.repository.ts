@@ -35,7 +35,6 @@ export class UserRepository extends DefaultCrudRepository<User, string, {}> {
             "children",
             Getter.fromValue(this)
         );
-        (this.children as any).getter = Getter.fromValue(this);
         this.registerInclusionResolver(
             "children",
             this.children.inclusionResolver

@@ -39,7 +39,11 @@ const nestedCreate = async <T extends Entity, ID>(
     ).filter(([_, metadata]) => metadata.type === RelationType.belongsTo)) {
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
-        const targetRepository = await (repository as any)[relation].getter();
+        const targetGetter = (repository as any)[relation].getter;
+        if (!targetGetter) {
+            continue;
+        }
+        const targetRepository = await targetGetter();
 
         models = await Promise.all(
             models.map(async (model: any) => {
@@ -83,7 +87,11 @@ const nestedCreate = async <T extends Entity, ID>(
     ).filter(([_, metadata]) => metadata.type === RelationType.hasOne)) {
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
-        const targetRepository = await (repository as any)[relation].getter();
+        const targetGetter = (repository as any)[relation];
+        if (!targetGetter) {
+            continue;
+        }
+        const targetRepository = await targetGetter().getTargetRepository();
 
         models = await Promise.all(
             models.map(async (model: any) => {
@@ -108,7 +116,11 @@ const nestedCreate = async <T extends Entity, ID>(
     ).filter(([_, metadata]) => metadata.type === RelationType.hasMany)) {
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
-        const targetRepository = await (repository as any)[relation].getter();
+        const targetGetter = (repository as any)[relation];
+        if (!targetGetter) {
+            continue;
+        }
+        const targetRepository = await targetGetter().getTargetRepository();
 
         models = await Promise.all(
             models.map(async (model: any) => {
@@ -153,10 +165,17 @@ const nestedUpdate = async <T extends Entity, ID>(
     ).filter(([_, metadata]) => metadata.type === RelationType.belongsTo)) {
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
-        const targetRepository = await (repository as any)[relation].getter();
+        const targetGetter = (repository as any)[relation].getter;
+        if (!targetGetter) {
+            continue;
+        }
+        const targetRepository = await targetGetter();
 
         if (data[relation]) {
-            const models = await repository.find({ where: where });
+            const models = await repository.find(
+                { where: where },
+                { context: context }
+            );
 
             result += await nestedUpdate(
                 targetRepository,
@@ -185,10 +204,17 @@ const nestedUpdate = async <T extends Entity, ID>(
     ).filter(([_, metadata]) => metadata.type === RelationType.hasOne)) {
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
-        const targetRepository = await (repository as any)[relation].getter();
+        const targetGetter = (repository as any)[relation];
+        if (!targetGetter) {
+            continue;
+        }
+        const targetRepository = await targetGetter().getTargetRepository();
 
         if (data[relation]) {
-            const models = await repository.find({ where: where });
+            const models = await repository.find(
+                { where: where },
+                { context: context }
+            );
 
             result += await nestedUpdate(
                 targetRepository,
@@ -474,6 +500,7 @@ export function UpdateControllerMixin<T extends Entity, ID>(
                     content: {
                         "application/json": {
                             schema: getModelSchemaRef(config.model, {
+                                includeRelations: true,
                                 partial: true,
                             }),
                         },
@@ -518,6 +545,7 @@ export function UpdateControllerMixin<T extends Entity, ID>(
                     content: {
                         "application/json": {
                             schema: getModelSchemaRef(config.model, {
+                                includeRelations: true,
                                 partial: true,
                             }),
                         },
