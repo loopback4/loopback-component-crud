@@ -492,6 +492,7 @@ export function UpdateControllerMixin<T extends Entity, ID>(
                     content: {
                         "application/json": {
                             schema: getModelSchemaRef(config.model, {
+                                includeRelations: true,
                                 partial: true,
                             }),
                         },
@@ -536,6 +537,7 @@ export function UpdateControllerMixin<T extends Entity, ID>(
                     content: {
                         "application/json": {
                             schema: getModelSchemaRef(config.model, {
+                                includeRelations: true,
                                 partial: true,
                             }),
                         },
