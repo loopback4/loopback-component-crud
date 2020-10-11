@@ -2,6 +2,7 @@
 
 ## v1.2.0
 
+-   **Feat**: get hasOne, hasMany `TargetRepository` from relation
 -   **Fix**: add `context` to nestedUpdate method
 -   **Fix**: check `target` repository is not undefined
 -   **Fix**: add `includeRelations` to update apis
