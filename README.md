@@ -12,6 +12,8 @@ Using this extension you can generate a configurable `CRUD` endpoints with these
 1. **Authentication**
 2. **Authorization**
 3. **Validation**
+4. **Nested Create**
+5. **Nested Update**
 
 ## Installation
 
