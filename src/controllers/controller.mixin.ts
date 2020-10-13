@@ -229,6 +229,37 @@ const nestedUpdate = async <T extends Entity, ID>(
         }
     }
 
+    for (const [relation, metadata] of Object.entries(
+        repository.entityClass.definition.relations
+    ).filter(([_, metadata]) => metadata.type === RelationType.hasMany)) {
+        const targetGetter = (repository as any)[relation];
+        if (!targetGetter) {
+            continue;
+        }
+        const targetRepository = await targetGetter().getTargetRepository();
+
+        if (data[relation]) {
+            const items = await Promise.all(
+                (data[relation] as any[]).map((relatedModel: any) =>
+                    nestedUpdate(
+                        targetRepository,
+                        context,
+                        Object.fromEntries(
+                            targetRepository.entityClass
+                                .getIdProperties()
+                                .map((idProperty: string) => ({
+                                    [idProperty]: relatedModel[idProperty],
+                                }))
+                        ) as any,
+                        relatedModel
+                    )
+                )
+            );
+
+            result += items.reduce((acc, item) => acc + item, 0);
+        }
+    }
+
     return result;
 };
 

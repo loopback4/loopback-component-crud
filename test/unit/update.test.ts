@@ -28,8 +28,18 @@ describe("Update Model", () => {
                 id: "user1",
                 username: "user1",
                 parent: {
-                    username: "parentUser1-1",
+                    username: "user1",
                 },
+                children: [
+                    {
+                        id: "child1",
+                        username: "child1",
+                    },
+                    {
+                        id: "child2",
+                        username: "child2",
+                    },
+                ],
             },
         ]);
         await userController.updateAll(
@@ -38,6 +48,16 @@ describe("Update Model", () => {
                 parent: {
                     password: "123",
                 },
+                children: [
+                    {
+                        id: "child1",
+                        password: "123",
+                    },
+                    {
+                        id: "child2",
+                        password: "123",
+                    },
+                ],
             },
             {
                 id: "user1",
@@ -49,15 +69,25 @@ describe("Update Model", () => {
          */
         expect(
             await userController.readOne("user1", {
-                include: [{ relation: "parent" }],
+                include: [{ relation: "parent" }, { relation: "children" }],
             })
         ).containDeep({
             id: "user1",
             username: "user1",
             parent: {
-                username: "parentUser1-1",
+                username: "user1",
                 password: "123",
             },
+            children: [
+                {
+                    username: "child1",
+                    password: "123",
+                },
+                {
+                    username: "child2",
+                    password: "123",
+                },
+            ],
         });
     });
 

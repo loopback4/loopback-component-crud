@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.3.0
+
+-   **Feat**: add `hasMany` update nested
+
 ## v1.2.0
 
 -   **Feat**: get hasOne, hasMany `TargetRepository` from relation
