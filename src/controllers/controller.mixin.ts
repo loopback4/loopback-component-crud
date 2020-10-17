@@ -232,6 +232,8 @@ const nestedUpdate = async <T extends Entity, ID>(
     for (const [relation, metadata] of Object.entries(
         repository.entityClass.definition.relations
     ).filter(([_, metadata]) => metadata.type === RelationType.hasMany)) {
+        const keyTo = (metadata as any).keyTo;
+        const keyFrom = (metadata as any).keyFrom;
         const targetGetter = (repository as any)[relation];
         if (!targetGetter) {
             continue;
@@ -239,24 +241,28 @@ const nestedUpdate = async <T extends Entity, ID>(
         const targetRepository = await targetGetter().getTargetRepository();
 
         if (data[relation]) {
-            const items = await Promise.all(
-                (data[relation] as any[]).map((relatedModel: any) =>
-                    nestedUpdate(
-                        targetRepository,
-                        context,
-                        Object.fromEntries(
-                            targetRepository.entityClass
-                                .getIdProperties()
-                                .map((idProperty: string) => ({
-                                    [idProperty]: relatedModel[idProperty],
-                                }))
-                        ) as any,
-                        relatedModel
-                    )
-                )
+            const models = await repository.find(
+                { where: where },
+                { context: context }
             );
 
-            result += items.reduce((acc, item) => acc + item, 0);
+            for (const item of data[relation]) {
+                result += await nestedUpdate(
+                    targetRepository,
+                    context,
+                    {
+                        ...targetRepository.entityClass.buildWhereForId(
+                            item[
+                                targetRepository.entityClass.getIdProperties()[0]
+                            ]
+                        ),
+                        [keyTo]: {
+                            inq: models.map((model: any) => model[keyFrom]),
+                        },
+                    },
+                    item
+                );
+            }
         }
     }
 
