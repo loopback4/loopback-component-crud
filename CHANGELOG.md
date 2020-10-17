@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.0
+
+-   **Fix**: update nested hasMany relation fix `null id update all` bug
+
 ## v1.3.0
 
 -   **Feat**: add `hasMany` update nested
