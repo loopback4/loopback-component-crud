@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.5.0
+
+-   **feat**: support `multiple` authentication `strategy`
+-   **deps**: `update` packages
+
 ## v1.4.0
 
 -   **Fix**: update nested hasMany relation fix `null id update all` bug
