@@ -274,25 +274,16 @@ const nestedUpdate = async <T extends Entity, ID>(
  */
 export function CreateControllerMixin<T extends Entity, ID>(
     config: CRUDApiConfig,
-    authentication?: AuthenticationMetadata,
-    authorization?: AuthorizationMetadata
+    authentication: (string|AuthenticationMetadata)[],
+    authorization: AuthorizationMetadata
 ) {
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
         superClass: R
     ) {
         @api({ basePath: config.basePath })
         class MixedController extends superClass {
-            @authorize(
-                authorization || {
-                    skip: true,
-                }
-            )
-            @authenticate(
-                authentication || {
-                    strategy: "crud",
-                    skip: true,
-                }
-            )
+            @authorize(authorization)
+            @authenticate(...authentication)
             @post("/", {
                 responses: {
                     "200": {
@@ -334,17 +325,8 @@ export function CreateControllerMixin<T extends Entity, ID>(
                 return await nestedCreate(this.repository, this, models);
             }
 
-            @authorize(
-                authorization || {
-                    skip: true,
-                }
-            )
-            @authenticate(
-                authentication || {
-                    strategy: "crud",
-                    skip: true,
-                }
-            )
+            @authorize(authorization)
+            @authenticate(...authentication)
             @post("/one", {
                 responses: {
                     "200": {
@@ -389,30 +371,27 @@ export function CreateControllerMixin<T extends Entity, ID>(
     };
 }
 
+const normalizeAuthenticationConfigs = (configs: (string | AuthenticationMetadata)[] | string | AuthenticationMetadata | undefined, defaultConfig: AuthenticationMetadata) => {
+    if (configs === undefined) return [defaultConfig];
+    if (Array.isArray(configs)) return configs;
+    return [configs];
+}
+
 /**
  * Read controller mixin, add Read rest operations
  */
 export function ReadControllerMixin<T extends Entity, ID>(
     config: CRUDApiConfig,
-    authentication?: AuthenticationMetadata,
-    authorization?: AuthorizationMetadata
+    authentication: (string | AuthenticationMetadata)[],
+    authorization: AuthorizationMetadata,
 ) {
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
         superClass: R
     ) {
         @api({ basePath: config.basePath })
         class MixedController extends superClass {
-            @authorize(
-                authorization || {
-                    skip: true,
-                }
-            )
-            @authenticate(
-                authentication || {
-                    strategy: "crud",
-                    skip: true,
-                }
-            )
+            @authorize(authorization)
+            @authenticate(...authentication)
             @get("/", {
                 responses: {
                     "200": {
@@ -446,17 +425,8 @@ export function ReadControllerMixin<T extends Entity, ID>(
                 });
             }
 
-            @authorize(
-                authorization || {
-                    skip: true,
-                }
-            )
-            @authenticate(
-                authentication || {
-                    strategy: "crud",
-                    skip: true,
-                }
-            )
+            @authorize(authorization)
+            @authenticate(...authentication)
             @get("/{id}", {
                 responses: {
                     "200": {
@@ -503,25 +473,16 @@ export function ReadControllerMixin<T extends Entity, ID>(
  */
 export function UpdateControllerMixin<T extends Entity, ID>(
     config: CRUDApiConfig,
-    authentication?: AuthenticationMetadata,
-    authorization?: AuthorizationMetadata
+    authentication: (string|AuthenticationMetadata)[],
+    authorization: AuthorizationMetadata
 ) {
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
         superClass: R
     ) {
         @api({ basePath: config.basePath })
         class MixedController extends superClass {
-            @authorize(
-                authorization || {
-                    skip: true,
-                }
-            )
-            @authenticate(
-                authentication || {
-                    strategy: "crud",
-                    skip: true,
-                }
-            )
+            @authorize(authorization)
+            @authenticate(...authentication)
             @put("/", {
                 responses: {
                     "200": {
@@ -558,17 +519,8 @@ export function UpdateControllerMixin<T extends Entity, ID>(
                 };
             }
 
-            @authorize(
-                authorization || {
-                    skip: true,
-                }
-            )
-            @authenticate(
-                authentication || {
-                    strategy: "crud",
-                    skip: true,
-                }
-            )
+            @authorize(authorization)
+            @authenticate(...authentication)
             @put("/{id}", {
                 responses: {
                     "204": {
@@ -608,25 +560,16 @@ export function UpdateControllerMixin<T extends Entity, ID>(
  */
 export function DeleteControllerMixin<T extends Entity, ID>(
     config: CRUDApiConfig,
-    authentication?: AuthenticationMetadata,
-    authorization?: AuthorizationMetadata
+    authentication: (string|AuthenticationMetadata)[],
+    authorization: AuthorizationMetadata
 ) {
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
         superClass: R
     ) {
         @api({ basePath: config.basePath })
         class MixedController extends superClass {
-            @authorize(
-                authorization || {
-                    skip: true,
-                }
-            )
-            @authenticate(
-                authentication || {
-                    strategy: "crud",
-                    skip: true,
-                }
-            )
+            @authorize(authorization)
+            @authenticate(...authentication)
             @del("/", {
                 responses: {
                     "200": {
@@ -645,17 +588,8 @@ export function DeleteControllerMixin<T extends Entity, ID>(
                 });
             }
 
-            @authorize(
-                authorization || {
-                    skip: true,
-                }
-            )
-            @authenticate(
-                authentication || {
-                    strategy: "crud",
-                    skip: true,
-                }
-            )
+            @authorize(authorization)
+            @authenticate(...authentication)
             @del("/{id}", {
                 responses: {
                     "204": {
@@ -674,6 +608,15 @@ export function DeleteControllerMixin<T extends Entity, ID>(
     };
 }
 
+export const defaultAuthorizationConfig = {
+    skip: true
+}
+
+export const defaultAuthenticationConfig = {
+    strategy: "crud",
+    skip: true,
+}
+
 /**
  * CRUD controller mixin, add CRUD rest operations
  */
@@ -686,32 +629,32 @@ export function CRUDControllerMixin<T extends Entity, ID>(
         if (config.create) {
             superClass = CreateControllerMixin<T, ID>(
                 config,
-                config.create.authentication,
-                config.create.authorization
+                normalizeAuthenticationConfigs(config.create.authentication, defaultAuthenticationConfig),
+                config.create.authorization ?? defaultAuthorizationConfig
             )(superClass);
         }
 
         if (config.read) {
             superClass = ReadControllerMixin<T, ID>(
                 config,
-                config.read.authentication,
-                config.read.authorization
+                normalizeAuthenticationConfigs(config.read.authentication, defaultAuthenticationConfig),
+                config.read.authorization ?? defaultAuthorizationConfig
             )(superClass);
         }
 
         if (config.update) {
             superClass = UpdateControllerMixin<T, ID>(
                 config,
-                config.update.authentication,
-                config.update.authorization
+                normalizeAuthenticationConfigs(config.update.authentication, defaultAuthenticationConfig),
+                config.update.authorization ?? defaultAuthorizationConfig
             )(superClass);
         }
 
         if (config.delete) {
             superClass = DeleteControllerMixin<T, ID>(
                 config,
-                config.delete.authentication,
-                config.delete.authorization
+                normalizeAuthenticationConfigs(config.delete.authentication, defaultAuthenticationConfig),
+                config.delete.authorization ?? defaultAuthorizationConfig
             )(superClass);
         }
 

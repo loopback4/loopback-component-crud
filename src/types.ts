@@ -1,6 +1,6 @@
 import { MixinTarget } from "@loopback/core";
 import { ModelApiConfig } from "@loopback/model-api-builder";
-import { Entity, EntityCrudRepository } from "@loopback/repository";
+import { Class, Entity, EntityCrudRepository, Model, Repository } from "@loopback/repository";
 import { AuthenticationMetadata } from "@loopback/authentication";
 import { AuthorizationMetadata } from "@loopback/authorization";
 import { Request, Response } from "@loopback/rest";
@@ -16,29 +16,24 @@ export interface CRUDComponentOptions {}
  */
 export const DEFAULT_CRUD_OPTIONS: CRUDComponentOptions = {};
 
+export interface IAuthConfig {
+    /** Configuration passed to @authenticate decorator, default to { strategy: "crud", skip: true } */
+    authentication?: (string | AuthenticationMetadata)[] | string | AuthenticationMetadata;
+    /** Configuration passed to @authorize decorator, default to { skip: true } */
+    authorization?: AuthorizationMetadata;
+}
+
 /**
  * Interface defining the CRUD api builder component's options object
  */
 export interface CRUDApiConfig extends ModelApiConfig {
     basePath: string;
-    repository?: string;
+    repository?:  string | Class<Repository<Model>>;
     controller?: MixinTarget<CRUDController<any, any>>;
-    create?: {
-        authentication?: AuthenticationMetadata;
-        authorization?: AuthorizationMetadata;
-    };
-    read?: {
-        authentication?: AuthenticationMetadata;
-        authorization?: AuthorizationMetadata;
-    };
-    update?: {
-        authentication?: AuthenticationMetadata;
-        authorization?: AuthorizationMetadata;
-    };
-    delete?: {
-        authentication?: AuthenticationMetadata;
-        authorization?: AuthorizationMetadata;
-    };
+    create?: IAuthConfig;
+    read?: IAuthConfig;
+    update?: IAuthConfig;
+    delete?: IAuthConfig;
 }
 
 export interface CRUDController<T extends Entity, ID> {
