@@ -1,6 +1,12 @@
 import { MixinTarget } from "@loopback/core";
 import { ModelApiConfig } from "@loopback/model-api-builder";
-import { Class, Entity, EntityCrudRepository, Model, Repository } from "@loopback/repository";
+import {
+    Class,
+    Entity,
+    EntityCrudRepository,
+    Model,
+    Repository,
+} from "@loopback/repository";
 import { AuthenticationMetadata } from "@loopback/authentication";
 import { AuthorizationMetadata } from "@loopback/authorization";
 import { Request, Response } from "@loopback/rest";
@@ -18,7 +24,10 @@ export const DEFAULT_CRUD_OPTIONS: CRUDComponentOptions = {};
 
 export interface IAuthConfig {
     /** Configuration passed to @authenticate decorator, default to { strategy: "crud", skip: true } */
-    authentication?: (string | AuthenticationMetadata)[] | string | AuthenticationMetadata;
+    authentication?:
+        | (string | AuthenticationMetadata)[]
+        | string
+        | AuthenticationMetadata;
     /** Configuration passed to @authorize decorator, default to { skip: true } */
     authorization?: AuthorizationMetadata;
 }
