@@ -28,7 +28,7 @@ export interface IAuthConfig {
  */
 export interface CRUDApiConfig extends ModelApiConfig {
     basePath: string;
-    repository?:  string | Class<Repository<Model>>;
+    repository?: string | Class<Repository<Model>>;
     controller?: MixinTarget<CRUDController<any, any>>;
     create?: IAuthConfig;
     read?: IAuthConfig;

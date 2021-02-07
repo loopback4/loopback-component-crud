@@ -410,9 +410,10 @@ export function ReadControllerMixin<T extends Entity, ID>(
                 },
             })
             async readAll(
-                @param.filter(config.model) filter?: Filter<T>
+                @param.filter(config.model) filter?: Filter<T>,
+                @param.header.boolean('x-total', {required: false}) xTotal?: Boolean,
             ): Promise<T[]> {
-                if (this.request.headers["x-total"] === "true") {
+                if (xTotal) {
                     const count = await this.repository.count(filter?.where, {
                         context: this,
                     });
@@ -438,6 +439,11 @@ export function ReadControllerMixin<T extends Entity, ID>(
                                 }),
                             },
                         },
+                        headers: {
+                            "X-Total-Count": {
+                                type: "number",
+                            }
+                        }
                     },
                 },
             })
