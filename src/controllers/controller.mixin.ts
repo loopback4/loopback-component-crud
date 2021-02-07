@@ -274,7 +274,7 @@ const nestedUpdate = async <T extends Entity, ID>(
  */
 export function CreateControllerMixin<T extends Entity, ID>(
     config: CRUDApiConfig,
-    authentication: (string|AuthenticationMetadata)[],
+    authentication: (string | AuthenticationMetadata)[],
     authorization: AuthorizationMetadata
 ) {
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
@@ -371,11 +371,18 @@ export function CreateControllerMixin<T extends Entity, ID>(
     };
 }
 
-const normalizeAuthenticationConfigs = (configs: (string | AuthenticationMetadata)[] | string | AuthenticationMetadata | undefined, defaultConfig: AuthenticationMetadata) => {
+const normalizeAuthenticationConfigs = (
+    configs:
+        | (string | AuthenticationMetadata)[]
+        | string
+        | AuthenticationMetadata
+        | undefined,
+    defaultConfig: AuthenticationMetadata
+) => {
     if (configs === undefined) return [defaultConfig];
     if (Array.isArray(configs)) return configs;
     return [configs];
-}
+};
 
 /**
  * Read controller mixin, add Read rest operations
@@ -383,7 +390,7 @@ const normalizeAuthenticationConfigs = (configs: (string | AuthenticationMetadat
 export function ReadControllerMixin<T extends Entity, ID>(
     config: CRUDApiConfig,
     authentication: (string | AuthenticationMetadata)[],
-    authorization: AuthorizationMetadata,
+    authorization: AuthorizationMetadata
 ) {
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
         superClass: R
@@ -411,7 +418,8 @@ export function ReadControllerMixin<T extends Entity, ID>(
             })
             async readAll(
                 @param.filter(config.model) filter?: Filter<T>,
-                @param.header.boolean('x-total', {required: false}) xTotal?: Boolean,
+                @param.header.boolean("x-total", { required: false })
+                xTotal?: Boolean
             ): Promise<T[]> {
                 if (xTotal) {
                     const count = await this.repository.count(filter?.where, {
@@ -442,8 +450,8 @@ export function ReadControllerMixin<T extends Entity, ID>(
                         headers: {
                             "X-Total-Count": {
                                 type: "number",
-                            }
-                        }
+                            },
+                        },
                     },
                 },
             })
@@ -479,7 +487,7 @@ export function ReadControllerMixin<T extends Entity, ID>(
  */
 export function UpdateControllerMixin<T extends Entity, ID>(
     config: CRUDApiConfig,
-    authentication: (string|AuthenticationMetadata)[],
+    authentication: (string | AuthenticationMetadata)[],
     authorization: AuthorizationMetadata
 ) {
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
@@ -566,7 +574,7 @@ export function UpdateControllerMixin<T extends Entity, ID>(
  */
 export function DeleteControllerMixin<T extends Entity, ID>(
     config: CRUDApiConfig,
-    authentication: (string|AuthenticationMetadata)[],
+    authentication: (string | AuthenticationMetadata)[],
     authorization: AuthorizationMetadata
 ) {
     return function <R extends MixinTarget<CRUDController<T, ID>>>(
@@ -615,13 +623,13 @@ export function DeleteControllerMixin<T extends Entity, ID>(
 }
 
 export const defaultAuthorizationConfig = {
-    skip: true
-}
+    skip: true,
+};
 
 export const defaultAuthenticationConfig = {
     strategy: "crud",
     skip: true,
-}
+};
 
 /**
  * CRUD controller mixin, add CRUD rest operations
@@ -635,7 +643,10 @@ export function CRUDControllerMixin<T extends Entity, ID>(
         if (config.create) {
             superClass = CreateControllerMixin<T, ID>(
                 config,
-                normalizeAuthenticationConfigs(config.create.authentication, defaultAuthenticationConfig),
+                normalizeAuthenticationConfigs(
+                    config.create.authentication,
+                    defaultAuthenticationConfig
+                ),
                 config.create.authorization ?? defaultAuthorizationConfig
             )(superClass);
         }
@@ -643,7 +654,10 @@ export function CRUDControllerMixin<T extends Entity, ID>(
         if (config.read) {
             superClass = ReadControllerMixin<T, ID>(
                 config,
-                normalizeAuthenticationConfigs(config.read.authentication, defaultAuthenticationConfig),
+                normalizeAuthenticationConfigs(
+                    config.read.authentication,
+                    defaultAuthenticationConfig
+                ),
                 config.read.authorization ?? defaultAuthorizationConfig
             )(superClass);
         }
@@ -651,7 +665,10 @@ export function CRUDControllerMixin<T extends Entity, ID>(
         if (config.update) {
             superClass = UpdateControllerMixin<T, ID>(
                 config,
-                normalizeAuthenticationConfigs(config.update.authentication, defaultAuthenticationConfig),
+                normalizeAuthenticationConfigs(
+                    config.update.authentication,
+                    defaultAuthenticationConfig
+                ),
                 config.update.authorization ?? defaultAuthorizationConfig
             )(superClass);
         }
@@ -659,7 +676,10 @@ export function CRUDControllerMixin<T extends Entity, ID>(
         if (config.delete) {
             superClass = DeleteControllerMixin<T, ID>(
                 config,
-                normalizeAuthenticationConfigs(config.delete.authentication, defaultAuthenticationConfig),
+                normalizeAuthenticationConfigs(
+                    config.delete.authentication,
+                    defaultAuthenticationConfig
+                ),
                 config.delete.authorization ?? defaultAuthorizationConfig
             )(superClass);
         }
