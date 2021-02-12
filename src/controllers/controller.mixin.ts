@@ -192,7 +192,7 @@ const nestedUpdate = async <T extends Entity, ID>(
     }
 
     const rawData: any = Object.fromEntries(
-        Object.entries(data).filter(([key, value]) => !relationFieldsDefs[key])
+        Object.entries(data).filter(([key]) => !relationFieldsDefs[key])
     );
     result += (
         await repository.updateAll(rawData, where, {
@@ -254,7 +254,7 @@ const nestedUpdate = async <T extends Entity, ID>(
                     {
                         ...targetRepository.entityClass.buildWhereForId(
                             item[
-                            targetRepository.entityClass.getIdProperties()[0]
+                                targetRepository.entityClass.getIdProperties()[0]
                             ]
                         ),
                         [keyTo]: {
