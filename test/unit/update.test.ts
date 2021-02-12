@@ -27,6 +27,7 @@ describe("Update Model", () => {
             {
                 id: "user1",
                 username: "user1",
+                roles: ["role"],
                 parent: {
                     username: "user1",
                 },
@@ -104,6 +105,7 @@ describe("Update Model", () => {
         ]);
         await userController.updateOne("user1", {
             password: "123",
+            roles: ["role"],
             parent: {
                 password: "123",
             },
@@ -119,6 +121,7 @@ describe("Update Model", () => {
         ).containDeep({
             id: "user1",
             username: "user1",
+            roles: ["role"],
             parent: {
                 username: "parentUser1-1",
                 password: "123",

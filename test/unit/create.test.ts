@@ -54,6 +54,7 @@ describe("Create Model", () => {
                     parent: {
                         username: "parentUser4-1",
                     },
+                    roles: ["role"],
                     children: [
                         {
                             username: "childUser4-1",
@@ -90,6 +91,7 @@ describe("Create Model", () => {
                 parent: {
                     username: "parentUser4-1",
                 },
+                roles: ["role"],
                 children: [
                     {
                         username: "childUser4-1",
@@ -111,6 +113,7 @@ describe("Create Model", () => {
         expect(
             await userController.createOne({
                 username: "user4",
+                roles: ["role"],
                 parent: {
                     username: "parentUser4-1",
                 },
@@ -125,6 +128,7 @@ describe("Create Model", () => {
             })
         ).containDeep({
             username: "user4",
+            roles: ["role"],
             parent: {
                 username: "parentUser4-1",
             },
