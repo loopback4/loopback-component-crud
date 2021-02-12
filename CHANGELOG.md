@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.6.0
+
+-   **feat**: support `object types` in nested create, update
+
 ## v1.5.0
 
 -   **feat**: support `multiple` authentication `strategy`

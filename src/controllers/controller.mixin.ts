@@ -35,6 +35,7 @@ const nestedCreate = async <T extends Entity, ID>(
     models: T[]
 ): Promise<T[]> => {
     const relationFieldsDefs = repository.entityClass.definition.relations;
+
     for (const [relation, metadata] of Object.entries(
         relationFieldsDefs
     ).filter(([_, metadata]) => metadata.type === RelationType.belongsTo)) {
@@ -161,6 +162,7 @@ const nestedUpdate = async <T extends Entity, ID>(
 ): Promise<number> => {
     let result = 0;
     const relationFieldsDefs = repository.entityClass.definition.relations;
+
     for (const [relation, metadata] of Object.entries(
         repository.entityClass.definition.relations
     ).filter(([_, metadata]) => metadata.type === RelationType.belongsTo)) {
@@ -192,7 +194,7 @@ const nestedUpdate = async <T extends Entity, ID>(
     }
 
     const rawData: any = Object.fromEntries(
-        Object.entries(data).filter(([key, value]) => !relationFieldsDefs[key])
+        Object.entries(data).filter(([key]) => !relationFieldsDefs[key])
     );
     result += (
         await repository.updateAll(rawData, where, {
@@ -254,7 +256,7 @@ const nestedUpdate = async <T extends Entity, ID>(
                     {
                         ...targetRepository.entityClass.buildWhereForId(
                             item[
-                            targetRepository.entityClass.getIdProperties()[0]
+                                targetRepository.entityClass.getIdProperties()[0]
                             ]
                         ),
                         [keyTo]: {
