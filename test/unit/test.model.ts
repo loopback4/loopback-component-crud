@@ -22,6 +22,12 @@ export class User extends Entity {
     username: string;
 
     @property({
+        type: "array",
+        itemType: "string",
+    })
+    roles: [string];
+
+    @property({
         type: "string",
     })
     password: string;

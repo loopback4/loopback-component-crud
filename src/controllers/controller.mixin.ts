@@ -34,8 +34,9 @@ const nestedCreate = async <T extends Entity, ID>(
     context: CRUDController<T, ID>,
     models: T[]
 ): Promise<T[]> => {
+    const relationFieldsDefs = repository.entityClass.definition.relations;
     for (const [relation, metadata] of Object.entries(
-        repository.entityClass.definition.relations
+        relationFieldsDefs
     ).filter(([_, metadata]) => metadata.type === RelationType.belongsTo)) {
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
@@ -67,7 +68,7 @@ const nestedCreate = async <T extends Entity, ID>(
         models.map(async (model: any) => {
             const rawModel: any = Object.fromEntries(
                 Object.entries(model).filter(
-                    ([_, value]) => typeof value !== "object"
+                    ([key]) => !relationFieldsDefs[key]
                 )
             );
 
@@ -83,7 +84,7 @@ const nestedCreate = async <T extends Entity, ID>(
     );
 
     for (const [relation, metadata] of Object.entries(
-        repository.entityClass.definition.relations
+        relationFieldsDefs
     ).filter(([_, metadata]) => metadata.type === RelationType.hasOne)) {
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
@@ -112,7 +113,7 @@ const nestedCreate = async <T extends Entity, ID>(
     }
 
     for (const [relation, metadata] of Object.entries(
-        repository.entityClass.definition.relations
+        relationFieldsDefs
     ).filter(([_, metadata]) => metadata.type === RelationType.hasMany)) {
         const keyTo = (metadata as any).keyTo;
         const keyFrom = (metadata as any).keyFrom;
@@ -159,7 +160,7 @@ const nestedUpdate = async <T extends Entity, ID>(
     data: any
 ): Promise<number> => {
     let result = 0;
-
+    const relationFieldsDefs = repository.entityClass.definition.relations;
     for (const [relation, metadata] of Object.entries(
         repository.entityClass.definition.relations
     ).filter(([_, metadata]) => metadata.type === RelationType.belongsTo)) {
@@ -191,7 +192,7 @@ const nestedUpdate = async <T extends Entity, ID>(
     }
 
     const rawData: any = Object.fromEntries(
-        Object.entries(data).filter(([_, value]) => typeof value !== "object")
+        Object.entries(data).filter(([key, value]) => !relationFieldsDefs[key])
     );
     result += (
         await repository.updateAll(rawData, where, {
@@ -253,7 +254,7 @@ const nestedUpdate = async <T extends Entity, ID>(
                     {
                         ...targetRepository.entityClass.buildWhereForId(
                             item[
-                                targetRepository.entityClass.getIdProperties()[0]
+                            targetRepository.entityClass.getIdProperties()[0]
                             ]
                         ),
                         [keyTo]: {
