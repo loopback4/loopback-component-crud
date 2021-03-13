@@ -4,6 +4,7 @@
 ![npm](https://img.shields.io/npm/v/loopback-component-crud)
 ![npm bundle size](https://img.shields.io/bundlephobia/min/loopback-component-crud)
 ![GitHub](https://img.shields.io/github/license/loopback4/loopback-component-crud)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-crud.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-crud?ref=badge_shield)
 
 Creating `CRUD` endpoints in any application is a repetitive and futile task.
 
@@ -83,3 +84,6 @@ module.exports = {
 
 This project is licensed under the [MIT license](LICENSE.md).  
 Copyright (c) KoLiBer (koliberr136a1@gmail.com)
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-crud.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Floopback4%2Floopback-component-crud?ref=badge_large)
