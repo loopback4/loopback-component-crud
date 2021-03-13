@@ -1,5 +1,51 @@
 # Changelog
 
+## v1.6.0
+
+-   **feat**: support `object types` in nested create, update
+
+## v1.5.0
+
+-   **feat**: support `multiple` authentication `strategy`
+-   **deps**: `update` packages
+
+## v1.4.0
+
+-   **Fix**: update nested hasMany relation fix `null id update all` bug
+
+## v1.3.0
+
+-   **Feat**: add `hasMany` update nested
+
+## v1.2.0
+
+-   **Feat**: get hasOne, hasMany `TargetRepository` from relation
+-   **Fix**: add `context` to nestedUpdate method
+-   **Fix**: check `target` repository is not undefined
+-   **Fix**: add `includeRelations` to update apis
+-   **Deps**: update `packages`
+
+## v1.1.0
+
+-   **Feat**: add CRUD `model-api-builder`
+-   **Feat**: add `create nested`
+-   **Feat**: add `update nested`
+-   **Clean**: remove `relations` in controllers
+-   **Deps**: update packages
+
+## v1.0.1
+
+-   **Fix**: remove sources folder from ci file
+
+## v1.0.0
+
+-   **Deps**: update packages
+-   **Clean**: remove `sources` folder
+-   **Clean**: remove `model-mapper` method
+-   **Feat**: use `buildWhereForId` in utils and limit interceptor
+-   **Fix**: disable filter for empty object (`mongo` error: `and` with empty array)
+-   **Docs**: add shields to `README`
+
 ## v0.11.0
 
 -   **Feat**: add `getAccess` method for getting nested authorization metadata

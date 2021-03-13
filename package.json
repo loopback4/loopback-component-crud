@@ -1,20 +1,21 @@
 {
     "name": "loopback-component-crud",
-    "version": "0.11.0",
+    "version": "1.6.0",
     "description": "Loopback component Rest CRUD controller mixin",
     "keywords": [
         "loopback-extension",
         "loopback"
     ],
-    "main": "index.js",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
     "engines": {
-        "node": ">=10"
+        "node": ">=10.16"
     },
     "scripts": {
-        "clean": "lb-clean dist *.tsbuildinfo",
+        "clean": "lb-clean dist *.tsbuildinfo .eslintcache",
         "prebuild": "npm run clean",
-        "build": "lb-tsc --outDir dist",
-        "build:watch": "lb-tsc --watch --outDir dist",
+        "build": "lb-tsc",
+        "build:watch": "lb-tsc --watch",
         "start": "node .",
         "start:watch": "nodemon .",
         "test": "lb-mocha --allow-console-logs \"test/**/*.test.ts\"",
@@ -24,31 +25,29 @@
         "type": "git",
         "url": "https://github.com/loopback4/loopback-component-crud"
     },
-    "author": "KoLiBer",
+    "author": "KoLiBer <koliberr136a1@gmail.com>",
     "license": "MIT",
     "files": [
         "README.md",
-        "index.js",
-        "index.d.ts",
         "dist"
     ],
     "dependencies": {
-        "@loopback/authentication": "^4.2.7",
-        "@loopback/authorization": "^0.6.0",
-        "@loopback/boot": "^2.3.3",
-        "@loopback/context": "^3.9.0",
-        "@loopback/core": "^2.8.0",
-        "@loopback/repository": "^2.7.0",
-        "@loopback/rest": "^5.1.1",
-        "@loopback/security": "^0.2.12",
+        "@loopback/authentication": "^7.0.6",
+        "@loopback/authorization": "^0.7.6",
+        "@loopback/context": "^3.14.0",
+        "@loopback/core": "^2.14.0",
+        "@loopback/model-api-builder": "^2.1.20",
+        "@loopback/repository": "^3.4.0",
+        "@loopback/rest": "^9.1.2",
+        "@loopback/security": "^0.3.6",
         "tslib": "^2.0.0"
     },
     "devDependencies": {
-        "@loopback/build": "^5.4.3",
-        "@loopback/testlab": "^3.1.7",
-        "@types/node": "^10.17.26",
+        "@loopback/build": "^6.2.9",
+        "@loopback/testlab": "^3.2.11",
+        "@types/node": "^10.17.51",
         "nodemon": "^2.0.4",
         "ts-node": "^8.10.2",
-        "typescript": "~3.9.5"
+        "typescript": "~4.1.3"
     }
 }
