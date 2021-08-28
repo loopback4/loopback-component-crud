@@ -1,0 +1,13 @@
+name: Release
+
+on:
+    push:
+        tags: ["*"]
+
+jobs:
+    run:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: docker/bake-action@v1.5.0
+              with:
+                  NPM_TOKEN: $NPM_TOKEN
