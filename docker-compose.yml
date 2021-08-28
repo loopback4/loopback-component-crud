@@ -1,0 +1,20 @@
+version: "3.6"
+services:
+    app:
+        build:
+            context: .
+            target: debug
+        ports:
+            - 9229:9229
+        volumes:
+            - ./src:/srv/src
+            - ./test:/srv/test
+            - node_modules:/srv/node_modules
+
+volumes:
+    node_modules:
+        driver: local
+        driver_opts:
+            type: none
+            o: bind
+            device: $CWD/node_modules
