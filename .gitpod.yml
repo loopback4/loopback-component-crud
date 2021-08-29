@@ -7,8 +7,7 @@ ports:
 vscode:
     extensions:
         - mikestead.dotenv
-        - esbenp.prettier-vscode
         - loiane.ts-extension-pack
-        - PKief.material-icon-theme
+        - pkief.material-icon-theme
         - hsnazar.hyper-term-theme
-        - IBM.output-colorizer
+        - ibm.output-colorizer
