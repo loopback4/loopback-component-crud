@@ -1,0 +1,11 @@
+tasks:
+    - init: npm install
+      command: npm run start
+ports:
+    - port: 9229
+      onOpen: open-preview
+vscode:
+    extensions:
+        - mikestead.dotenv
+        - esbenp.prettier-vscode
+        - loiane.ts-extension-pack
