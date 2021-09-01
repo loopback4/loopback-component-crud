@@ -8,7 +8,14 @@ jobs:
         container: node:alpine
         steps:
             - uses: actions/checkout@v2
-            - run: ls -la
+            - uses: actions/cache@v2
+              with:
+                  path: node_modules/
+                  key: ${{ hashFiles('**/package-lock.json') }}
+            - uses: actions/cache@v2
+              with:
+                  path: dist/
+                  key: ${{ github.sha }}
             - run: npm ci
             - run: npm run build
 
@@ -18,6 +25,10 @@ jobs:
         container: node:alpine
         steps:
             - uses: actions/checkout@v2
+            - uses: actions/cache@v2
+              with:
+                  path: node_modules/
+                  key: ${{ hashFiles('**/package-lock.json') }}
             - run: npm run test
 
     release:
@@ -39,6 +50,10 @@ jobs:
             CI_COMMIT_TAG: ${CI_COMMIT_TAG:-${CI_MERGE_REQUEST_ID:-"latest"}}
         steps:
             - uses: actions/checkout@v2
+            - uses: actions/cache@v2
+              with:
+                  path: dist/
+                  key: ${{ github.sha }}
             - run: echo .git > .dockerignore
             - run: docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
             - run: docker build -f .gitlab/Dockerfile -t $CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG .
