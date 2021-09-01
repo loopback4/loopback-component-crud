@@ -7,16 +7,19 @@ jobs:
         runs-on: ubuntu-latest
         container: node:alpine
         steps:
+            - run: ls -la
             - run: npm ci
             - run: npm run build
 
     test:
+        needs: build
         runs-on: ubuntu-latest
         container: node:alpine
         steps:
             - run: npm run test
 
     release:
+        needs: test
         runs-on: ubuntu-latest
         container: docker:latest
         services:
@@ -39,6 +42,7 @@ jobs:
             - run: docker push $CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG
 
     deploy:
+        needs: release
         runs-on: ubuntu-latest
         container: hashicorp/terraform
         services:
