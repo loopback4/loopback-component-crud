@@ -1,13 +1,54 @@
 name: Release
 
-on:
-    push:
-        tags: ["*"]
+on: [push, pull_request]
 
 jobs:
-    run:
+    build:
         runs-on: ubuntu-latest
+        container: node:alpine
         steps:
-            - uses: docker/bake-action@v1.5.0
-              with:
-                  NPM_TOKEN: $NPM_TOKEN
+            - run: npm ci
+            - run: npm run build
+
+    test:
+        runs-on: ubuntu-latest
+        container: node:alpine
+        steps:
+            - run: npm run test
+
+    release:
+        runs-on: ubuntu-latest
+        container: docker:latest
+        services:
+            docker:
+                image: docker:dind
+                options: ["--tls=false"]
+        env:
+            DOCKER_HOST: tcp://docker:2375
+            DOCKER_DRIVER: overlay2
+            DOCKER_TLS_CERTDIR: ""
+            CI_REGISTRY: "??"
+            CI_REGISTRY_USER: "??"
+            CI_REGISTRY_PASSWORD: "??"
+            CI_REGISTRY_IMAGE: "??"
+            CI_COMMIT_TAG: ${CI_COMMIT_TAG:-${CI_MERGE_REQUEST_ID:-"latest"}}
+        steps:
+            - run: echo .git > .dockerignore
+            - run: docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+            - run: docker build -f .gitlab/Dockerfile -t $CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG .
+            - run: docker push $CI_REGISTRY_IMAGE":"$CI_COMMIT_TAG
+
+    deploy:
+        runs-on: ubuntu-latest
+        container: hashicorp/terraform
+        services:
+            docker:
+                image: docker:dind
+                options: ["--tls=false"]
+        env:
+            CI_COMMIT_TAG: ${CI_COMMIT_TAG:-${CI_MERGE_REQUEST_ID:-"latest"}}
+            CI_MERGE_REQUEST_ID: ${{ github.event.pull_request.number }}
+        steps:
+            - run: cp .gitlab/terraform.tf .
+            - run: terraform init
+            - run: terraform apply -auto-approve

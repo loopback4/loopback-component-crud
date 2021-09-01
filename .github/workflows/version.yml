@@ -6,16 +6,13 @@ on:
             VERSION:
                 description: "Versioning Channels"
                 required: true
+                default: "master"
 
 jobs:
-    run:
+    version:
         runs-on: ubuntu-latest
         container: node:alpine
         steps:
-            - run: |
-                  apk add openssh-client bash git
-                  eval $(ssh-agent -s)
-                  echo "$GIT_DEPLOY_KEY" | ssh-add -
-                  mkdir -p ~/.ssh && echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
-                  npm i -g semantic-release @semantic-release/git @semantic-release/npm @semantic-release/changelog
-                  semantic-release -r "ssh://git@$CI_SERVER_HOST/$CI_PROJECT_PATH.git"
+            - run: apk add openssh-client bash git
+            - run: npm i -g semantic-release @semantic-release/git @semantic-release/npm @semantic-release/changelog
+            - run: semantic-release -b "$VERSION"
