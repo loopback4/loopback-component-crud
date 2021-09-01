@@ -13,6 +13,7 @@ jobs:
         runs-on: ubuntu-latest
         container: node:alpine
         steps:
+            - uses: actions/checkout@v2
             - run: apk add openssh-client bash git
             - run: npm i -g semantic-release @semantic-release/git @semantic-release/npm @semantic-release/changelog
             - run: semantic-release -b "$VERSION"
