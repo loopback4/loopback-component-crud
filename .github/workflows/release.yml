@@ -22,8 +22,7 @@ jobs:
         services:
             docker:
                 image: docker:dind
-                options:
-                    - --tls=false
+                options: --tls=false
         env:
             DOCKER_HOST: tcp://docker:2375
             DOCKER_DRIVER: overlay2
@@ -45,8 +44,7 @@ jobs:
         services:
             docker:
                 image: docker:dind
-                options:
-                    - --tls=false
+                options: --tls=false
         env:
             CI_COMMIT_TAG: ${CI_COMMIT_TAG:-${CI_MERGE_REQUEST_ID:-"latest"}}
             CI_MERGE_REQUEST_ID: ${{ github.event.pull_request.number }}
