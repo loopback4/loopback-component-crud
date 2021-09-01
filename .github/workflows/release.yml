@@ -26,6 +26,7 @@ jobs:
         runs-on: ubuntu-latest
         container: node:alpine
         steps:
+            - run: apk update && apk add --no-cache tar
             - uses: actions/checkout@v2
             - uses: actions/cache@v2
               with:
