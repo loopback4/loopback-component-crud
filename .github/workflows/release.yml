@@ -12,7 +12,7 @@ jobs:
             - uses: actions/cache@v2
               with:
                   path: node_modules/
-                  key: ${{ hashFiles('package-lock.json') }}
+                  key: npm-${{ hashFiles('package-lock.json') }}
             - uses: actions/cache@v2
               with:
                   path: dist/
@@ -30,7 +30,7 @@ jobs:
             - uses: actions/cache@v2
               with:
                   path: node_modules/
-                  key: ${{ hashFiles('package-lock.json') }}
+                  key: npm-${{ hashFiles('package-lock.json') }}
 
             - run: npm run test
 
