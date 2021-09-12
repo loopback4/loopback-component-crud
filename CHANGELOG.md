@@ -1,5 +1,3 @@
-# Changelog
-
 ## v1.6.0
 
 -   **feat**: support `object types` in nested create, update
