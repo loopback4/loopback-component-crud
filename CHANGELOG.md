@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/loopback4/loopback-component-crud/compare/1.7.0...1.7.1) (2021-11-05)
+
+
+### Bug Fixes
+
+* change README, clean project ([e94f55d](https://github.com/loopback4/loopback-component-crud/commit/e94f55d14007714f28693214334bc5dafe914ba8))
+
 ## [1.7.1-next.1](https://github.com/loopback4/loopback-component-crud/compare/1.7.0...1.7.1-next.1) (2021-09-12)
 
 
