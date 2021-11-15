@@ -1,3 +1,10 @@
+## [1.7.2-next.1](https://github.com/loopback4/loopback-component-crud/compare/1.7.1...1.7.2-next.1) (2021-11-15)
+
+
+### Bug Fixes
+
+* **CI:** merge request, release workflows into one CI/CD workflow ([4e77c32](https://github.com/loopback4/loopback-component-crud/commit/4e77c3237a5bd404d4326f1ee8c8a72578535689))
+
 ## [1.7.1](https://github.com/loopback4/loopback-component-crud/compare/1.7.0...1.7.1) (2021-11-05)
 
 

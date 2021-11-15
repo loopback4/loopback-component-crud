@@ -1,6 +1,6 @@
 {
     "name": "loopback-component-crud",
-    "version": "1.7.1",
+    "version": "1.7.2-next.1",
     "description": "Loopback component Rest CRUD controller mixin",
     "keywords": [
         "loopback-extension",
